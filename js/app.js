@@ -20,6 +20,12 @@ $(document).ready(function () {
                 busUnitTo.append('<option value="' + businessUnit.id + '">' +
                     businessUnit.name + '</option>');
             });
+
+            var busUnit = $('#business_unit');
+            $.each(response, function(index, businessUnit) {
+                busUnit.append('<option value="' + businessUnit.id + '">' +
+                    businessUnit.name + '</option>');
+            });
         },
         error: function () {
             alert('Error loading business units');

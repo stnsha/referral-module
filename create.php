@@ -6,28 +6,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" />
-    <style>
-        .r-main-title {
-            font-weight: bold;
-            font-size: 18px;
-        }
+    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
 
-        .r-title {
-            font-weight: 600;
-            font-size: 14px;
-            padding-bottom: 15px;
-        }
-
-        .r-text {
-            font-size: 13px;
-        }
-
-        .btn-back {
-            text-decoration: none;
-            padding-right: 5px;
-            color: black;
-        }
-    </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 </head>
@@ -35,8 +15,6 @@
 require_once('../lock_adv.php');
 $connect = 1;
 include('../common/index_adv.php');
-echo 'session:' . $department;
-$id_user;
 ?>
 
 <body>
@@ -183,24 +161,24 @@ $id_user;
                         <!--png/jpeg/jpg/pdf/word/excel-->
                         <div class="col m-4">
                             <div class="col mb-2">
-                                <img src="document.png" alt="" style="width: 25px;">
+                                <img src="img/document.png" alt="" style="width: 25px;">
                                 <span class="r-text">prescription.png</span>
                             </div>
                             <div class="col mb-2">
-                                <img src="document.png" alt="" style="width: 25px;">
+                                <img src="img/document.png" alt="" style="width: 25px;">
                                 <span class="r-text">prescription.pdf</span>
                             </div>
                             <div class="col mb-2">
-                                <img src="document.png" alt="" style="width: 25px;">
+                                <img src="img/document.png" alt="" style="width: 25px;">
                                 <span class="r-text">prescription.xlsx</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-center align-items-center">
+            <div class="d-flex flex-column justify-content-center align-items-center">
+                <input type="submit" value="Submit" class="submitButton">
                 <a href="index.php" class="btn-back">Back</a>
-                <input type="submit" value="Submit">
             </div>
         </form>
 
