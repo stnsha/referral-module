@@ -65,7 +65,7 @@ function searchCustomer($icno)
     global $conn;
 
     $icno = mysqli_real_escape_string($conn, $icno);
-    $query = "SELECT customer_name, ic, gender, birth_date, phone, email, c_addr FROM customer WHERE ic LIKE '%$icno%'";
+    $query = "SELECT id, customer_name, ic, gender, birth_date, phone, email, c_addr FROM customer WHERE ic LIKE '%$icno%'";
     $searchIcno = mysqli_query($conn, $query);
 
     if (!$searchIcno || mysqli_num_rows($searchIcno) == 0) {
@@ -75,6 +75,7 @@ function searchCustomer($icno)
     $customerDetails = array();
     while ($row = mysqli_fetch_assoc($searchIcno)) {
         $customerDetails[] = array(
+            'id' => $row['id'],
             'name' => $row['customer_name'],
             'ic' => $row['ic'],
             'gender' => $row['gender'],
