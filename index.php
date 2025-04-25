@@ -13,7 +13,7 @@ $connect = 1;
 include('../common/index_adv.php');
 ?>
 
-<body class="referral-body">
+<body>
     <div class="referral-container">
         <div class="referral_header">
             <h1 class="referral_h1">
