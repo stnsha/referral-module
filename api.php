@@ -44,16 +44,19 @@ function getApiData($prefix, $data = null)
     }
 
     curl_close($ch);
-    return $response;
+    return array(
+        'response' => $response,
+        'httpCode' => $httpCode
+    );
 }
 
 function getBusinessUnit()
 {
     $data = getApiData('business-units');
-    if ($data === false) {
+    if ($data['httpCode'] != 200) {
         return array();
     }
-    $decoded = json_decode($data, true);
+    $decoded = json_decode($data['response'], true);
     return isset($decoded['data']) ? $decoded['data'] : array();
 }
 
@@ -74,10 +77,13 @@ function createForm($data)
         $formattedData['value_fields'] = array_values(array_filter($data['value_fields']));
     }
 
-    $result = getApiData('form', $formattedData);
+    $data = getApiData('form', $formattedData);
+    $result  = $data['response'];
+    $httpCode = $data['httpCode'];
+
     $decoded = json_decode($result, true);
 
-    if (isset($decoded['form_id'])) {
+    if ($httpCode == 201) {
         return array(
             'success' => true,
             'id' => $decoded['form_id']

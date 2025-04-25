@@ -21,7 +21,7 @@ include('../common/index_adv.php');
     <div class="container bg-white rounded p-4">
         <p class="r-main-title text-center mb-3">New Referral</p>
         <form name="admin-form" id="admin-form" onsubmit="validateForm(event)" enctype="multipart/form-data">
-            <div class="row justify-content-center">
+            <div class="row justify-content-start">
                 <div class="col-md-8">
                     <div class="row mb-2 align-items-center">
                         <label class="col-sm-4 col-form-label text-sm-start">Business Unit</label>
@@ -107,11 +107,14 @@ include('../common/index_adv.php');
                     </div>
 
                     <div class="row mb-2 align-items-center">
-                        <div class="col-sm-4">
+                        <div class="col-sm-4 d-flex justify-content-start">
                             <input type="submit" value="Submit" class="btn btn-sm btn-primary">
-                            <div class="success-message" style="color: green; font-size: 12px;"></div>
+                        </div>
+                        <div class="col-sm-4 d-flex justify-content-start">
+                            <div class="success-message" style="color: green; font-size: 12px; margin-top: 10px;"></div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </form>
