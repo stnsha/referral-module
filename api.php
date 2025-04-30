@@ -93,6 +93,16 @@ function createForm($data)
     }
 }
 
+function getFormDetails($business_unit_id)
+{
+    $data = getApiData('form/show/' . $business_unit_id);
+    if ($data['httpCode'] != 200) {
+        return array();
+    }
+
+    $decoded = json_decode($data['response'], true);
+    return isset($decoded['data']) ? $decoded['data'] : array();
+}
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
@@ -108,6 +118,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'create-form':
                 if (isset($jsonData['formData'])) {
                     $response = createForm($jsonData['formData']);
+                }
+                break;
+            case 'form-details':
+                if (isset($jsonData['business_unit_id'])) {
+                    $response = array('data' => getFormDetails($jsonData['business_unit_id']));
                 }
                 break;
         }
@@ -133,6 +148,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $response = createForm($formData);
+                break;
+
+            case 'form-details':
+                if (isset($jsonData['business_unit_id'])) {
+                    $response = array('data' => getFormDetails($jsonData['business_unit_id']));
+                }
                 break;
         }
     }

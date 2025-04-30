@@ -22,7 +22,7 @@ include('../common/index_adv.php');
         <p class="r-main-title">New Referral</p>
         <form action="post.php" method="POST" id="referral-form" name="referral-form" onsubmit="validateForm(event)"
             enctype="multipart/form-data">
-            <div class="row align-items-start text-start p-4">
+            <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
                     <div class="border-bottom pb-3 mb-3">
                         <p class="r-title">Referral Details</p>
@@ -32,10 +32,10 @@ include('../common/index_adv.php');
                                 <select name="business_unit_from" id="business_unit_from"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Business Unit</option>
-                                    <div class="error-message" id="error-business-unit-from"
-                                        style="color: red;font-size:12px;">
-                                    </div>
                                 </select>
+                                <div class="error-message" id="error-business-unit-from"
+                                    style="color: red;font-size:12px;">
+                                </div>
                             </div>
                             <div class="col">
                                 <select name="assignee_from" id="assignee_from"
@@ -214,10 +214,27 @@ include('../common/index_adv.php');
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="row align-items-start text-start py-2 px-4">
+                <div class="col h-auto border rounded me-2 p-2">
+                    <div class="business-unit-1 content" style="display:none;">Audiology Content</div>
+                    <div class="business-unit-21 content" style="display:none;">Baby Content</div>
+                    <div class="business-unit-2 content" style="display:none;">Clinic Content</div>
+                    <div class="business-unit-35 content" style="display:none;">Optisaver Content</div>
+                    <div class="business-unit-20 content" style="display:none;">
+                        <p class="r-title">Physio Form</p>
+                    </div>
+                </div>
+                <div class="col h-auto border rounded ms-2 p-2">
+                    <p class="r-title">Referral PIC History</p>
+                </div>
+            </div>
+            <div class="row align-items-start text-start py-2 px-4">
                 <div class="d-flex flex-column justify-content-center align-items-center">
                     <input type="submit" value="Submit" class="submitButton">
                     <a href="index.php" class="btn-back">Back</a>
                 </div>
+            </div>
         </form>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>

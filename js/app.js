@@ -75,6 +75,7 @@ $(document).ready(function () {
         dataType: 'json',
         success: function (response) {
             var busUnitFrom = $('#business_unit_from');
+            console.log(response);
             $.each(response, function (index, businessUnit) {
                 const selected = businessUnit.staff_department_id == department ? 'selected' : '';
                 busUnitFrom.append('<option value="' + businessUnit.staff_department_id + '" ' + selected + '>' +
@@ -82,19 +83,30 @@ $(document).ready(function () {
             });
 
             busUnitFrom.val(department);
-            busUnitFrom.trigger('change');
+            busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
 
             var busUnitTo = $('#business_unit_to');
-            $.each(response, function(index, businessUnit) {
+            $.each(response, function (index, businessUnit) {
                 busUnitTo.append('<option value="' + businessUnit.id + '">' +
                     businessUnit.name + '</option>');
             });
 
             var busUnit = $('#business_unit');
-            $.each(response, function(index, businessUnit) {
+            $.each(response, function (index, businessUnit) {
                 busUnit.append('<option value="' + businessUnit.id + '">' +
                     businessUnit.name + '</option>');
             });
+
+            // Function to display content based on business unit ID
+            function displayContent(businessUnitId) {
+                $('.content').hide(); // Hide all content divs
+                $('.business-unit-' + businessUnitId).show(); // Show the relevant div
+            }
+
+            // Call displayContent on initial load if department is set
+            if (department) {
+                displayContent(department);
+            }
         },
         error: function () {
             alert('Error loading business units');
@@ -103,6 +115,9 @@ $(document).ready(function () {
 
     $('#business_unit_from').change(function () {
         var businessUnitId = $(this).val();
+
+        // Display content based on the selected business unit
+        displayContent(businessUnitId);
 
         if (businessUnitId) {
             $.ajax({
@@ -137,6 +152,63 @@ $(document).ready(function () {
             $('#assignee_from').empty().append('<option value="">Assignee</option>');
         }
     });
+
+    // Function to display content based on business unit ID
+    function displayContent(businessUnitId) {
+        $.ajax({
+            url: 'api.php',
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify({
+                action: 'form-details',
+                business_unit_id: businessUnitId
+            }),
+            success: function (data) {
+                const [{ form_id, label_name, is_hidden, form_details }] = data.data;
+
+                $('.content').hide();
+                const targetDiv = $('.business-unit-' + businessUnitId);
+                targetDiv.show();
+
+                targetDiv.find('.form-container').remove();
+
+                const formContainer = $('<div class="form-container"></div>');
+                form_details.forEach(({ field_name, field_type, field_value, form_detail_id, is_required }) => {
+                    const wrapper = $('<div class="mb-2"></div>');
+
+                    const labelText = field_name.charAt(0).toUpperCase() + field_name.slice(1);
+                    const label = $('<p class="r-text"></p>').html(labelText + (is_required ? '<span style="color:red;">*</span>' : ''));
+
+                    const input = $('<input>', {
+                        type: field_type,
+                        name: field_name,
+                        class: 'form-control form-control-sm',
+                        value: field_value || '',
+                        required: is_required
+                    });
+
+                    const errorDiv = $('<div>', {
+                        id: 'error-' + field_name,
+                        class: 'error-message',
+                        css: {
+                            color: 'red',
+                            fontSize: '12px'
+                        }
+                    });
+
+                    wrapper.append(label, input, errorDiv);
+                    formContainer.append(wrapper);
+                });
+
+                targetDiv.append(formContainer);
+
+
+            },
+            error: function () {
+                console.log('Failed to display form details');
+            }
+        });
+    }
 
     $.ajax({
         url: 'backend.php?action=getLocations',
@@ -281,4 +353,6 @@ $(document).ready(function () {
             }
         });
     });
+
+
 });

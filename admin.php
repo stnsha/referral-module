@@ -28,7 +28,7 @@ include('../common/index_adv.php');
                         <div class="col-sm-8">
                             <select name="business-unitss" id="business-units"
                                 class="form-select form-select-sm text-capitalize">
-                                <option value="">Business Unit</option>
+                                <option value="">Select Business Unit</option>
                             </select>
                             <div class="error-message" id="error-business-units" style="color: red; font-size: 12px;">
                             </div>

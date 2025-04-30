@@ -9,7 +9,7 @@ $(document).ready(function () {
         success: function (data) {
             // console.log(data);
             var $select = $('#business-units');
-            $select.empty().append('<option value="">Business Unit</option>');
+            $select.empty().append('<option value="">Select Business Unit</option>');
             $.each(data.data, function (i, unit) {
                 $select.append('<option value="' + unit.staff_department_id + '">' + unit.name + '</option>');
             });
