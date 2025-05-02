@@ -164,46 +164,98 @@ $(document).ready(function () {
                 business_unit_id: businessUnitId
             }),
             success: function (data) {
-                const [{ form_id, label_name, is_hidden, form_details }] = data.data;
+                console.log(data);
 
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
                 targetDiv.show();
-
                 targetDiv.find('.form-container').remove();
 
-                const formContainer = $('<div class="form-container"></div>');
-                form_details.forEach(({ field_name, field_type, field_value, form_detail_id, is_required }) => {
-                    const wrapper = $('<div class="mb-2"></div>');
+                data.data.forEach(({ form_id, label_name, is_hidden, form_details }) => {
+                    const formContainer = $('<div class="form-container mb-3"></div>');
 
-                    const labelText = field_name.charAt(0).toUpperCase() + field_name.slice(1);
-                    const label = $('<p class="r-text"></p>').html(labelText + (is_required ? '<span style="color:red;">*</span>' : ''));
+                    form_details.forEach(detail => {
+                        const { field_name, field_type, is_required, field_value } = detail;
+                        const errorId = 'error-' + field_name;
+                        const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
 
-                    const input = $('<input>', {
-                        type: field_type,
-                        name: field_name,
-                        class: 'form-control form-control-sm',
-                        value: field_value || '',
-                        required: is_required
-                    });
+                        let wrapper;
+                        let input;
 
-                    const errorDiv = $('<div>', {
-                        id: 'error-' + field_name,
-                        class: 'error-message',
-                        css: {
-                            color: 'red',
-                            fontSize: '12px'
+                        if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
+                            wrapper = $('<div class="mb-2"></div>');
+                            const label = $('<p class="r-text"></p>').html(labelText);
+                            input = $('<div></div>');
+
+                            field_value.forEach(option => {
+                                const optionWrapper = $('<div class="form-check"></div>');
+                                const inputField = $('<input>', {
+                                    type: field_type,
+                                    class: 'form-check-input border',
+                                    name: field_name + (field_type === 'checkbox' ? '[]' : ''),
+                                    value: option.field_value,
+                                    required: is_required
+                                });
+                                const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
+                                optionWrapper.append(inputField, inputLabel);
+                                input.append(optionWrapper);
+                            });
+
+                            wrapper.append(label, input);
+
+                        } else if (field_type === 'select' && Array.isArray(field_value)) {
+                            wrapper = $('<div class="col mb-2"></div>');
+                            input = $('<select>', {
+                                name: field_name,
+                                id: field_name,
+                                class: 'form-select form-select-sm text-capitalize',
+                                required: is_required
+                            });
+
+                            input.append($('<option>', {
+                                value: '',
+                                text: label_name
+                            }));
+
+                            field_value.forEach(option => {
+                                input.append($('<option>', {
+                                    value: option.field_value,
+                                    text: option.field_value
+                                }));
+                            });
+
+                            wrapper.append(input);
+
+                        } else {
+                            wrapper = $('<div class="mb-2"></div>');
+                            const label = $('<p class="r-text"></p>').html(labelText);
+                            input = $('<input>', {
+                                type: field_type,
+                                name: field_name,
+                                class: 'form-control form-control-sm',
+                                value: field_value || '',
+                                required: is_required
+                            });
+                            wrapper.append(label, input);
                         }
+
+                        const errorDiv = $('<div>', {
+                            id: errorId,
+                            class: 'error-message',
+                            css: {
+                                color: 'red',
+                                fontSize: '12px'
+                            }
+                        });
+
+                        wrapper.append(errorDiv);
+                        formContainer.append(wrapper);
                     });
 
-                    wrapper.append(label, input, errorDiv);
-                    formContainer.append(wrapper);
+                    targetDiv.append(formContainer);
                 });
-
-                targetDiv.append(formContainer);
-
-
-            },
+            }
+            ,
             error: function () {
                 console.log('Failed to display form details');
             }
