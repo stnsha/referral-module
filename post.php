@@ -1,4 +1,8 @@
 <?php
+foreach ($_POST as $key => $value) {
+    echo $key . ': ' . $value . '<br>';
+}
+exit;
 $business_unit_from = isset($_POST['business_unit_from']) ? trim($_POST['business_unit_from']) : '';
 $assignee_from = isset($_POST['assignee_from']) ? trim($_POST['assignee_from']) : '';
 $location_from = isset($_POST['location_from']) ? trim($_POST['location_from']) : '';

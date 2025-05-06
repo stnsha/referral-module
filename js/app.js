@@ -62,7 +62,14 @@ function validateForm(event) {
 
     // ✅ Only submit the form if there are no errors
     if (!hasError) {
+        $(this).find(':input').each(function () {
+            if ($(this).is(':hidden')) {
+                $(this).prop('required', false);
+            }
+        });
+
         form.submit();
+
     }
 }
 
@@ -169,7 +176,8 @@ $(document).ready(function () {
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
                 targetDiv.show();
-                targetDiv.find('.form-container').remove();
+                targetDiv.find('[data-required="true"]').prop('required', true);
+                $('.content .form-container').remove();
 
                 data.data.forEach(({ form_id, label_name, is_hidden, form_details }) => {
                     const formContainer = $('<div class="form-container mb-3"></div>');
@@ -194,7 +202,7 @@ $(document).ready(function () {
                                     class: 'form-check-input border',
                                     name: field_name + (field_type === 'checkbox' ? '[]' : ''),
                                     value: option.field_value,
-                                    required: is_required
+                                    'data-required': is_required
                                 });
                                 const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
                                 optionWrapper.append(inputField, inputLabel);
@@ -209,7 +217,7 @@ $(document).ready(function () {
                                 name: field_name,
                                 id: field_name,
                                 class: 'form-select form-select-sm text-capitalize',
-                                required: is_required
+                                'data-required': is_required
                             });
 
                             input.append($('<option>', {
@@ -234,7 +242,7 @@ $(document).ready(function () {
                                 name: field_name,
                                 class: 'form-control form-control-sm',
                                 value: field_value || '',
-                                required: is_required
+                                'data-required': is_required
                             });
                             wrapper.append(label, input);
                         }

@@ -7,9 +7,6 @@
 
     <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" />
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 </head>
 <?php
 require_once('../lock_adv.php');
@@ -131,7 +128,7 @@ include('../common/index_adv.php');
                         <div class="d-flex mb-2">
                             <div class="me-2">
                                 <p class="r-text">I/C No.<span style="color:red;">*</span></p>
-                                <input type="text" name="customer_id" hidden>
+                                <input type="hidden" name="customer_id">
                                 <input type="text" name="customer_ic" class="form-control form-control-sm">
                                 <div class="error-message" id="error-customer-ic" style="color: red;font-size:12px;">
                                 </div>
@@ -217,11 +214,24 @@ include('../common/index_adv.php');
             </div>
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
-                    <div class="business-unit-1 content" style="display:none;">Audiology Content</div>
-                    <div class="business-unit-21 content" style="display:none;">Baby Content</div>
-                    <div class="business-unit-2 content" style="display:none;">Clinic Content</div>
-                    <div class="business-unit-35 content" style="display:none;">Optisaver Content</div>
-                    <div class="business-unit-20 content" style="display:none;">
+                    <div class="business-unit-1 content">
+                        <!-- style="display:none;"-->
+                        <p class="r-title">Audiology Form</p>
+                    </div>
+                    <div class="business-unit-21 content">
+                        <!-- style="display:none;"-->
+                        <p class="r-title">Baby Form</p>
+                    </div>
+                    <div class="business-unit-2 content">
+                        <!-- style="display:none;"-->
+                        <p class="r-title">Clinic Form</p>
+                    </div>
+                    <div class="business-unit-35 content">
+                        <!-- style="display:none;"-->
+                        <p class="r-title">Optisaver Form</p>
+                    </div>
+                    <div class="business-unit-20 content">
+                        <!-- style="display:none;"-->
                         <p class="r-title">Physio Form</p>
                     </div>
                 </div>
@@ -231,6 +241,7 @@ include('../common/index_adv.php');
             </div>
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="d-flex flex-column justify-content-center align-items-center">
+                    <button type="submit" id="real-submit" style="display: none;"></button>
                     <input type="submit" value="Submit" class="submitButton">
                     <a href="index.php" class="btn-back">Back</a>
                 </div>
