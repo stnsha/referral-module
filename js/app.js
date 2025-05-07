@@ -60,7 +60,6 @@ function validateForm(event) {
     markError("customer-email", !isEmpty(email) && !isEmail(email), "Invalid email format.");
     markError("customer-address", isEmpty(form["customer_address"].value), "This field cannot be left blank.");
 
-    // ✅ Only submit the form if there are no errors
     if (!hasError) {
         $(this).find(':input').each(function () {
             if ($(this).is(':hidden')) {
@@ -68,7 +67,23 @@ function validateForm(event) {
             }
         });
 
-        form.submit();
+        // form.submit();
+        const formData = new FormData(form);
+
+        fetch('post.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text()) // or .json() if your PHP returns JSON
+            .then(data => {
+                console.log(data); // You can show a message on the page here
+                // Optionally reset the form
+                // form.reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Something went wrong.');
+            });
 
     }
 }
@@ -94,7 +109,8 @@ $(document).ready(function () {
 
             var busUnitTo = $('#business_unit_to');
             $.each(response, function (index, businessUnit) {
-                busUnitTo.append('<option value="' + businessUnit.id + '">' +
+                // const selected = businessUnit.staff_department_id == department ? 'selected' : '';
+                busUnitTo.append('<option value="' + businessUnit.staff_department_id + '" >' +
                     businessUnit.name + '</option>');
             });
 
