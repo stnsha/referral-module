@@ -4,7 +4,7 @@
 <head>
     <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" />
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css" />
 
 </head>
 <?php
@@ -21,7 +21,7 @@ include('../common/index_adv.php');
             </h1>
         </div>
         <div class="success-message"></div>
-        <div class="main-container">
+        <div class="head-container">
             <div class="referral-filter">
                 <p style="padding-right:15px;">Filter</p>
                 <div class="referral-select">
@@ -41,11 +41,26 @@ include('../common/index_adv.php');
 
             <a href="create.php" type="button" class="btn-referral">New Referral</a>
         </div>
+        <div class="body-container">
+            <table id="myTable">
+                <thead>
+                    <tr>
+                        <th>Referral ID</th>
+                        <th>Description</th>
+                        <th>Business Unit</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
 
 
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
+
     <script>
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;

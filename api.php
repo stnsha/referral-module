@@ -103,6 +103,16 @@ function getFormDetails($business_unit_id)
     $decoded = json_decode($data['response'], true);
     return isset($decoded['data']) ? $decoded['data'] : array();
 }
+
+function getAllReferral()
+{
+    $data = getApiData('referral');
+    if ($data['httpCode'] != 200) {
+        return array();
+    }
+    $decoded = json_decode($data['response'], true);
+    return isset($decoded['data']) ? $decoded['data'] : array();
+}
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
@@ -156,6 +166,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($jsonData['business_unit_id'])) {
                     $response = array('data' => getFormDetails($jsonData['business_unit_id']));
                 }
+                break;
+
+            case 'all-referral':
+                $response = array('data' => getAllReferral());
                 break;
         }
 
