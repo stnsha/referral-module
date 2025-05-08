@@ -214,25 +214,27 @@ include('../common/index_adv.php');
             </div>
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
+                    <p class="r-title">Current/Past Treatments</p>
+
                     <div class="business-unit-1 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Audiology Form</p>
+                        <p class="r-title">Alpro Audiology</p>
                     </div>
                     <div class="business-unit-21 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Baby Form</p>
+                        <p class="r-title">Alpro Baby</p>
                     </div>
                     <div class="business-unit-2 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Clinic Form</p>
+                        <p class="r-title">Alpro Clinic</p>
                     </div>
                     <div class="business-unit-35 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Optisaver Form</p>
+                        <p class="r-title">Alpro Optisaver</p>
                     </div>
                     <div class="business-unit-20 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Physio Form</p>
+                        <p class="r-title">Alpro Physio</p>
                     </div>
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">

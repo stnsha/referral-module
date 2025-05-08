@@ -92,13 +92,16 @@ function validateForm(event) {
 let firstLoad = true;
 $(document).ready(function () {
     $.ajax({
-        url: 'backend.php?action=getBusinessUnits',
-        type: 'GET',
+        url: 'api.php',
+        type: 'POST',
         dataType: 'json',
+        data: {
+            action: 'business-units'
+        },
         success: function (response) {
             var busUnitFrom = $('#business_unit_from');
-            console.log(response);
-            $.each(response, function (index, businessUnit) {
+            // console.log(response);
+            $.each(response.data, function (index, businessUnit) {
                 const selected = businessUnit.staff_department_id == department ? 'selected' : '';
                 busUnitFrom.append('<option value="' + businessUnit.staff_department_id + '" ' + selected + '>' +
                     businessUnit.name + '</option>');
@@ -108,14 +111,14 @@ $(document).ready(function () {
             busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
 
             var busUnitTo = $('#business_unit_to');
-            $.each(response, function (index, businessUnit) {
+            $.each(response.data, function (index, businessUnit) {
                 // const selected = businessUnit.staff_department_id == department ? 'selected' : '';
                 busUnitTo.append('<option value="' + businessUnit.staff_department_id + '" >' +
                     businessUnit.name + '</option>');
             });
 
             var busUnit = $('#business_unit');
-            $.each(response, function (index, businessUnit) {
+            $.each(response.data, function (index, businessUnit) {
                 busUnit.append('<option value="' + businessUnit.id + '">' +
                     businessUnit.name + '</option>');
             });
