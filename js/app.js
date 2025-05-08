@@ -74,20 +74,29 @@ function validateForm(event) {
             method: 'POST',
             body: formData
         })
-            .then(response => response.text()) // or .json() if your PHP returns JSON
+            .then(response => response.text())
             .then(data => {
-                console.log(data); // You can show a message on the page here
-                // Optionally reset the form
-                // form.reset();
+                const parsed = JSON.parse(data);
+                const inner = JSON.parse(parsed.response);
+                console.log('Message:', inner.message);
+                console.log('HTTP Code:', parsed.httpCode);
+
+                const successCode = parsed.httpCode;
+
+                if (successCode === 200 || successCode === 201) {
+                    sessionStorage.setItem('successMessage', inner.message);
+                    window.location.href = 'index.php';
+                } else {
+                    console.log('Failed:', inner.message);
+                }
+
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Something went wrong.');
             });
 
     }
 }
-
 
 let firstLoad = true;
 $(document).ready(function () {
@@ -100,7 +109,7 @@ $(document).ready(function () {
         },
         success: function (response) {
             var busUnitFrom = $('#business_unit_from');
-            // console.log(response);
+
             $.each(response.data, function (index, businessUnit) {
                 const selected = businessUnit.staff_department_id == department ? 'selected' : '';
                 busUnitFrom.append('<option value="' + businessUnit.staff_department_id + '" ' + selected + '>' +
@@ -123,13 +132,6 @@ $(document).ready(function () {
                     businessUnit.name + '</option>');
             });
 
-            // Function to display content based on business unit ID
-            function displayContent(businessUnitId) {
-                $('.content').hide(); // Hide all content divs
-                $('.business-unit-' + businessUnitId).show(); // Show the relevant div
-            }
-
-            // Call displayContent on initial load if department is set
             if (department) {
                 displayContent(department);
             }
@@ -144,6 +146,10 @@ $(document).ready(function () {
 
         // Display content based on the selected business unit
         displayContent(businessUnitId);
+        var locationFrom = $('#location_from');
+        locationFrom.empty();
+        locationFrom.append(
+            '<option value="">Location</option>');
 
         if (businessUnitId) {
             $.ajax({
@@ -166,6 +172,8 @@ $(document).ready(function () {
 
                         assigneeFrom.append('<option value="' + assignee.id + '" ' + selected + '>' +
                             assignee.name + '</option>');
+
+                        getFromLocations(assignee.id);
                     });
 
                     firstLoad = false;
@@ -190,7 +198,7 @@ $(document).ready(function () {
                 business_unit_id: businessUnitId
             }),
             success: function (data) {
-                console.log(data);
+                // console.log(data);
 
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
@@ -289,32 +297,39 @@ $(document).ready(function () {
         });
     }
 
-    $.ajax({
-        url: 'backend.php?action=getLocations',
-        type: 'POST',
-        data: {
-            assignee_id: id_user
-        }, // Send the selected assignee ID
-        dataType: 'json',
-        success: function (response) {
-            var locationFrom = $('#location_from');
-            locationFrom.empty(); // Clear previous options
-            locationFrom.append(
-                '<option value="">Location</option>'); // Default option
+    function getFromLocations(assignee_id) {
+        $.ajax({
+            url: 'backend.php?action=getLocations',
+            type: 'POST',
+            data: {
+                assignee_id: assignee_id
+            }, // Send the selected assignee ID
+            dataType: 'json',
+            success: function (response) {
+                var locationFrom = $('#location_from');
+                locationFrom.empty(); // Clear previous options
+                locationFrom.append(
+                    '<option value="">Location</option>'); // Default option
 
-            $.each(response, function (index, location) {
-                locationFrom.append('<option value="' + location
-                    .id + '">' +
-                    location.comp_name + '</option>');
-            });
-        },
-        error: function () {
-            alert('Error loading locations');
-        }
-    });
+                $.each(response, function (index, location) {
+                    locationFrom.append('<option value="' + location
+                        .id + '">' +
+                        location.comp_name + '</option>');
+                });
+            },
+            error: function () {
+                alert('Error loading locations');
+            }
+        });
+    }
+
 
     $('#business_unit_to').change(function () {
         var businessUnitId = $(this).val();
+        var locationTo = $('#location_to');
+        locationTo.empty();
+        locationTo.append(
+            '<option value="">Location</option>');
 
         if (businessUnitId) {
             $.ajax({
@@ -341,7 +356,6 @@ $(document).ready(function () {
                 }
             });
         } else {
-            // If no business unit is selected, clear the assignee select
             $('#recipient_to').empty();
             $('#recipient_to').append('<option value="">Assignee</option>');
         }

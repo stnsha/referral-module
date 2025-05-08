@@ -126,6 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
         }
+
+        echo json_encode($response);
     } elseif (isset($_POST['action'])) {
         // Handle form-data requests
         switch ($_POST['action']) {
@@ -156,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
         }
+
+        echo json_encode($response);
     }
 }
-
-echo json_encode($response);

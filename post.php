@@ -1,10 +1,6 @@
 <?php
 require 'api.php';
-// foreach ($_POST as $key => $value) {
-//     echo $key . ': ' . $value . '<br>';
-// }
-
-// exit;
+header('Content-Type: application/json');
 
 $data = array();
 
@@ -66,7 +62,7 @@ if ($business_unit_from !== null) {
 
 $endpoint = 'referral'; // change as needed
 $response = getApiData($endpoint, $data);
-echo $response['response'];
+echo json_encode($response);
 
 exit;
 

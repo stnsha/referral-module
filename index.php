@@ -20,6 +20,7 @@ include('../common/index_adv.php');
                 <img src="img/referral.png" width="30px" style="padding-right:5px;" /> Referral
             </h1>
         </div>
+        <div class="success-message"></div>
         <div class="main-container">
             <div class="referral-filter">
                 <p style="padding-right:15px;">Filter</p>
@@ -40,6 +41,8 @@ include('../common/index_adv.php');
 
             <a href="create.php" type="button" class="btn-referral">New Referral</a>
         </div>
+
+
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -50,4 +53,15 @@ include('../common/index_adv.php');
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
     </script>
     <script src="js/app.js"></script>
+    <script>
+        const message = sessionStorage.getItem('successMessage');
+        if (message) {
+            const div = document.querySelector('.success-message');
+            if (div) {
+                div.textContent = message;
+                div.classList.add('alert', 'alert-success'); // optional styling
+            }
+            sessionStorage.removeItem('successMessage');
+        }
+    </script>
 </body>
