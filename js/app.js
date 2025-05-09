@@ -467,7 +467,7 @@ $(document).ready(function () {
                 orderable: false,
                 searchable: false,
                 render: function (data, type, row) {
-                    return `<button class="view-btn" data-id="${row.id}">View</button>`;
+                    return `<a class="view-btn" type="button" data-id="${row.id}" href="view.php?id=${row.id}">View</a>`;
                 }
             }
         ]
