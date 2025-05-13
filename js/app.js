@@ -67,8 +67,10 @@ function validateForm(event) {
             }
         });
 
-        // form.submit();
         const formData = new FormData(form);
+        // for (const [key, value] of formData.entries()) {
+        //     console.log(`${key}: ${value}`);
+        // }
 
         fetch('post.php', {
             method: 'POST',
@@ -132,9 +134,9 @@ $(document).ready(function () {
                     businessUnit.name + '</option>');
             });
 
-            if (department) {
-                displayContent(department);
-            }
+            // if (department) {
+            //     displayContent(department);
+            // }
         },
         error: function () {
             alert('Error loading business units');
@@ -198,24 +200,31 @@ $(document).ready(function () {
                 business_unit_id: businessUnitId
             }),
             success: function (data) {
-                // console.log(data);
+                // console.log(data.data);
 
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
                 targetDiv.show();
                 targetDiv.find('[data-required="true"]').prop('required', true);
                 $('.content .form-container').remove();
+                // const bu_input = document.createElement('input');
+                // bu_input.type = 'text';
+                // bu_input.name = 'business_unit';
+                // bu_input.value = businessUnitId;
+                // targetDiv.append(bu_input);
 
                 data.data.forEach(({ form_id, label_name, is_hidden, form_details }) => {
                     const formContainer = $('<div class="form-container mb-3"></div>');
-
                     form_details.forEach(detail => {
-                        const { field_name, field_type, is_required, field_value } = detail;
+                        const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
+
                         const errorId = 'error-' + field_name;
                         const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
 
                         let wrapper;
                         let input;
+
+                        wrapper = $('<div class="mb-2"></div>');
 
                         if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
                             wrapper = $('<div class="mb-2"></div>');
@@ -228,7 +237,7 @@ $(document).ready(function () {
                                     type: field_type,
                                     class: 'form-check-input border',
                                     name: field_name + (field_type === 'checkbox' ? '[]' : ''),
-                                    value: option.field_value,
+                                    value: option.form_detail_id,
                                     'data-required': is_required
                                 });
                                 const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
@@ -254,7 +263,7 @@ $(document).ready(function () {
 
                             field_value.forEach(option => {
                                 input.append($('<option>', {
-                                    value: option.field_value,
+                                    value: option.form_detail_id,
                                     text: option.field_value
                                 }));
                             });
@@ -283,10 +292,11 @@ $(document).ready(function () {
                             }
                         });
 
+                        wrapper.append(input);
                         wrapper.append(errorDiv);
                         formContainer.append(wrapper);
-                    });
 
+                    });
                     targetDiv.append(formContainer);
                 });
             }
