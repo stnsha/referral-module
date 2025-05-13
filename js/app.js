@@ -68,9 +68,9 @@ function validateForm(event) {
         });
 
         const formData = new FormData(form);
-        // for (const [key, value] of formData.entries()) {
-        //     console.log(`${key}: ${value}`);
-        // }
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
 
         fetch('post.php', {
             method: 'POST',
@@ -201,19 +201,15 @@ $(document).ready(function () {
             }),
             success: function (data) {
                 // console.log(data.data);
+                const forms = data.data.forms;
 
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
                 targetDiv.show();
                 targetDiv.find('[data-required="true"]').prop('required', true);
                 $('.content .form-container').remove();
-                // const bu_input = document.createElement('input');
-                // bu_input.type = 'text';
-                // bu_input.name = 'business_unit';
-                // bu_input.value = businessUnitId;
-                // targetDiv.append(bu_input);
 
-                data.data.forEach(({ form_id, label_name, is_hidden, form_details }) => {
+                forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
                     const formContainer = $('<div class="form-container mb-3"></div>');
                     form_details.forEach(detail => {
                         const { form_detail_id, field_name, field_type, is_required, field_value } = detail;

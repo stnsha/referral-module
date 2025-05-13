@@ -18,7 +18,6 @@ $data['business_units'] = array(
     )
 );
 
-// $business_unit = isset($_POST['business_unit']) ? $_POST['business_unit'] : $business_unit_from;
 $data['referral'] = array(
     'customer_id' => isset($_POST['customer_id']) ? (int)$_POST['customer_id'] : null,
     'referral_reason' => isset($_POST['referral_reason']) ? $_POST['referral_reason'] : '',
@@ -59,7 +58,7 @@ if ($business_unit_from !== null) {
     );
 }
 
-// echo json_encode($data);
+echo json_encode($data);
 
 $endpoint = 'referral'; // change as needed
 $response = getApiData($endpoint, $data);
