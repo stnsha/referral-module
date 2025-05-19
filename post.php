@@ -58,7 +58,7 @@ if ($business_unit_from !== null) {
     );
 }
 
-echo json_encode($data);
+// echo json_encode($data);
 
 $endpoint = 'referral'; // change as needed
 $response = getApiData($endpoint, $data);
