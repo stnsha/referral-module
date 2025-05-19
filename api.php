@@ -101,7 +101,8 @@ function getFormDetails($business_unit_id)
     }
 
     $decoded = json_decode($data['response'], true);
-    return isset($decoded['data']) ? $decoded['data'] : array();
+
+    return isset($decoded) ? $decoded : array();
 }
 
 function getAllReferral()

@@ -199,9 +199,8 @@ $(document).ready(function () {
                 action: 'form-details',
                 business_unit_id: businessUnitId
             }),
-            success: function (data) {
-                // console.log(data.data);
-                const forms = data.data.forms;
+            success: function (response) {
+                const forms = response.data.forms;
 
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
