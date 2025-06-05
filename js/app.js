@@ -210,7 +210,11 @@ $(document).ready(function () {
 
                 forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
                     const formContainer = $('<div class="form-container mb-3"></div>');
-                    form_details.forEach(detail => {
+                    const normalizedDetails = Array.isArray(form_details)
+                        ? form_details
+                        : Object.values(form_details || {});
+
+                    normalizedDetails.forEach(detail => {
                         const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
 
                         const errorId = 'error-' + field_name;
