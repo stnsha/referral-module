@@ -107,6 +107,21 @@ function getAssignee($bu_id)
     return $assignees;
 }
 
+function getStaff($staff_id)
+{
+    global $conn;
+
+    $staff_id = mysqli_real_escape_string($conn, $staff_id);
+    $query = "SELECT nama_staff FROM staff WHERE id = $staff_id";
+    $result = mysqli_query($conn, $query);
+
+    if ($row = mysqli_fetch_assoc($result)) {
+        return $row['nama_staff'];
+    }
+
+    return null;
+}
+
 if (isset($_GET['action']) && $_GET['action'] == 'getLocations' && isset($_POST['assignee_id'])) {
     header('Content-Type: application/json');
     echo json_encode(getLocations($_POST['assignee_id']));
@@ -128,5 +143,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'searchCustomer' && isset($_POS
 if (isset($_GET['action']) && $_GET['action'] == 'getAssignees' && isset($_POST['business_unit_id'])) {
     header('Content-Type: application/json');
     echo json_encode(getAssignee($_POST['business_unit_id']));
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] == 'getStaff' && isset($_GET['staff_id'])) {
+    header('Content-Type: application/json');
+    echo json_encode(getStaff($_GET['staff_id']));
     exit;
 }
