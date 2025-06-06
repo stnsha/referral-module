@@ -17,7 +17,7 @@ include('../common/index_adv.php');
 <body>
     <div class="container text-center bg-white rounded p-2">
         <p class="r-main-title">New Referral</p>
-        <form action="post.php" method="POST" id="referral-form" name="referral-form" onsubmit="validateForm(event)"
+        <form action="post.php" method="POST" id="referral-form" name="referral-form" class="referral-view" onsubmit="validateForm(event)"
             enctype="multipart/form-data">
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">

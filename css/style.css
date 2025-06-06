@@ -94,7 +94,8 @@ select {
     color: black;
 }
 
-.btn-referral, .submitButton {
+.btn-referral,
+.submitButton {
     text-decoration: none;
     padding: 8px 15px;
     background: #135caa;
@@ -104,7 +105,13 @@ select {
     cursor: pointer;
 }
 
-.btn-referral:hover, .submitButton:hover {
+.btn-referral:hover,
+.submitButton:hover {
     color: #fff;
     background: #0a4788;
+}
+
+.referral-view input[readonly],
+.referral-view textarea[readonly] {
+    background-color: rgb(238, 236, 236);
 }
