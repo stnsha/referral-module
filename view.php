@@ -92,20 +92,20 @@ include('../common/index_adv.php');
                         <p class="r-title">Referring Indication</p>
                         <div class="mb-2">
                             <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                            <input type="text" name="referral_reason" class="form-control form-control-sm">
+                            <input type="text" name="referral_reason" id="referral_reason" class="form-control form-control-sm" readonly>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
-                            <textarea name="referral_condition" class="form-control form-control-sm"
-                                rows="5"></textarea>
+                            <textarea name="referral_condition" id="referral_condition" class="form-control form-control-sm"
+                                rows="5" readonly></textarea>
                             <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
                             </div>
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Relevant Medical History (if applicable)</p>
-                            <textarea name="medical_history" class="form-control form-control-sm" rows="5"></textarea>
+                            <textarea name="medical_history" id="medical_history" class="form-control form-control-sm" rows="5" readonly></textarea>
                             <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
                             </div>
                         </div>
@@ -135,8 +135,8 @@ include('../common/index_adv.php');
                         <div class="d-flex mb-2">
                             <div class="me-2">
                                 <p class="r-text">I/C No.<span style="color:red;">*</span></p>
-                                <input type="hidden" name="customer_id">
-                                <input type="text" name="customer_ic" class="form-control form-control-sm">
+                                <input type="hidden" name="customer_id" id="customer_id" readonly>
+                                <input type="text" name="customer_ic" id="customer_ic" class="form-control form-control-sm" readonly>
                                 <div class="error-message" id="error-customer-ic" style="color: red;font-size:12px;">
                                 </div>
                             </div>
@@ -145,7 +145,7 @@ include('../common/index_adv.php');
                             </div>
                             <div class="flex-grow-1 ms-2">
                                 <p class="r-text">Alpro VIP Number</p>
-                                <input type="text" name="" class="form-control form-control-sm">
+                                <input type="text" name="" class="form-control form-control-sm" readonly>
                             </div> -->
                         </div>
                         <!-- <div class="mb-2">
@@ -158,19 +158,19 @@ include('../common/index_adv.php');
                         </div> -->
                         <div class="mb-2">
                             <p class="r-text">Name<span style="color:red;">*</span></p>
-                            <input type="text" name="customer_name" class="form-control form-control-sm">
+                            <input type="text" name="customer_name" id="customer_name" class="form-control form-control-sm" readonly>
                             <div class="error-message" id="error-customer-name" style="color: red;font-size:12px;">
                             </div>
                             <div class="row mb-2">
                                 <div class="col">
                                     <p class="r-text">Phone No.<span style="color:red;">*</span></p>
-                                    <input type="text" name="customer_phone" class="form-control form-control-sm">
+                                    <input type="text" name="customer_phone" id="customer_phone" class="form-control form-control-sm" readonly>
                                     <div class="error-message" id="error-customer-phone"
                                         style="color: red;font-size:12px;"></div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Email</p>
-                                    <input type="text" name="customer_email" class="form-control form-control-sm">
+                                    <input type="text" name="customer_email" id="customer_email" class="form-control form-control-sm" readonly>
                                     <div class="error-message" id="error-customer-email"
                                         style="color: red;font-size:12px;"></div>
                                 </div>
@@ -178,21 +178,21 @@ include('../common/index_adv.php');
                             <div class="row mb-2">
                                 <div class="col">
                                     <p class="r-text">Age</p>
-                                    <input type="text" name="customer_age" class="form-control form-control-sm">
+                                    <input type="text" name="customer_age" id="customer_age" class="form-control form-control-sm" readonly>
                                     <div class="error-message" id="error-customer-age"
                                         style="color: red;font-size:12px;"></div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Gender</p>
-                                    <input type="text" name="customer_gender" class="form-control form-control-sm">
+                                    <input type="text" name="customer_gender" id="customer_gender" class="form-control form-control-sm" readonly>
                                     <div class="error-message" id="error-customer-gender"
                                         style="color: red;font-size:12px;"></div>
                                 </div>
                             </div>
                             <div class="mb-2">
                                 <p class="r-text">Address<span style="color:red;">*</span></p>
-                                <textarea name="customer_address" class="form-control form-control-sm"
-                                    rows="3"></textarea>
+                                <textarea name="customer_address" id="customer_address" class="form-control form-control-sm"
+                                    rows="3" readonly></textarea>
                                 <div class="error-message" id="error-customer-address"
                                     style="color: red;font-size:12px;"></div>
                             </div>

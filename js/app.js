@@ -72,30 +72,30 @@ function validateForm(event) {
             console.log(`${key}: ${value}`);
         }
 
-        // fetch('post.php', {
-        //     method: 'POST',
-        //     body: formData
-        // })
-        //     .then(response => response.text())
-        //     .then(data => {
-        //         const parsed = JSON.parse(data);
-        //         const inner = JSON.parse(parsed.response);
-        //         console.log('Message:', inner.message);
-        //         console.log('HTTP Code:', parsed.httpCode);
+        fetch('post.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text())
+            .then(data => {
+                const parsed = JSON.parse(data);
+                const inner = JSON.parse(parsed.response);
+                console.log('Message:', inner.message);
+                console.log('HTTP Code:', parsed.httpCode);
 
-        //         const successCode = parsed.httpCode;
+                const successCode = parsed.httpCode;
 
-        //         if (successCode === 200 || successCode === 201) {
-        //             sessionStorage.setItem('successMessage', inner.message);
-        //             window.location.href = 'index.php';
-        //         } else {
-        //             console.log('Failed:', inner.message);
-        //         }
+                if (successCode === 200 || successCode === 201) {
+                    sessionStorage.setItem('successMessage', inner.message);
+                    // window.location.href = 'index.php';
+                } else {
+                    console.log('Failed:', inner.message);
+                }
 
-        //     })
-        //     .catch(error => {
-        //         console.error('Error:', error);
-        //     });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
 
     }
 }

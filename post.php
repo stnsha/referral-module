@@ -11,12 +11,12 @@ $data['business_units'] = array(
     'assignee' => array(
         'staff_id' => isset($_POST['assignee_from']) ? (int)$_POST['assignee_from'] : null,
         'staff_department_id' => $business_unit_from,
-        'location' => $_POST['location_from']
+        'location' => isset($_POST['location_from']) ? $_POST['location_from'] : null
     ),
     'recipient' => array(
         'staff_id' => isset($_POST['recipient_to']) ? (int)$_POST['recipient_to'] : null,
         'staff_department_id' => $business_unit_to,
-        'location' => $_POST['location_to']
+        'location' => isset($_POST['location_to']) ? $_POST['location_to'] : null
     )
 );
 

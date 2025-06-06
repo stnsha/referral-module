@@ -60,16 +60,29 @@ function getBusinessUnits()
     return $departments;
 }
 
-function searchCustomer($icno)
+function searchCustomer($icno = null, $customer_id = null)
 {
     global $conn;
 
-    $icno = mysqli_real_escape_string($conn, $icno);
-    $query = "SELECT id, customer_name, ic, gender, birth_date, phone, email, c_addr FROM customer WHERE ic LIKE '%$icno%'";
+    $conditions = array();
+    if ($icno !== null && $icno !== '') {
+        $icno = mysqli_real_escape_string($conn, $icno);
+        $conditions[] = "ic LIKE '%$icno%'";
+    }
+    if ($customer_id > 0) {
+        $conditions[] = "id = $customer_id";
+    }
+
+    if (empty($conditions)) {
+        return array();
+    }
+
+    $query = "SELECT id, customer_name, ic, gender, birth_date, phone, email, c_addr FROM customer WHERE " . implode(" OR ", $conditions);
+
     $searchIcno = mysqli_query($conn, $query);
 
     if (!$searchIcno || mysqli_num_rows($searchIcno) == 0) {
-        return array(); // Return empty array if no results
+        return array();
     }
 
     $customerDetails = array();
@@ -107,19 +120,48 @@ function getAssignee($bu_id)
     return $assignees;
 }
 
-function getStaff($staff_id)
+function getStaff($staff_id, $location)
 {
     global $conn;
 
     $staff_id = mysqli_real_escape_string($conn, $staff_id);
-    $query = "SELECT nama_staff FROM staff WHERE id = $staff_id";
+    $location = mysqli_real_escape_string($conn, $location);
+
+    $query = "SELECT s.nama_staff, r.name 
+              FROM staff s 
+              INNER JOIN ref_business_unit r ON s.department = r.staff_department_id 
+              WHERE s.id = $staff_id";
+
     $result = mysqli_query($conn, $query);
 
+    $nama_staff = '';
+    $department = '';
+
     if ($row = mysqli_fetch_assoc($result)) {
-        return $row['nama_staff'];
+        $nama_staff = $row['nama_staff'];
+        $department = $row['name'];
     }
 
-    return null;
+    $comp_name = '';
+    $query2 = "SELECT comp_name FROM outlet WHERE id = $location";
+    $result2 = mysqli_query($conn, $query2);
+
+    if ($result2 && $row2 = mysqli_fetch_assoc($result2)) {
+        $comp_name = ucwords(strtolower($row2['comp_name']));
+        $pos = strpos($comp_name, '(');
+        if ($pos !== false) {
+            $comp_name = trim(substr($comp_name, 0, $pos));
+        }
+    }
+
+    $arr[] = array(
+        'nama_staff' => $nama_staff,
+        'department' => $department,
+        'location' => $comp_name,
+    );
+
+
+    return $arr;
 }
 
 if (isset($_GET['action']) && $_GET['action'] == 'getLocations' && isset($_POST['assignee_id'])) {
@@ -134,9 +176,15 @@ if (isset($_GET['action']) && $_GET['action'] == 'getBusinessUnits') {
     exit;
 }
 
-if (isset($_GET['action']) && $_GET['action'] == 'searchCustomer' && isset($_POST['icno'])) {
+if (
+    isset($_GET['action']) && $_GET['action'] == 'searchCustomer' &&
+    (isset($_POST['icno']) || isset($_POST['customer_id']))
+) {
+    $icno = isset($_POST['icno']) ? $_POST['icno'] : null;
+    $customer_id = isset($_POST['customer_id']) ? $_POST['customer_id'] : null;
+
     header('Content-Type: application/json');
-    echo json_encode(searchCustomer($_POST['icno']));
+    echo json_encode(searchCustomer($icno, $customer_id));
     exit;
 }
 
@@ -148,6 +196,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'getAssignees' && isset($_POST[
 
 if (isset($_GET['action']) && $_GET['action'] == 'getStaff' && isset($_GET['staff_id'])) {
     header('Content-Type: application/json');
-    echo json_encode(getStaff($_GET['staff_id']));
+    echo json_encode(getStaff($_GET['staff_id'], $_GET['location']));
     exit;
 }
