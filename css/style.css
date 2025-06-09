@@ -115,3 +115,9 @@ select {
 .referral-view textarea[readonly] {
     background-color: rgb(238, 236, 236);
 }
+
+.referral-view input[type="radio"][disabled],
+.referral-view input[type="checkbox"][disabled] {
+    opacity: 1;
+    pointer-events: none;
+}
