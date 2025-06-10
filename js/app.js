@@ -87,7 +87,7 @@ function validateForm(event) {
 
                 if (successCode === 200 || successCode === 201) {
                     sessionStorage.setItem('successMessage', inner.message);
-                    // window.location.href = 'index.php';
+                    window.location.href = 'index.php';
                 } else {
                     console.log('Failed:', inner.message);
                 }

@@ -1,3 +1,106 @@
+function validateForm(event) {
+    event.preventDefault();
+    var form = document.forms["referral-form"];
+
+    function getFieldValue(fieldName) {
+        var field = form[fieldName];
+        return field ? field.value : null;
+    }
+
+    function setErrorMessage(fieldName, message) {
+        var errorElement = document.getElementById('error-' + fieldName);
+        if (errorElement) {
+            errorElement.innerHTML = message;
+        }
+    }
+
+    var errorElements = document.querySelectorAll('.error-message');
+    errorElements.forEach(function (element) {
+        element.innerHTML = '';
+    });
+
+    function isEmpty(val) {
+        return val === null || val.trim() === "";
+    }
+
+    function isInteger(val) {
+        return /^\d+$/.test(val);
+    }
+
+    function isEmail(val) {
+        return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val);
+    }
+
+    function isIC(val) {
+        return /^\d{12}$/.test(val);
+    }
+
+    var hasError = false;
+
+    function markError(fieldName, condition, message) {
+        if (condition) {
+            setErrorMessage(fieldName, message);
+            hasError = true;
+        }
+    }
+
+    $('.reply-form [data-required="true"]:visible').each(function () {
+        const field = $(this);
+        const value = field.val();
+        const fieldName = field.attr('name');
+        const errorId = 'error-' + fieldName;
+
+        if (field.is(':checkbox') || field.is(':radio')) {
+            const checked = $('[name="' + fieldName + '"]:checked').length > 0;
+            if (!checked) {
+                setErrorMessage(fieldName, 'This field is required');
+                hasError = true;
+            }
+        } else if (!value || value.trim() === '') {
+            setErrorMessage(fieldName, 'This field is required');
+            hasError = true;
+        }
+    });
+
+    if (!hasError) {
+        $(this).find(':input').each(function () {
+            if ($(this).is(':hidden')) {
+                $(this).prop('required', false);
+            }
+        });
+
+        const formData = new FormData(form);
+        // for (const [key, value] of formData.entries()) {
+        //     console.log(`${key}: ${value}`);
+        // }
+
+        fetch('update.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text())
+            .then(data => {
+                const parsed = JSON.parse(data);
+                const inner = JSON.parse(parsed.response);
+                console.log('Message:', inner.message);
+                console.log('HTTP Code:', parsed.httpCode);
+
+                const successCode = parsed.httpCode;
+
+                if (successCode === 200 || successCode === 201) {
+                    sessionStorage.setItem('successMessage', inner.message);
+                    window.location.href = 'index.php';
+                } else {
+                    console.log('Failed:', inner.message);
+                }
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+    }
+}
 $(document).ready(function () {
     $.ajax({
         url: 'api.php',
@@ -8,8 +111,6 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
-            // console.log(response.data.referringIndication);
-
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -25,7 +126,6 @@ $(document).ready(function () {
             recipientTo.val('');
             business_unit_to.val('');
             location_to.val('');
-
             response.data.referralDetails.forEach(function (item) {
                 getStaff(item.staff_id, item.location, function (staffInfo) {
                     if (item.sequence == 1) {
@@ -38,6 +138,10 @@ $(document).ready(function () {
                         location_to.val(staffInfo[0].location);
                     }
                 });
+
+                if (item.is_filled == 0) {
+                    displayContent(item.staff_department_id);
+                }
             })
 
             var referringIndication = response.data.referringIndication;
@@ -111,14 +215,12 @@ $(document).ready(function () {
 
             var bu_id = response.data.referringIndication.business_unit_id;
             var initialTreatments = response.data.initialTreatment;
-
             $('.content').hide();
             const targetDiv = $('.business-unit-' + bu_id);
             targetDiv.show();
             targetDiv.find('[data-required="true"]').prop('required', true);
             $('.content .form-container').remove();
 
-            console.log(initialTreatments);
             initialTreatments.forEach(({ form_id, label_name, is_hidden, form_details, form_answer }) => {
                 const formContainer = $('<div class="form-container mb-3"></div>');
                 const normalizedDetails = Array.isArray(form_details)
@@ -222,9 +324,6 @@ $(document).ready(function () {
 
                 targetDiv.append(formContainer);
             });
-
-
-
         },
         error: function () {
             console.log("Failed to fetch referral details.");
@@ -267,22 +366,26 @@ $(document).ready(function () {
         });
     }
 
-    function displayContent(bu_id, referringIndication) {
+    function displayContent(businessUnitId) {
         $.ajax({
             url: 'api.php',
             type: 'POST',
             dataType: 'json',
             data: JSON.stringify({
                 action: 'form-details',
-                business_unit_id: bu_id
+                business_unit_id: businessUnitId
             }),
             success: function (response) {
                 const forms = response.data.forms;
-                $('.content').hide();
-                const targetDiv = $('.business-unit-' + bu_id);
+
+                $('.reply-content').hide();
+                const targetDiv = $('.reply-form');
                 targetDiv.show();
                 targetDiv.find('[data-required="true"]').prop('required', true);
-                $('.content .form-container').remove();
+                $('.reply-content .form-container').remove();
+
+                const bu_id_reply = $('<input type="text" name="bu_id_reply" hidden value=' + businessUnitId + ' readonly/>');
+                $('.reply-content').append(bu_id_reply);
 
                 forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
                     const formContainer = $('<div class="form-container mb-3"></div>');

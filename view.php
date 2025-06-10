@@ -16,9 +16,9 @@ include('../common/index_adv.php');
 
 <body>
     <div class="container text-center bg-white rounded p-2">
-        <p class="r-main-title">New Referral</p>
-        <form action="post.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
-            onsubmit="validateForm(event)" enctype="multipart/form-data">
+        <p class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></p>
+        <span class="referral-status">hey</span>
+        <div class="referral-show">
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
                     <div class="border-bottom pb-3 mb-3">
@@ -171,14 +171,16 @@ include('../common/index_adv.php');
                                     <input type="text" name="customer_phone" id="customer_phone"
                                         class="form-control form-control-sm" readonly>
                                     <div class="error-message" id="error-customer-phone"
-                                        style="color: red;font-size:12px;"></div>
+                                        style="color: red;font-size:12px;">
+                                    </div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Email</p>
                                     <input type="text" name="customer_email" id="customer_email"
                                         class="form-control form-control-sm" readonly>
                                     <div class="error-message" id="error-customer-email"
-                                        style="color: red;font-size:12px;"></div>
+                                        style="color: red;font-size:12px;">
+                                    </div>
                                 </div>
                             </div>
                             <div class="row mb-2">
@@ -187,7 +189,8 @@ include('../common/index_adv.php');
                                     <input type="text" name="customer_age" id="customer_age"
                                         class="form-control form-control-sm" readonly>
                                     <div class="error-message" id="error-customer-age"
-                                        style="color: red;font-size:12px;"></div>
+                                        style="color: red;font-size:12px;">
+                                    </div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Gender</p>
@@ -202,7 +205,8 @@ include('../common/index_adv.php');
                                 <textarea name="customer_address" id="customer_address"
                                     class="form-control form-control-sm" rows="3" readonly></textarea>
                                 <div class="error-message" id="error-customer-address"
-                                    style="color: red;font-size:12px;"></div>
+                                    style="color: red;font-size:12px;">
+                                </div>
                             </div>
                         </div>
                         <div class="border-bottom pb-3 mb-3">
@@ -253,6 +257,35 @@ include('../common/index_adv.php');
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">
                     <p class="r-title">Referral PIC History</p>
+                    <div class="timeline">
+                        <div class="events">
+                            <div class="event life">
+                                <!-- The circle is an svg -->
+                                <svg class="marker" xmlns="http://www.w3.org/2000/svg" width="12" height="12">
+                                    <circle cx="6" cy="6" r="6"></circle>
+                                </svg>
+                                <div class="content">
+                                    <time>1989</time>
+                                    <div class="text">
+                                        <p>I was born in the north of Sweden</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
+            onsubmit="validateForm(event)" enctype="multipart/form-data">
+            <div class="row align-items-start text-start py-2 px-4">
+                <div class="col h-auto border rounded ms-2 p-2">
+                    <input type="hidden" name="referral_id" value="<?php echo $_GET['id']  ?>" readonly>
+                    <p class="r-title">Reply Form</p>
+                    <div class="reply-form reply-content">
+                        <!-- style="display:none;"-->
+                    </div>
                 </div>
             </div>
             <div class="row align-items-start text-start py-2 px-4">
@@ -263,13 +296,10 @@ include('../common/index_adv.php');
                 </div>
             </div>
         </form>
-
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
             const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
         </script>
         <script src="js/view.js"></script>
-
-
 </body>

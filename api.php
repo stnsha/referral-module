@@ -1,11 +1,13 @@
 <?php
 header('Content-Type: application/json');
 
-function getApiData($prefix, $data = null)
+function getApiData($prefix, $data = null, $method)
 {
     $host = 'http://172.18.28.51:8002/api/';
     $token = '1|4lpr0@r3f3rr4L';
     $url = $host . $prefix;
+
+    $method = strtoupper($method);
 
     $headers = array(
         'Authorization: ' . $token,
@@ -14,23 +16,34 @@ function getApiData($prefix, $data = null)
     );
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-    if ($data) {
+    if ($method === 'GET') {
+        if (!empty($data)) {
+            $url .= '?' . http_build_query($data);
+        }
+        curl_setopt($ch, CURLOPT_URL, $url);
+    } elseif ($method === 'POST') {
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    } elseif ($method === 'PUT') {
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    } elseif ($method === 'DELETE') {
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
     }
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
 
-    // Simple error display
-    if ($response === false && ($httpCode !== 200 && $httpCode !== 201)) {
+    if ($response === false || ($httpCode !== 200 && $httpCode !== 201)) {
         die(json_encode(array(
             'success' => false,
             'error' => 'API Request Failed',
@@ -52,7 +65,7 @@ function getApiData($prefix, $data = null)
 
 function getBusinessUnit()
 {
-    $data = getApiData('business-units');
+    $data = getApiData('business-units', null, 'GET');
     if ($data['httpCode'] != 200) {
         return array();
     }
@@ -62,7 +75,6 @@ function getBusinessUnit()
 
 function createForm($data)
 {
-    // Transform data to match Laravel's expected format
     $formattedData = array(
         'business_unit_id' => (int)$data['business_unit_id'],
         'label_name' => $data['label_name'],
@@ -72,12 +84,11 @@ function createForm($data)
         'is_required' => isset($data['is_required']) ? (int)$data['is_required'] : 0,
     );
 
-    // Add value_fields if present
     if (isset($data['value_fields']) && is_array($data['value_fields'])) {
         $formattedData['value_fields'] = array_values(array_filter($data['value_fields']));
     }
 
-    $data = getApiData('form', $formattedData);
+    $data = getApiData('form', $formattedData, 'POST');
     $result  = $data['response'];
     $httpCode = $data['httpCode'];
 
@@ -95,7 +106,7 @@ function createForm($data)
 
 function getFormDetails($business_unit_id)
 {
-    $data = getApiData('form/show/' . $business_unit_id);
+    $data = getApiData('form/show/' . $business_unit_id, null, 'GET');
     if ($data['httpCode'] != 200) {
         return array();
     }
@@ -107,7 +118,7 @@ function getFormDetails($business_unit_id)
 
 function getAllReferral()
 {
-    $data = getApiData('referral');
+    $data = getApiData('referral', null, 'GET');
     if ($data['httpCode'] != 200) {
         return array();
     }
@@ -118,7 +129,7 @@ function getAllReferral()
 
 function getReferral($referral_id)
 {
-    $data = getApiData('referral/' . $referral_id);
+    $data = getApiData('referral/' . $referral_id, null, 'GET');
 
     if ($data['httpCode'] != 200) {
         return array();

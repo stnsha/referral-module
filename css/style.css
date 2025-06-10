@@ -111,13 +111,13 @@ select {
     background: #0a4788;
 }
 
-.referral-view input[readonly],
-.referral-view textarea[readonly] {
+.referral-show input[readonly],
+.referral-show textarea[readonly] {
     background-color: rgb(238, 236, 236);
 }
 
-.referral-view input[type="radio"][disabled],
-.referral-view input[type="checkbox"][disabled] {
+.referral-show input[type="radio"][disabled],
+.referral-show input[type="checkbox"][disabled] {
     opacity: 1;
     pointer-events: none;
 }
