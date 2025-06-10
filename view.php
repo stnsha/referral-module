@@ -16,8 +16,10 @@ include('../common/index_adv.php');
 
 <body>
     <div class="container text-center bg-white rounded p-2">
-        <p class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></p>
-        <span class="referral-status">hey</span>
+        <div class="col align-items-center">
+            <span class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></span>
+            <span class="referral-status">hey</span>
+        </div>
         <div class="referral-show">
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
@@ -257,23 +259,6 @@ include('../common/index_adv.php');
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">
                     <p class="r-title">Referral PIC History</p>
-                    <div class="timeline">
-                        <div class="events">
-                            <div class="event life">
-                                <!-- The circle is an svg -->
-                                <svg class="marker" xmlns="http://www.w3.org/2000/svg" width="12" height="12">
-                                    <circle cx="6" cy="6" r="6"></circle>
-                                </svg>
-                                <div class="content">
-                                    <time>1989</time>
-                                    <div class="text">
-                                        <p>I was born in the north of Sweden</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -288,11 +273,19 @@ include('../common/index_adv.php');
                     </div>
                 </div>
             </div>
-            <div class="row align-items-start text-start py-2 px-4">
-                <div class="d-flex flex-column justify-content-center align-items-center">
-                    <button type="submit" id="real-submit" style="display: none;"></button>
-                    <input type="submit" value="Submit" class="submitButton">
-                    <a href="index.php" class="btn-back">Back</a>
+            <div class="row py-2 px-4">
+                <div class="d-flex justify-content-end align-items-center">
+                    <div class="d-flex flex-column align-items-center">
+                        <select name="status" id="" required>
+                            <option value="">All Status</option>
+                            <option value="1">Open</option>
+                            <option value="2">In Progress</option>
+                            <option value="3">Forwarded</option>
+                            <option value="4">Closed</option>
+                        </select>
+                        <input type="submit" value="Submit" class="submitButton my-2">
+                        <a href="index.php" class="btn-back">Back</a>
+                    </div>
                 </div>
             </div>
         </form>

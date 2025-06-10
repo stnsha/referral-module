@@ -145,6 +145,7 @@ $(document).ready(function () {
             })
 
             var referringIndication = response.data.referringIndication;
+            console.log(referringIndication.status);
 
             var referral_reason = $('#referral_reason');
             var referral_condition = $('#referral_condition');
@@ -157,6 +158,7 @@ $(document).ready(function () {
             referral_reason.val(referringIndication.referral_reason);
             referral_condition.val(referringIndication.referral_condition);
             medical_history.val(referringIndication.medical_history);
+
             $('input[name="priority"]').on('click', function (e) {
                 e.preventDefault();
             });
@@ -220,6 +222,14 @@ $(document).ready(function () {
             targetDiv.show();
             targetDiv.find('[data-required="true"]').prop('required', true);
             $('.content .form-container').remove();
+
+            var status = referringIndication.status;
+            var span = document.querySelector('.referral-status');
+            span.textContent = status;
+
+            if (status === 'Open') {
+                span.classList.add('bg-open');
+            }
 
             initialTreatments.forEach(({ form_id, label_name, is_hidden, form_details, form_answer }) => {
                 const formContainer = $('<div class="form-container mb-3"></div>');
