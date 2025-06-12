@@ -276,7 +276,7 @@ include('../common/index_adv.php');
             <div class="row py-2 px-4">
                 <div class="d-flex justify-content-end align-items-center">
                     <div class="d-flex flex-column align-items-center">
-                        <select name="status" id="" required>
+                        <select name="referral-status" id="" required>
                             <option value="">All Status</option>
                             <option value="1">Open</option>
                             <option value="2">In Progress</option>

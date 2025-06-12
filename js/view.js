@@ -145,7 +145,7 @@ $(document).ready(function () {
             })
 
             var referringIndication = response.data.referringIndication;
-            console.log(referringIndication.status);
+            console.log(referringIndication);
 
             var referral_reason = $('#referral_reason');
             var referral_condition = $('#referral_condition');
