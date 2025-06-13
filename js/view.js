@@ -101,6 +101,22 @@ function validateForm(event) {
 
     }
 }
+
+// var acc = document.getElementsByClassName("referral-accordion");
+// var i;
+
+// for (var i = 0; i < acc.length; i++) {
+//     acc[i].addEventListener("click", function () {
+//         this.classList.toggle("active");
+//         var panel = this.nextElementSibling;
+//         if (panel.style.maxHeight) {
+//             panel.style.maxHeight = null;
+//         } else {
+//             panel.style.maxHeight = panel.scrollHeight + "px";
+//         }
+//     });
+// }
+
 $(document).ready(function () {
     $.ajax({
         url: 'api.php',
@@ -111,6 +127,7 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
+            // console.log(response.data);
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -138,14 +155,9 @@ $(document).ready(function () {
                         location_to.val(staffInfo[0].location);
                     }
                 });
-
-                if (item.is_filled == 0) {
-                    displayContent(item.staff_department_id);
-                }
             })
 
             var referringIndication = response.data.referringIndication;
-            console.log(referringIndication);
 
             var referral_reason = $('#referral_reason');
             var referral_condition = $('#referral_condition');
@@ -217,19 +229,20 @@ $(document).ready(function () {
 
             var bu_id = response.data.referringIndication.business_unit_id;
             var initialTreatments = response.data.initialTreatment;
+
             $('.content').hide();
             const targetDiv = $('.business-unit-' + bu_id);
             targetDiv.show();
             targetDiv.find('[data-required="true"]').prop('required', true);
             $('.content .form-container').remove();
 
-            var status = referringIndication.status;
-            var span = document.querySelector('.referral-status');
-            span.textContent = status;
+            // var status = referringIndication.status;
+            // var span = document.querySelector('.referral-status');
+            // span.textContent = status;
 
-            if (status === 'Open') {
-                span.classList.add('bg-open');
-            }
+            // if (status === 'Open') {
+            //     span.classList.add('bg-open');
+            // }
 
             initialTreatments.forEach(({ form_id, label_name, is_hidden, form_details, form_answer }) => {
                 const formContainer = $('<div class="form-container mb-3"></div>');
@@ -334,6 +347,38 @@ $(document).ready(function () {
 
                 targetDiv.append(formContainer);
             });
+
+            var referralHistories = response.data.referralHistories;
+            console.log(referralHistories);
+            var container = document.getElementById("referral-accordion-container");
+
+            referralHistories.forEach(function (history) {
+                var btn = document.createElement("button");
+                btn.className = "referral-accordion";
+                btn.textContent = `${history.staff_id}, ${history.business_unit_id} (${history.location})`;
+
+                var panel = document.createElement("div");
+                panel.className = "referral-panel";
+                panel.innerHTML = "<p>More details here...</p>";
+
+                container.appendChild(btn);
+                container.appendChild(panel);
+            });
+
+            // Add event listeners
+            document.querySelectorAll(".referral-accordion").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    this.classList.toggle("active");
+                    var panel = this.nextElementSibling;
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                    }
+                });
+            });
+
+
         },
         error: function () {
             console.log("Failed to fetch referral details.");

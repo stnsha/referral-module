@@ -259,6 +259,8 @@ include('../common/index_adv.php');
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">
                     <p class="r-title">Referral PIC History</p>
+                    <div id="referral-accordion-container">
+                    </div>
                 </div>
             </div>
         </div>
@@ -276,13 +278,13 @@ include('../common/index_adv.php');
             <div class="row py-2 px-4">
                 <div class="d-flex justify-content-end align-items-center">
                     <div class="d-flex flex-column align-items-center">
-                        <select name="referral-status" id="" required>
+                        <!-- <select name="referral-status" id="" required>
                             <option value="">All Status</option>
                             <option value="1">Open</option>
                             <option value="2">In Progress</option>
                             <option value="3">Forwarded</option>
                             <option value="4">Closed</option>
-                        </select>
+                        </select> -->
                         <input type="submit" value="Submit" class="submitButton my-2">
                         <a href="index.php" class="btn-back">Back</a>
                     </div>
