@@ -350,19 +350,38 @@ $(document).ready(function () {
 
             var referralHistories = response.data.referralHistories;
             console.log(referralHistories);
+            referralHistories.sort((a, b) => a.sequence - b.sequence);
             var container = document.getElementById("referral-accordion-container");
 
             referralHistories.forEach(function (history) {
-                var btn = document.createElement("button");
-                btn.className = "referral-accordion";
-                btn.textContent = `${history.staff_id}, ${history.business_unit_id} (${history.location})`;
+                getStaff(history.staff_id, history.location, function (staffInfo) {
+                    var staff = staffInfo[0];
 
-                var panel = document.createElement("div");
-                panel.className = "referral-panel";
-                panel.innerHTML = "<p>More details here...</p>";
+                    var btn = document.createElement("button");
+                    btn.className = "referral-accordion";
+                    btn.innerHTML = `
+            <span class="accordion-title">${staff.nama_staff}, ${staff.department} (${staff.location})</span><br>
+            <span class="accordion-date">${history.created_at ?? 'No date'}</span>
+        `;
 
-                container.appendChild(btn);
-                container.appendChild(panel);
+                    container.appendChild(btn);
+
+                    if (history.is_filled === 1) {
+                        var panel = document.createElement("div");
+                        panel.className = "referral-panel";
+                        panel.innerHTML = "<p>More details here...</p>";
+                        container.appendChild(panel);
+
+                        btn.addEventListener("click", function () {
+                            this.classList.toggle("active");
+                            if (panel.style.maxHeight) {
+                                panel.style.maxHeight = null;
+                            } else {
+                                panel.style.maxHeight = panel.scrollHeight + "px";
+                            }
+                        });
+                    }
+                });
             });
 
             // Add event listeners
