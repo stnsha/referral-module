@@ -258,7 +258,7 @@ include('../common/index_adv.php');
                     </div>
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">
-                    <p class="r-title">Referral PIC History</p>
+                    <p class="r-title">Referral History</p>
                     <div id="referral-accordion-container">
                     </div>
                 </div>
