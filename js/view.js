@@ -127,7 +127,7 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
-            // console.log(response.data);
+            console.log(response.data);
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -143,19 +143,19 @@ $(document).ready(function () {
             recipientTo.val('');
             business_unit_to.val('');
             location_to.val('');
-            response.data.referralDetails.forEach(function (item) {
-                getStaff(item.staff_id, item.location, function (staffInfo) {
-                    if (item.sequence == 1) {
-                        assigneeFrom.val(staffInfo[0].nama_staff);
-                        business_unit_from.val(staffInfo[0].department);
-                        location_from.val(staffInfo[0].location);
-                    } else {
-                        recipientTo.val(staffInfo[0].nama_staff);
-                        business_unit_to.val(staffInfo[0].department);
-                        location_to.val(staffInfo[0].location);
-                    }
-                });
-            })
+            // response.data.referralDetails.forEach(function (item) {
+            //     getStaff(item.staff_id, item.location, function (staffInfo) {
+            //         if (item.sequence == 1) {
+            //             assigneeFrom.val(staffInfo[0].nama_staff);
+            //             business_unit_from.val(staffInfo[0].department);
+            //             location_from.val(staffInfo[0].location);
+            //         } else {
+            //             recipientTo.val(staffInfo[0].nama_staff);
+            //             business_unit_to.val(staffInfo[0].department);
+            //             location_to.val(staffInfo[0].location);
+            //         }
+            //     });
+            // })
 
             var referringIndication = response.data.referringIndication;
 
@@ -244,158 +244,158 @@ $(document).ready(function () {
             //     span.classList.add('bg-open');
             // }
 
-            initialTreatments.forEach(({ form_id, label_name, is_hidden, form_details, form_answer }) => {
-                const formContainer = $('<div class="form-container mb-3"></div>');
-                const normalizedDetails = Array.isArray(form_details)
-                    ? form_details
-                    : Object.values(form_details || {});
+            // initialTreatments.forEach(({ form_id, label_name, is_hidden, form_details, form_answer }) => {
+            //     const formContainer = $('<div class="form-container mb-3"></div>');
+            //     const normalizedDetails = Array.isArray(form_details)
+            //         ? form_details
+            //         : Object.values(form_details || {});
 
-                normalizedDetails.forEach(detail => {
-                    const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
+            //     normalizedDetails.forEach(detail => {
+            //         const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
 
-                    const errorId = 'error-' + field_name;
-                    const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
+            //         const errorId = 'error-' + field_name;
+            //         const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
 
-                    let wrapper;
-                    let input;
+            //         let wrapper;
+            //         let input;
 
-                    if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
-                        wrapper = $('<div class="mb-2"></div>');
-                        const label = $('<p class="r-text"></p>').html(labelText);
-                        input = $('<div></div>');
+            //         if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
+            //             wrapper = $('<div class="mb-2"></div>');
+            //             const label = $('<p class="r-text"></p>').html(labelText);
+            //             input = $('<div></div>');
 
-                        field_value.forEach(option => {
-                            const optionWrapper = $('<div class="form-check"></div>');
-                            const inputField = $('<input>', {
-                                type: field_type,
-                                class: 'form-check-input border',
-                                name: field_name + (field_type === 'checkbox' ? '[]' : ''),
-                                value: option.form_detail_id,
-                                'data-required': is_required,
-                                disabled: true
-                            });
+            //             field_value.forEach(option => {
+            //                 const optionWrapper = $('<div class="form-check"></div>');
+            //                 const inputField = $('<input>', {
+            //                     type: field_type,
+            //                     class: 'form-check-input border',
+            //                     name: field_name + (field_type === 'checkbox' ? '[]' : ''),
+            //                     value: option.form_detail_id,
+            //                     'data-required': is_required,
+            //                     disabled: true
+            //                 });
 
-                            if (option.is_answer) {
-                                inputField.prop('checked', true);
-                            }
+            //                 if (option.is_answer) {
+            //                     inputField.prop('checked', true);
+            //                 }
 
-                            const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
-                            optionWrapper.append(inputField, inputLabel);
-                            input.append(optionWrapper);
-                        });
+            //                 const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
+            //                 optionWrapper.append(inputField, inputLabel);
+            //                 input.append(optionWrapper);
+            //             });
 
-                        wrapper.append(label, input);
+            //             wrapper.append(label, input);
 
-                    } else if (field_type === 'select' && Array.isArray(field_value)) {
-                        wrapper = $('<div class="col mb-2"></div>');
-                        input = $('<select>', {
-                            name: field_name,
-                            id: field_name,
-                            class: 'form-select form-select-sm text-capitalize',
-                            'data-required': is_required,
-                            disabled: true
-                        });
+            //         } else if (field_type === 'select' && Array.isArray(field_value)) {
+            //             wrapper = $('<div class="col mb-2"></div>');
+            //             input = $('<select>', {
+            //                 name: field_name,
+            //                 id: field_name,
+            //                 class: 'form-select form-select-sm text-capitalize',
+            //                 'data-required': is_required,
+            //                 disabled: true
+            //             });
 
-                        input.append($('<option>', {
-                            value: '',
-                            text: label_name
-                        }));
+            //             input.append($('<option>', {
+            //                 value: '',
+            //                 text: label_name
+            //             }));
 
-                        field_value.forEach(option => {
-                            const optionEl = $('<option>', {
-                                value: option.form_detail_id,
-                                text: option.field_value
-                            });
+            //             field_value.forEach(option => {
+            //                 const optionEl = $('<option>', {
+            //                     value: option.form_detail_id,
+            //                     text: option.field_value
+            //                 });
 
-                            if (option.is_answer) {
-                                optionEl.prop('selected', true);
-                            }
+            //                 if (option.is_answer) {
+            //                     optionEl.prop('selected', true);
+            //                 }
 
-                            input.append(optionEl);
-                        });
+            //                 input.append(optionEl);
+            //             });
 
-                        wrapper.append(input);
+            //             wrapper.append(input);
 
-                    } else {
-                        wrapper = $('<div class="mb-2"></div>');
-                        const label = $('<p class="r-text"></p>').html(labelText);
-                        const value = form_answer || '';
-                        input = $('<input>', {
-                            type: field_type,
-                            name: field_name,
-                            class: 'form-control form-control-sm',
-                            value: value,
-                            'data-required': is_required,
-                            readonly: true
-                        });
-                        wrapper.append(label, input);
-                    }
+            //         } else {
+            //             wrapper = $('<div class="mb-2"></div>');
+            //             const label = $('<p class="r-text"></p>').html(labelText);
+            //             const value = form_answer || '';
+            //             input = $('<input>', {
+            //                 type: field_type,
+            //                 name: field_name,
+            //                 class: 'form-control form-control-sm',
+            //                 value: value,
+            //                 'data-required': is_required,
+            //                 readonly: true
+            //             });
+            //             wrapper.append(label, input);
+            //         }
 
-                    const errorDiv = $('<div>', {
-                        id: errorId,
-                        class: 'error-message',
-                        css: {
-                            color: 'red',
-                            fontSize: '12px'
-                        }
-                    });
+            //         const errorDiv = $('<div>', {
+            //             id: errorId,
+            //             class: 'error-message',
+            //             css: {
+            //                 color: 'red',
+            //                 fontSize: '12px'
+            //             }
+            //         });
 
-                    wrapper.append(input);
-                    wrapper.append(errorDiv);
-                    formContainer.append(wrapper);
-                });
+            //         wrapper.append(input);
+            //         wrapper.append(errorDiv);
+            //         formContainer.append(wrapper);
+            //     });
 
-                targetDiv.append(formContainer);
-            });
+            //     targetDiv.append(formContainer);
+            // });
 
-            var referralHistories = response.data.referralHistories;
-            console.log(referralHistories);
-            referralHistories.sort((a, b) => a.sequence - b.sequence);
-            var container = document.getElementById("referral-accordion-container");
+            //     var referralHistories = response.data.referralHistories;
+            //     console.log(referralHistories);
+            //     referralHistories.sort((a, b) => a.sequence - b.sequence);
+            //     var container = document.getElementById("referral-accordion-container");
 
-            referralHistories.forEach(function (history) {
-                getStaff(history.staff_id, history.location, function (staffInfo) {
-                    var staff = staffInfo[0];
+            //     referralHistories.forEach(function (history) {
+            //         getStaff(history.staff_id, history.location, function (staffInfo) {
+            //             var staff = staffInfo[0];
 
-                    var btn = document.createElement("button");
-                    btn.className = "referral-accordion";
-                    btn.innerHTML = `
-            <span class="accordion-title">${staff.nama_staff}, ${staff.department} (${staff.location})</span><br>
-            <span class="accordion-date">${history.created_at ?? 'No date'}</span>
-        `;
+            //             var btn = document.createElement("button");
+            //             btn.className = "referral-accordion";
+            //             btn.innerHTML = `
+            //     <span class="accordion-title">${staff.nama_staff}, ${staff.department} (${staff.location})</span><br>
+            //     <span class="accordion-date">${history.created_at ?? 'No date'}</span>
+            // `;
 
-                    container.appendChild(btn);
+            //             container.appendChild(btn);
 
-                    if (history.is_filled === 1) {
-                        var panel = document.createElement("div");
-                        panel.className = "referral-panel";
-                        panel.innerHTML = "<p>More details here...</p>";
-                        container.appendChild(panel);
+            //             if (history.is_filled === 1) {
+            //                 var panel = document.createElement("div");
+            //                 panel.className = "referral-panel";
+            //                 panel.innerHTML = "<p>More details here...</p>";
+            //                 container.appendChild(panel);
 
-                        btn.addEventListener("click", function () {
-                            this.classList.toggle("active");
-                            if (panel.style.maxHeight) {
-                                panel.style.maxHeight = null;
-                            } else {
-                                panel.style.maxHeight = panel.scrollHeight + "px";
-                            }
-                        });
-                    }
-                });
-            });
+            //                 btn.addEventListener("click", function () {
+            //                     this.classList.toggle("active");
+            //                     if (panel.style.maxHeight) {
+            //                         panel.style.maxHeight = null;
+            //                     } else {
+            //                         panel.style.maxHeight = panel.scrollHeight + "px";
+            //                     }
+            //                 });
+            //             }
+            //         });
+            //     });
 
-            // Add event listeners
-            document.querySelectorAll(".referral-accordion").forEach(function (btn) {
-                btn.addEventListener("click", function () {
-                    this.classList.toggle("active");
-                    var panel = this.nextElementSibling;
-                    if (panel.style.maxHeight) {
-                        panel.style.maxHeight = null;
-                    } else {
-                        panel.style.maxHeight = panel.scrollHeight + "px";
-                    }
-                });
-            });
+            //     // Add event listeners
+            //     document.querySelectorAll(".referral-accordion").forEach(function (btn) {
+            //         btn.addEventListener("click", function () {
+            //             this.classList.toggle("active");
+            //             var panel = this.nextElementSibling;
+            //             if (panel.style.maxHeight) {
+            //                 panel.style.maxHeight = null;
+            //             } else {
+            //                 panel.style.maxHeight = panel.scrollHeight + "px";
+            //             }
+            //         });
+            //     });
 
 
         },
