@@ -240,21 +240,29 @@ include('../common/index_adv.php');
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Audiology</p>
                     </div>
-                    <div class="business-unit-21 content">
+                    <div class="business-unit-2 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Baby</p>
                     </div>
-                    <div class="business-unit-2 content">
+                    <div class="business-unit-3 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Clinic</p>
                     </div>
-                    <div class="business-unit-35 content">
+                    <div class="business-unit-4 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Optisaver</p>
                     </div>
-                    <div class="business-unit-20 content">
+                    <div class="business-unit-5 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Physio</p>
+                    </div>
+                    <div class="business-unit-6 content">
+                        <!-- style="display:none;"-->
+                        <p class="r-title">Alpro Pharmacy</p>
+                    </div>
+                    <div class="business-unit-7 content">
+                        <!-- style="display:none;"-->
+                        <p class="r-title">Alpro Sugi</p>
                     </div>
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">

@@ -111,6 +111,7 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
+            console.log(response);
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
