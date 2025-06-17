@@ -34,6 +34,9 @@ foreach ($_POST as $key => $value) {
         'business_unit_from',
         'assignee_from',
         'location_from',
+        'business_unit_id_from',
+        'assignee_id_from',
+        'location_id_from',
         'business_unit_to',
         'recipient_to',
         'location_to',
@@ -60,7 +63,7 @@ if ($business_unit_from !== null) {
     );
 }
 
-// echo json_encode($data);
+echo json_encode($data);
 
 $endpoint = 'referral'; // change as needed
 $response = getApiData($endpoint, $data, 'POST');
