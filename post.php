@@ -4,14 +4,14 @@ header('Content-Type: application/json');
 
 $data = array();
 
-$business_unit_from = isset($_POST['business_unit_from']) ? $_POST['business_unit_from'] : null;
+$business_unit_from = isset($_POST['business_unit_id_from']) ? $_POST['business_unit_id_from'] : null;
 $business_unit_to = isset($_POST['business_unit_to']) ? $_POST['business_unit_to'] : null;
 
 $data['business_units'] = array(
     'assignee' => array(
-        'staff_id' => isset($_POST['assignee_from']) ? (int)$_POST['assignee_from'] : null,
+        'staff_id' => isset($_POST['assignee_id_from']) ? (int)$_POST['assignee_id_from'] : null,
         'staff_department_id' => $business_unit_from,
-        'location' => isset($_POST['location_from']) ? $_POST['location_from'] : null
+        'location' => isset($_POST['location_id_from']) ? $_POST['location_id_from'] : null
     ),
     'recipient' => array(
         'staff_id' => isset($_POST['recipient_to']) ? (int)$_POST['recipient_to'] : null,
@@ -60,10 +60,11 @@ if ($business_unit_from !== null) {
     );
 }
 
-// echo json_encode($data);
+echo json_encode($data);
+exit;
 
 $endpoint = 'referral'; // change as needed
-$response = getApiData($endpoint, $data);
+$response = getApiData($endpoint, $data, 'POST');
 echo json_encode($response);
 
 exit;
