@@ -67,10 +67,10 @@ function validateForm(event) {
             }
         });
 
-        const formData = new FormData(form);
-        for (const [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
+        // const formData = new FormData(form);
+        // for (const [key, value] of formData.entries()) {
+        //     console.log(`${key}: ${value}`);
+        // }
 
         fetch('post.php', {
             method: 'POST',
@@ -230,7 +230,7 @@ $(document).ready(function () {
 
                                 if (isSelected) {
                                     assigneeFrom.prop('disabled', true);
-                                    $('input[name="assignee_id_from"]').val(staffId);
+                                    $('input[name="assignee_id_from"]').val(assigneeId);
                                 }
                             });
 
@@ -276,7 +276,7 @@ $(document).ready(function () {
                 if (isSelected) {
                     assigneeFrom.prop('disabled', true);
                     $('input[name="location_id_from"]').val(locationId);
-                    $('input[name="assignee_id_from"]').val(staffId);
+                    $('input[name="assignee_id_from"]').val(assigneeId);
                 }
             });
         } else {

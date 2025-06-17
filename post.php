@@ -10,12 +10,12 @@ $business_unit_to = isset($_POST['business_unit_to']) ? $_POST['business_unit_to
 $data['business_units'] = array(
     'assignee' => array(
         'staff_id' => isset($_POST['assignee_id_from']) ? (int)$_POST['assignee_id_from'] : null,
-        'staff_department_id' => $business_unit_from,
+        'business_unit_id' => $business_unit_from,
         'location' => isset($_POST['location_id_from']) ? $_POST['location_id_from'] : null
     ),
     'recipient' => array(
         'staff_id' => isset($_POST['recipient_to']) ? (int)$_POST['recipient_to'] : null,
-        'staff_department_id' => $business_unit_to,
+        'business_unit_id' => $business_unit_to,
         'location' => isset($_POST['location_to']) ? $_POST['location_to'] : null
     )
 );
@@ -63,7 +63,7 @@ if ($business_unit_from !== null) {
     );
 }
 
-echo json_encode($data);
+// echo json_encode($data);
 
 $endpoint = 'referral'; // change as needed
 $response = getApiData($endpoint, $data, 'POST');
