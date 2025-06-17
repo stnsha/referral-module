@@ -22,9 +22,9 @@ function getApiData($prefix, $data = null, $method)
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
     if ($method === 'GET') {
-        if (!empty($data)) {
-            $url .= '?' . http_build_query($data);
-        }
+        // if (!empty($data)) {
+        //     $url .= '?' . http_build_query($data);
+        // }
         curl_setopt($ch, CURLOPT_URL, $url);
     } elseif ($method === 'POST') {
         curl_setopt($ch, CURLOPT_URL, $url);

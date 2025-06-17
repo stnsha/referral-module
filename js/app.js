@@ -44,9 +44,9 @@ function validateForm(event) {
         }
     }
 
-    markError("business-unit-from", !isInteger(form["business_unit_from"].value), "Select one business unit.");
-    markError("assignee-from", !isInteger(form["assignee_from"].value), "Select one assignee.");
-    markError("location-from", !isInteger(form["location_from"].value), "Select one location.");
+    markError("business-unit-from", !isInteger(form["business_unit_id_from"].value), "Select one business unit.");
+    markError("assignee-from", !isInteger(form["assignee_id_from"].value), "Select one assignee.");
+    markError("location-from", !isInteger(form["location_id_from"].value), "Select one location.");
     markError("business-unit-to", !isInteger(form["business_unit_to"].value), "Select one business unit.");
     // markError("recipient-to", !isInteger(form["recipient_to"].value), "Select one recipient.");
     markError("location-to", !isInteger(form["location_to"].value), "Select one location.");
@@ -113,21 +113,28 @@ $(document).ready(function () {
             var busUnitFrom = $('#business_unit_from');
 
             let isSelected = false;
+            let businessUnitId = '';
 
             $.each(response, function (index, businessUnit) {
                 const selected = businessUnit.staff_department_id == department ? 'selected' : '';
                 if (selected !== '') isSelected = true;
-                // displayContent(businessUnitId);
+                if (selected !== '') businessUnitId = businessUnit.id;
 
                 busUnitFrom.append(
                     '<option value="' + businessUnit.staff_department_id + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
                     businessUnit.name + '</option>'
                 );
+
+
             });
 
             if (isSelected) {
                 busUnitFrom.prop('disabled', true);
+                $('input[name="business_unit_id_from"]').val(businessUnitId);
             }
+
+            displayReferredFrom(businessUnitId);
+            displayContent(businessUnitId);
 
             busUnitFrom.val(department);
             busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
@@ -147,54 +154,157 @@ $(document).ready(function () {
     });
 
     // For Referred From
-    $('#business_unit_from').change(function () {
+    function displayReferredFrom(businessUnitId) {
         const selectedOption = $(this).find(':selected');
         var refBusId = selectedOption.data('id');
-        var businessUnitId = $(this).val();
-        if (refBusId) {
-            getStaffLocation(staffId, function (staffLoc) {
-                $.ajax({
-                    url: 'backend.php?action=getLocations',
-                    type: 'POST',
-                    data: {
-                        ref_bus_id: refBusId
-                    },
-                    dataType: 'json',
-                    success: function (response) {
-                        var locationFrom = $('#location_from');
-                        locationFrom.empty();
-                        locationFrom.append('<option value="">Location</option>');
+        // var businessUnitId = $(this).val();
 
-                        let isSelected = false;
+        if (businessUnitId) {
+            getStaffLocation(staffId, function (staffLocs) {
 
-                        $.each(response, function (index, location) {
-                            let selected = '';
-                            if (String(location.id) === String(staffLoc)) {
-                                selected = 'selected';
-                                if (selected !== '') isSelected = true;
-                                getAssignees(location.id);
+                var locationFrom = $('#location_from');
+                locationFrom.empty();
+                locationFrom.append('<option value="">Location</option>');
+
+                let isSelected = false;
+                let locationId = '';
+
+                if (staffLocs.length > 1) {
+                    $.each(staffLocs, function (index, location) {
+                        locationFrom.append(
+                            '<option value="' + location.id + '" ' + '>' +
+                            location.comp_name + '</option>'
+                        );
+                    });
+                } else {
+                    $.ajax({
+                        url: 'backend.php?action=getLocations',
+                        type: 'POST',
+                        data: {
+                            ref_bus_id: businessUnitId
+                        },
+                        dataType: 'json',
+                        success: function (response) {
+                            $.each(response, function (index, location) {
+                                let selected = '';
+                                if (String(location.id) === String(staffLocs[0].id)) {
+                                    selected = 'selected';
+                                    if (selected !== '') isSelected = true;
+                                    if (selected != '') locationId = location.id;
+                                }
+
+                                locationFrom.append(
+                                    '<option value="' + location.id + '" ' + selected + '>' +
+                                    location.comp_name + '</option>'
+                                );
+                            });
+
+                            if (isSelected) {
+                                locationFrom.prop('disabled', true);
+                                $('input[name="location_id_from"]').val(locationId);
+
                             }
+                            getAssignee(locationId, function (assignees) {
+                                var assigneeFrom = $('#assignee_from');
+                                assigneeFrom.empty();
+                                assigneeFrom.append('<option value="">Assignee</option>');
 
-                            locationFrom.append(
-                                '<option value="' + location.id + '" ' + selected + '>' +
-                                location.comp_name + '</option>'
-                            );
-                        });
+                                let isSelected = false;
+                                let assigneeId = '';
 
-                        if (isSelected) {
-                            locationFrom.prop('disabled', true);
+                                $.each(assignees, function (index, assignee) {
+                                    let selected = '';
+                                    if (String(assignee.id) === String(staffId)) {
+                                        selected = 'selected';
+                                        if (selected !== '') isSelected = true;
+                                        if (selected !== '') assigneeId = assignee.id;
+                                    }
+
+                                    assigneeFrom.append(
+                                        '<option value="' + assignee.id + '" ' + selected + '>' +
+                                        assignee.nama_staff + '</option>'
+                                    );
+
+
+                                });
+
+                                if (isSelected) {
+                                    assigneeFrom.prop('disabled', true);
+                                    $('input[name="assignee_id_from"]').val(staffId);
+                                }
+                            });
+
+                        },
+                        error: function () {
+                            alert('Error loading locations');
                         }
-                    },
-                    error: function () {
-                        alert('Error loading locations');
-                    }
-                });
+                    });
+                }
             });
         } else {
             $('#location_from').empty().append('<option value="">Location</option>');
         }
+    }
+
+    $('#location_from').change(function () {
+        var locationId = $(this).val();
+        // console.log(locationId);
+        if (locationId) {
+            getAssignee(locationId, function (assignees) {
+                var assigneeFrom = $('#assignee_from');
+                assigneeFrom.empty();
+                assigneeFrom.append('<option value="">Assignee</option>');
+
+                let isSelected = false;
+                let assigneeId = '';
+
+                $.each(assignees, function (index, assignee) {
+                    let selected = '';
+                    if (String(assignee.id) === String(staffId)) {
+                        selected = 'selected';
+                        if (selected !== '') isSelected = true;
+                        if (selected !== '') assigneeId = assignee.id;
+                    }
+
+                    assigneeFrom.append(
+                        '<option value="' + assignee.id + '" ' + selected + '>' +
+                        assignee.nama_staff + '</option>'
+                    );
+                });
+
+
+                if (isSelected) {
+                    assigneeFrom.prop('disabled', true);
+                    $('input[name="location_id_from"]').val(locationId);
+                    $('input[name="assignee_id_from"]').val(staffId);
+                }
+            });
+        } else {
+            $('#assignee_from').empty().append('<option value="">Assignees</option>');
+        }
     });
 
+    function getAssignee(locationId, callback) {
+        $.ajax({
+            url: 'backend.php',
+            method: 'GET',
+            data: {
+                location_id: locationId,
+                action: 'getAssignees'
+            },
+            dataType: 'json',
+            success: function (response) {
+                try {
+                    callback(response);
+                } catch (e) {
+                    console.error('Callback failed:', e);
+                }
+            },
+            error: function () {
+                callback("Unknown");
+            }
+        });
+    }
     // For Referred From
     function getStaffLocation(staffId, callback) {
         $.ajax({
@@ -210,56 +320,6 @@ $(document).ready(function () {
             },
             error: function () {
                 callback("Unknown");
-            }
-        });
-    }
-
-    // For Referred From
-    function getAssignees(locationId) {
-        $.ajax({
-            url: 'backend.php',
-            method: 'GET',
-            data: {
-                location_id: locationId,
-                action: 'getAssignees'
-            },
-            dataType: 'json',
-            success: function (response) {
-                var assigneeFrom = $('#assignee_from');
-                assigneeFrom.empty();
-                assigneeFrom.append('<option value="">Assignee</option>');
-
-                var assigneeTo = $('#recipient_to');
-                assigneeTo.empty();
-                assigneeTo.append('<option value="">Assignee</option>');
-
-                let isSelected = false;
-
-                $.each(response, function (index, assignee) {
-                    let selected = '';
-                    if (String(assignee.id) === String(staffId)) {
-                        selected = 'selected';
-                        if (selected !== '') isSelected = true;
-                    }
-
-                    assigneeFrom.append(
-                        '<option value="' + assignee.id + '" ' + selected + '>' +
-                        assignee.nama_staff + '</option>'
-                    );
-
-                    assigneeTo.append(
-                        '<option value="' + assignee.id + '" ' + '>' +
-                        assignee.nama_staff + '</option>'
-                    );
-                });
-
-                if (isSelected) {
-                    assigneeFrom.prop('disabled', true);
-                }
-
-            },
-            error: function () {
-                alert('Error loading assignees')
             }
         });
     }
@@ -307,7 +367,32 @@ $(document).ready(function () {
         var locationId = $(this).val();
 
         if (locationId) {
-            getAssignees(locationId);
+            $.ajax({
+                url: 'backend.php',
+                method: 'GET',
+                data: {
+                    location_id: locationId,
+                    action: 'getAssignees'
+                },
+                dataType: 'json',
+                success: function (response) {
+
+                    var assigneeTo = $('#recipient_to');
+                    assigneeTo.empty();
+                    assigneeTo.append('<option value="">Assignee</option>');
+
+                    $.each(response, function (index, assignee) {
+                        assigneeTo.append(
+                            '<option value="' + assignee.id + '" ' + '>' +
+                            assignee.nama_staff + '</option>'
+                        );
+                    });
+
+                },
+                error: function () {
+                    alert('Error loading assignees')
+                }
+            });
         }
     })
 
@@ -323,7 +408,6 @@ $(document).ready(function () {
             }),
             success: function (response) {
                 const forms = response.data.forms;
-
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
                 targetDiv.show();

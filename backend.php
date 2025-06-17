@@ -101,7 +101,6 @@ function getStaffLocation($staff_id)
 
     $staff_id = mysqli_real_escape_string($conn, $staff_id);
 
-    //Find outlet from staff
     $staff_query = mysqli_query($conn, "SELECT outlet FROM staff WHERE id = $staff_id");
 
     if ($staff_row = mysqli_fetch_assoc($staff_query)) {
@@ -116,15 +115,31 @@ function getStaffLocation($staff_id)
         // Reindex array
         $outlets = array_values($outlets);
 
-        // Return last if multiple, or first if only one
-        if (count($outlets) > 1) {
-            return end($outlets); // latest
-        } elseif (count($outlets) === 1) {
-            return $outlets[0];
+        if (empty($outlets)) {
+            return array();
         }
+
+        // Convert to comma-separated string for SQL
+        $outlet_ids = implode(',', array_map('intval', $outlets));
+
+        $outlet_results = mysqli_query($conn, "SELECT id, comp_name FROM outlet WHERE id IN ($outlet_ids) ORDER BY comp_name ASC");
+
+        $all_locations = array();
+
+        while ($row = mysqli_fetch_assoc($outlet_results)) {
+            $comp_name = ucwords(strtolower($row['comp_name']));
+            $pos = strpos($comp_name, '(');
+            if ($pos !== false) {
+                $comp_name = trim(substr($comp_name, 0, $pos));
+            }
+            $row['comp_name'] = $comp_name;
+            $all_locations[] = $row;
+        }
+
+        return $all_locations;
     }
 
-    return null; // No result or empty
+    return array();
 }
 
 function getAssignees($location_id)
