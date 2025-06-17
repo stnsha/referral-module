@@ -9,43 +9,6 @@ if (!isset($conn)) {
     die(json_encode(array("status" => 500, "message" => "Database connection error")));
 }
 
-function getLocations($assignee_id)
-{
-    global $conn;
-
-    $assignee_id = mysqli_real_escape_string($conn, $assignee_id);
-    $outlets_result = mysqli_query($conn, "SELECT outlet FROM staff WHERE id = $assignee_id");
-
-    if ($outlets_row = mysqli_fetch_assoc($outlets_result)) {
-        $outlets = $outlets_row['outlet'];
-
-        $outlets = preg_replace('/\s+/', '', $outlets); // Remove spaces
-        $outlet_ids = explode(',', $outlets); // Split id into an array
-
-        $outlet_ids = array_map('intval', $outlet_ids); // Ensure all IDs are integers
-        $outlet_ids_list = implode(',', $outlet_ids); // Join the array into a comma-separated list
-
-        $location_results = mysqli_query($conn, "SELECT id, comp_name FROM outlet WHERE id IN ($outlet_ids_list)");
-
-        $locations = array();
-        while ($row = mysqli_fetch_assoc($location_results)) {
-            $comp_name = ucwords(strtolower($row['comp_name']));
-            $pos = strpos($comp_name, '(');
-            if ($pos !== false) {
-                $comp_name = trim(substr($comp_name, 0, $pos));
-            }
-            $row['comp_name'] = $comp_name;
-            $locations[] = $row;
-        }
-
-
-        return $locations;
-    }
-
-    return array();
-}
-
-
 function getBusinessUnits()
 {
     global $conn;
@@ -58,6 +21,37 @@ function getBusinessUnits()
     }
 
     return $departments;
+}
+
+function getLocations($ref_bus_id)
+{
+    global $conn;
+
+    $ref_bus_id = mysqli_real_escape_string($conn, $ref_bus_id);
+
+    $ref_bus_query = mysqli_query($conn, "SELECT ending_code FROM ref_business_unit WHERE id = $ref_bus_id");
+
+    if ($ref_bus_result = mysqli_fetch_assoc($ref_bus_query)) {
+        $ending_code = $ref_bus_result['ending_code'];
+
+        $outlet_results = mysqli_query($conn, "SELECT id, comp_name FROM outlet WHERE RIGHT(code, 1) = '$ending_code' ORDER BY comp_name ASC");
+
+        $all_locations = array();
+
+        while ($row = mysqli_fetch_assoc($outlet_results)) {
+            $comp_name = ucwords(strtolower($row['comp_name']));
+            $pos = strpos($comp_name, '(');
+            if ($pos !== false) {
+                $comp_name = trim(substr($comp_name, 0, $pos));
+            }
+            $row['comp_name'] = $comp_name;
+            $all_locations[] = $row;
+        }
+
+        return $all_locations;
+    }
+
+    return array();
 }
 
 function searchCustomer($icno = null, $customer_id = null)
@@ -101,72 +95,59 @@ function searchCustomer($icno = null, $customer_id = null)
     return $customerDetails;
 }
 
-function getAssignee($bu_id)
-{
-    global $conn;
-
-    $bu_id = mysqli_real_escape_string($conn, $bu_id);
-    $query = "SELECT id, nama_staff FROM staff WHERE department = $bu_id";
-    $searchAssignee = mysqli_query($conn, $query);
-
-    $assignees = array();
-    while ($row = mysqli_fetch_assoc($searchAssignee)) {
-        $assignees[] = array(
-            'id' => $row['id'],
-            'name' => $row['nama_staff']
-        );
-    }
-
-    return $assignees;
-}
-
-function getStaff($staff_id, $location)
+function getStaffLocation($staff_id)
 {
     global $conn;
 
     $staff_id = mysqli_real_escape_string($conn, $staff_id);
-    $location = mysqli_real_escape_string($conn, $location);
 
-    $query = "SELECT s.nama_staff, r.name 
-              FROM staff s 
-              INNER JOIN ref_business_unit r ON s.department = r.staff_department_id 
-              WHERE s.id = $staff_id";
+    //Find outlet from staff
+    $staff_query = mysqli_query($conn, "SELECT outlet FROM staff WHERE id = $staff_id");
 
-    $result = mysqli_query($conn, $query);
+    if ($staff_row = mysqli_fetch_assoc($staff_query)) {
+        $outlet = trim($staff_row['outlet']);
 
-    $nama_staff = '';
-    $department = '';
+        // Remove spaces and split by comma
+        $outlets = array_map('trim', explode(',', $outlet));
 
-    if ($row = mysqli_fetch_assoc($result)) {
-        $nama_staff = $row['nama_staff'];
-        $department = $row['name'];
-    }
+        // Filter out empty values
+        $outlets = array_filter($outlets);
 
-    $comp_name = '';
-    $query2 = "SELECT comp_name FROM outlet WHERE id = $location";
-    $result2 = mysqli_query($conn, $query2);
+        // Reindex array
+        $outlets = array_values($outlets);
 
-    if ($result2 && $row2 = mysqli_fetch_assoc($result2)) {
-        $comp_name = ucwords(strtolower($row2['comp_name']));
-        $pos = strpos($comp_name, '(');
-        if ($pos !== false) {
-            $comp_name = trim(substr($comp_name, 0, $pos));
+        // Return last if multiple, or first if only one
+        if (count($outlets) > 1) {
+            return end($outlets); // latest
+        } elseif (count($outlets) === 1) {
+            return $outlets[0];
         }
     }
 
-    $arr[] = array(
-        'nama_staff' => $nama_staff,
-        'department' => $department,
-        'location' => $comp_name,
-    );
-
-
-    return $arr;
+    return null; // No result or empty
 }
 
-if (isset($_GET['action']) && $_GET['action'] == 'getLocations' && isset($_POST['assignee_id'])) {
+function getAssignees($location_id)
+{
+    global $conn;
+
+    $location_id = mysqli_real_escape_string($conn, $location_id);
+
+    $outlet_results = mysqli_query($conn, "SELECT id, nama_staff FROM staff WHERE FIND_IN_SET('$location_id', outlet)");
+
+    $staffs = array();
+
+    while ($row = mysqli_fetch_assoc($outlet_results)) {
+        $staffs[] = $row;
+    }
+
+    return $staffs;
+}
+
+
+if (isset($_GET['action']) && $_GET['action'] == 'getLocations' && isset($_POST['ref_bus_id'])) {
     header('Content-Type: application/json');
-    echo json_encode(getLocations($_POST['assignee_id']));
+    echo json_encode(getLocations($_POST['ref_bus_id']));
     exit;
 }
 
@@ -188,14 +169,14 @@ if (
     exit;
 }
 
-if (isset($_GET['action']) && $_GET['action'] == 'getAssignees' && isset($_POST['business_unit_id'])) {
+if (isset($_GET['action']) && $_GET['action'] == 'getAssignees' && isset($_GET['location_id'])) {
     header('Content-Type: application/json');
-    echo json_encode(getAssignee($_POST['business_unit_id']));
+    echo json_encode(getAssignees($_GET['location_id']));
     exit;
 }
 
-if (isset($_GET['action']) && $_GET['action'] == 'getStaff' && isset($_GET['staff_id'])) {
+if (isset($_GET['action']) && $_GET['action'] == 'getStaffLocation' && isset($_GET['staff_id'])) {
     header('Content-Type: application/json');
-    echo json_encode(getStaff($_GET['staff_id'], $_GET['location']));
+    echo json_encode(getStaffLocation($_GET['staff_id']));
     exit;
 }

@@ -35,6 +35,14 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                             <div class="col">
+                                <select name="location_from" id="location_from"
+                                    class="form-select form-select-sm text-capitalize">
+                                    <option value="">Location</option>
+                                </select>
+                                <div class="error-message" id="error-location-from" style="color: red;font-size:12px;">
+                                </div>
+                            </div>
+                            <div class="col">
                                 <select name="assignee_from" id="assignee_from"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Assignee</option>
@@ -42,14 +50,6 @@ include('../common/index_adv.php');
                                         style="color: red;font-size:12px;">
                                     </div>
                                 </select>
-                            </div>
-                            <div class="col">
-                                <select name="location_from" id="location_from"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="">Location</option>
-                                </select>
-                                <div class="error-message" id="error-location-from" style="color: red;font-size:12px;">
-                                </div>
                             </div>
                         </div>
                         <p class="r-text">Referring To<span style="color:red;">*</span></p>
@@ -64,19 +64,19 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                             <div class="col">
-                                <select name="recipient_to" id="recipient_to"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="">Recipient</option>
-                                </select>
-                                <div class="error-message" id="error-recipient-to" style="color: red;font-size:12px;">
-                                </div>
-                            </div>
-                            <div class="col">
                                 <select name="location_to" id="location_to"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Location</option>
                                 </select>
                                 <div class="error-message" id="error-location-to" style="color: red;font-size:12px;">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <select name="recipient_to" id="recipient_to"
+                                    class="form-select form-select-sm text-capitalize">
+                                    <option value="">Recipient</option>
+                                </select>
+                                <div class="error-message" id="error-recipient-to" style="color: red;font-size:12px;">
                                 </div>
                             </div>
                         </div>
@@ -254,9 +254,7 @@ include('../common/index_adv.php');
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
             const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-            const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-            const staff_outlet =
-                <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/app.js"></script>
 
