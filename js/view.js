@@ -1,106 +1,3 @@
-function validateForm(event) {
-    event.preventDefault();
-    var form = document.forms["referral-form"];
-
-    function getFieldValue(fieldName) {
-        var field = form[fieldName];
-        return field ? field.value : null;
-    }
-
-    function setErrorMessage(fieldName, message) {
-        var errorElement = document.getElementById('error-' + fieldName);
-        if (errorElement) {
-            errorElement.innerHTML = message;
-        }
-    }
-
-    var errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(function (element) {
-        element.innerHTML = '';
-    });
-
-    function isEmpty(val) {
-        return val === null || val.trim() === "";
-    }
-
-    function isInteger(val) {
-        return /^\d+$/.test(val);
-    }
-
-    function isEmail(val) {
-        return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val);
-    }
-
-    function isIC(val) {
-        return /^\d{12}$/.test(val);
-    }
-
-    var hasError = false;
-
-    function markError(fieldName, condition, message) {
-        if (condition) {
-            setErrorMessage(fieldName, message);
-            hasError = true;
-        }
-    }
-
-    $('.reply-form [data-required="true"]:visible').each(function () {
-        const field = $(this);
-        const value = field.val();
-        const fieldName = field.attr('name');
-        const errorId = 'error-' + fieldName;
-
-        if (field.is(':checkbox') || field.is(':radio')) {
-            const checked = $('[name="' + fieldName + '"]:checked').length > 0;
-            if (!checked) {
-                setErrorMessage(fieldName, 'This field is required');
-                hasError = true;
-            }
-        } else if (!value || value.trim() === '') {
-            setErrorMessage(fieldName, 'This field is required');
-            hasError = true;
-        }
-    });
-
-    if (!hasError) {
-        $(this).find(':input').each(function () {
-            if ($(this).is(':hidden')) {
-                $(this).prop('required', false);
-            }
-        });
-
-        const formData = new FormData(form);
-        // for (const [key, value] of formData.entries()) {
-        //     console.log(`${key}: ${value}`);
-        // }
-
-        fetch('update.php', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.text())
-            .then(data => {
-                const parsed = JSON.parse(data);
-                const inner = JSON.parse(parsed.response);
-                console.log('Message:', inner.message);
-                console.log('HTTP Code:', parsed.httpCode);
-
-                const successCode = parsed.httpCode;
-
-                if (successCode === 200 || successCode === 201) {
-                    sessionStorage.setItem('successMessage', inner.message);
-                    window.location.href = 'index.php';
-                } else {
-                    console.log('Failed:', inner.message);
-                }
-
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-
-    }
-}
 $(document).ready(function () {
     $.ajax({
         url: 'api.php',
@@ -111,7 +8,6 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
-            console.log(response);
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -127,26 +23,37 @@ $(document).ready(function () {
             recipientTo.val('');
             business_unit_to.val('');
             location_to.val('');
-            response.data.referralDetails.forEach(function (item) {
-                getStaff(item.staff_id, item.location, function (staffInfo) {
-                    if (item.sequence == 1) {
-                        assigneeFrom.val(staffInfo[0].nama_staff);
-                        business_unit_from.val(staffInfo[0].department);
-                        location_from.val(staffInfo[0].location);
+
+            // Referral Details
+            let referralDetails = response.data.referralDetails;
+
+            $.each(referralDetails, function (index, rd) {
+                getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
+                    if (rd.sequence == 1) {
+                        assigneeFrom.val(sd[0].staff);
+                        business_unit_from.val(sd[0].business_unit);
+                        location_from.val(sd[0].outlet);
                     } else {
-                        recipientTo.val(staffInfo[0].nama_staff);
-                        business_unit_to.val(staffInfo[0].department);
-                        location_to.val(staffInfo[0].location);
+                        recipientTo.val(sd[0].staff);
+                        business_unit_to.val(sd[0].business_unit);
+                        location_to.val(sd[0].outlet);
                     }
                 });
 
-                if (item.is_filled == 0) {
-                    displayContent(item.staff_department_id);
+                // Reply Form
+                if (rd.is_filled == 0) {
+                    displayContent(rd.business_unit_id);
                 }
-            })
 
-            var referringIndication = response.data.referringIndication;
-            console.log(referringIndication.status);
+                // Initial Treatment
+                if (rd.sequence == 1 && rd.is_filled == 1) {
+                    console.log(rd.referral_details);
+                    initialTreatment(rd.referral_details, rd.business_unit_id);
+                }
+            });
+
+            // Referring Indication
+            let referringIndication = response.data.referringIndication;
 
             var referral_reason = $('#referral_reason');
             var referral_condition = $('#referral_condition');
@@ -215,24 +122,55 @@ $(document).ready(function () {
                 customer_gender.val(customer[0].gender);
                 customer_address.val(customer[0].address);
             });
+        },
+        error: function () {
+            console.log("Failed to fetch referral details.");
+        }
+    });
+});
 
-            var bu_id = response.data.referringIndication.business_unit_id;
-            var initialTreatments = response.data.initialTreatment;
-            $('.content').hide();
-            const targetDiv = $('.business-unit-' + bu_id);
+function getStaffDetails(staffId, locationId, businessUnitId, callback) {
+    $.ajax({
+        url: 'backend.php',
+        method: 'GET',
+        data: {
+            staff_id: staffId,
+            location_id: locationId,
+            bu_id: businessUnitId,
+            action: 'getStaffDetails'
+        },
+        dataType: 'json',
+        success: function (response) {
+            callback(response);
+        },
+        error: function () {
+            callback("Unknown");
+        }
+    });
+}
+
+function displayContent(businessUnitId) {
+    $.ajax({
+        url: 'api.php',
+        type: 'POST',
+        dataType: 'json',
+        data: JSON.stringify({
+            action: 'form-details',
+            business_unit_id: businessUnitId
+        }),
+        success: function (response) {
+            const forms = response.data.forms;
+
+            $('.reply-content').hide();
+            const targetDiv = $('.reply-form');
             targetDiv.show();
             targetDiv.find('[data-required="true"]').prop('required', true);
-            $('.content .form-container').remove();
+            $('.reply-content .form-container').remove();
 
-            var status = referringIndication.status;
-            var span = document.querySelector('.referral-status');
-            span.textContent = status;
+            const bu_id_reply = $('<input type="text" name="bu_id_reply" hidden value=' + businessUnitId + ' readonly/>');
+            $('.reply-content').append(bu_id_reply);
 
-            if (status === 'Open') {
-                span.classList.add('bg-open');
-            }
-
-            initialTreatments.forEach(({ form_id, label_name, is_hidden, form_details, form_answer }) => {
+            forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
                 const formContainer = $('<div class="form-container mb-3"></div>');
                 const normalizedDetails = Array.isArray(form_details)
                     ? form_details
@@ -247,6 +185,8 @@ $(document).ready(function () {
                     let wrapper;
                     let input;
 
+                    wrapper = $('<div class="mb-2"></div>');
+
                     if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
                         wrapper = $('<div class="mb-2"></div>');
                         const label = $('<p class="r-text"></p>').html(labelText);
@@ -259,14 +199,8 @@ $(document).ready(function () {
                                 class: 'form-check-input border',
                                 name: field_name + (field_type === 'checkbox' ? '[]' : ''),
                                 value: option.form_detail_id,
-                                'data-required': is_required,
-                                disabled: true
+                                'data-required': is_required
                             });
-
-                            if (option.is_answer) {
-                                inputField.prop('checked', true);
-                            }
-
                             const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
                             optionWrapper.append(inputField, inputLabel);
                             input.append(optionWrapper);
@@ -280,8 +214,7 @@ $(document).ready(function () {
                             name: field_name,
                             id: field_name,
                             class: 'form-select form-select-sm text-capitalize',
-                            'data-required': is_required,
-                            disabled: true
+                            'data-required': is_required
                         });
 
                         input.append($('<option>', {
@@ -290,16 +223,10 @@ $(document).ready(function () {
                         }));
 
                         field_value.forEach(option => {
-                            const optionEl = $('<option>', {
+                            input.append($('<option>', {
                                 value: option.form_detail_id,
                                 text: option.field_value
-                            });
-
-                            if (option.is_answer) {
-                                optionEl.prop('selected', true);
-                            }
-
-                            input.append(optionEl);
+                            }));
                         });
 
                         wrapper.append(input);
@@ -307,14 +234,12 @@ $(document).ready(function () {
                     } else {
                         wrapper = $('<div class="mb-2"></div>');
                         const label = $('<p class="r-text"></p>').html(labelText);
-                        const value = form_answer || '';
                         input = $('<input>', {
                             type: field_type,
                             name: field_name,
                             class: 'form-control form-control-sm',
-                            value: value,
-                            'data-required': is_required,
-                            readonly: true
+                            value: field_value || '',
+                            'data-required': is_required
                         });
                         wrapper.append(label, input);
                     }
@@ -331,168 +256,155 @@ $(document).ready(function () {
                     wrapper.append(input);
                     wrapper.append(errorDiv);
                     formContainer.append(wrapper);
-                });
 
+                });
                 targetDiv.append(formContainer);
             });
-        },
+        }
+        ,
         error: function () {
-            console.log("Failed to fetch referral details.");
+            console.log('Failed to display form details');
         }
     });
+}
 
-    function getStaff(staff_id, location, callback) {
-        $.ajax({
-            url: 'backend.php',
-            method: 'GET',
-            data: {
-                staff_id: staff_id,
-                location: location,
-                action: 'getStaff'
-            },
-            dataType: 'json',
-            success: function (response) {
-                callback(response);
-            },
-            error: function () {
-                callback("Unknown");
-            }
-        });
-    }
+function getCustomer(custid, callback) {
+    $.ajax({
+        url: 'backend.php?action=searchCustomer',
+        method: 'POST',
+        data: {
+            customer_id: custid,
+        },
+        dataType: 'json',
+        success: function (response) {
+            callback(response);
+        },
+        error: function () {
+            callback("Unknown");
+        }
+    });
+}
 
-    function getCustomer(custid, callback) {
-        $.ajax({
-            url: 'backend.php?action=searchCustomer',
-            method: 'POST',
-            data: {
-                customer_id: custid,
-            },
-            dataType: 'json',
-            success: function (response) {
-                callback(response);
-            },
-            error: function () {
-                callback("Unknown");
-            }
-        });
-    }
+function initialTreatment(initialTreatment, bu_id) {
+    $('.content').hide();
+    const targetDiv = $('.business-unit-' + bu_id);
+    targetDiv.show();
+    targetDiv.find('[data-required="true"]').prop('required', true);
+    $('.content .form-container').remove();
 
-    function displayContent(businessUnitId) {
-        $.ajax({
-            url: 'api.php',
-            type: 'POST',
-            dataType: 'json',
-            data: JSON.stringify({
-                action: 'form-details',
-                business_unit_id: businessUnitId
-            }),
-            success: function (response) {
-                const forms = response.data.forms;
+    initialTreatment.forEach(function ({ form_id, label_name, is_hidden, form_details, form_answer }) {
+        const formContainer = $('<div class="form-container mb-3"></div>');
+        const normalizedDetails = Array.isArray(form_details)
+            ? form_details
+            : Object.values(form_details || {});
 
-                $('.reply-content').hide();
-                const targetDiv = $('.reply-form');
-                targetDiv.show();
-                targetDiv.find('[data-required="true"]').prop('required', true);
-                $('.reply-content .form-container').remove();
+        normalizedDetails.forEach(detail => {
+            const {
+                field_name,
+                field_type,
+                is_required,
+                field_data = []
+            } = detail;
 
-                const bu_id_reply = $('<input type="text" name="bu_id_reply" hidden value=' + businessUnitId + ' readonly/>');
-                $('.reply-content').append(bu_id_reply);
+            const errorId = 'error-' + field_name;
+            const labelText = label_name + (is_required ? ' <span style="color:red;">*</span>' : '');
 
-                forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
-                    const formContainer = $('<div class="form-container mb-3"></div>');
-                    const normalizedDetails = Array.isArray(form_details)
-                        ? form_details
-                        : Object.values(form_details || {});
+            let wrapper;
+            let input;
 
-                    normalizedDetails.forEach(detail => {
-                        const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
+            if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_data)) {
+                wrapper = $('<div class="mb-2"></div>');
+                const label = $('<p class="r-text"></p>').html(labelText);
+                input = $('<div></div>');
 
-                        const errorId = 'error-' + field_name;
-                        const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
-
-                        let wrapper;
-                        let input;
-
-                        wrapper = $('<div class="mb-2"></div>');
-
-                        if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
-                            wrapper = $('<div class="mb-2"></div>');
-                            const label = $('<p class="r-text"></p>').html(labelText);
-                            input = $('<div></div>');
-
-                            field_value.forEach(option => {
-                                const optionWrapper = $('<div class="form-check"></div>');
-                                const inputField = $('<input>', {
-                                    type: field_type,
-                                    class: 'form-check-input border',
-                                    name: field_name + (field_type === 'checkbox' ? '[]' : ''),
-                                    value: option.form_detail_id,
-                                    'data-required': is_required
-                                });
-                                const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
-                                optionWrapper.append(inputField, inputLabel);
-                                input.append(optionWrapper);
-                            });
-
-                            wrapper.append(label, input);
-
-                        } else if (field_type === 'select' && Array.isArray(field_value)) {
-                            wrapper = $('<div class="col mb-2"></div>');
-                            input = $('<select>', {
-                                name: field_name,
-                                id: field_name,
-                                class: 'form-select form-select-sm text-capitalize',
-                                'data-required': is_required
-                            });
-
-                            input.append($('<option>', {
-                                value: '',
-                                text: label_name
-                            }));
-
-                            field_value.forEach(option => {
-                                input.append($('<option>', {
-                                    value: option.form_detail_id,
-                                    text: option.field_value
-                                }));
-                            });
-
-                            wrapper.append(input);
-
-                        } else {
-                            wrapper = $('<div class="mb-2"></div>');
-                            const label = $('<p class="r-text"></p>').html(labelText);
-                            input = $('<input>', {
-                                type: field_type,
-                                name: field_name,
-                                class: 'form-control form-control-sm',
-                                value: field_value || '',
-                                'data-required': is_required
-                            });
-                            wrapper.append(label, input);
-                        }
-
-                        const errorDiv = $('<div>', {
-                            id: errorId,
-                            class: 'error-message',
-                            css: {
-                                color: 'red',
-                                fontSize: '12px'
-                            }
-                        });
-
-                        wrapper.append(input);
-                        wrapper.append(errorDiv);
-                        formContainer.append(wrapper);
-
+                field_data.forEach(option => {
+                    const optionWrapper = $('<div class="form-check"></div>');
+                    const inputField = $('<input>', {
+                        type: field_type,
+                        class: 'form-check-input border',
+                        name: field_name + (field_type === 'checkbox' ? '[]' : ''),
+                        value: option.form_detail_id,
+                        'data-required': is_required,
+                        disabled: true
                     });
-                    targetDiv.append(formContainer);
+
+                    if (option.is_answer) {
+                        inputField.prop('checked', true);
+                    }
+
+                    const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
+                    optionWrapper.append(inputField, inputLabel);
+                    input.append(optionWrapper);
                 });
+
+                wrapper.append(label, input);
+
+            } else if (field_type === 'select' && Array.isArray(field_data)) {
+                wrapper = $('<div class="col mb-2"></div>');
+                const label = $('<p class="r-text"></p>').html(labelText);
+                input = $('<select>', {
+                    name: field_name,
+                    id: field_name,
+                    class: 'form-select form-select-sm text-capitalize',
+                    'data-required': is_required,
+                    disabled: true
+                });
+
+                input.append($('<option>', {
+                    value: '',
+                    text: 'Select ' + field_name
+                }));
+
+                field_data.forEach(option => {
+                    const optionEl = $('<option>', {
+                        value: option.form_detail_id,
+                        text: option.field_value
+                    });
+
+                    if (option.is_answer) {
+                        optionEl.prop('selected', true);
+                    }
+
+                    input.append(optionEl);
+                });
+
+                wrapper.append(label, input);
+
+            } else {
+                // default text/time/number etc.
+                wrapper = $('<div class="mb-2"></div>');
+                const label = $('<p class="r-text"></p>').html(labelText);
+
+                const answer = field_data.find(d => d.is_answer) || {};
+                const value = answer.field_value || '';
+
+                input = $('<input>', {
+                    type: field_type,
+                    name: field_name,
+                    class: 'form-control form-control-sm',
+                    value: value,
+                    'data-required': is_required,
+                    readonly: true
+                });
+
+                wrapper.append(label, input);
             }
-            ,
-            error: function () {
-                console.log('Failed to display form details');
-            }
+
+            const errorDiv = $('<div>', {
+                id: errorId,
+                class: 'error-message',
+                css: {
+                    color: 'red',
+                    fontSize: '12px'
+                }
+            });
+
+            wrapper.append(input);
+            wrapper.append(errorDiv);
+            formContainer.append(wrapper);
         });
-    }
-});
+
+
+        targetDiv.append(formContainer);
+    });
+}

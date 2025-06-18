@@ -9,6 +9,15 @@ if (!isset($conn)) {
     die(json_encode(array("status" => 500, "message" => "Database connection error")));
 }
 
+function normalizeCompName($comp_name)
+{
+    $comp_name = ucwords(strtolower($comp_name));
+    $pos = strpos($comp_name, '(');
+    if ($pos !== false) {
+        $comp_name = trim(substr($comp_name, 0, $pos));
+    }
+    return $comp_name;
+}
 function getBusinessUnits()
 {
     global $conn;
@@ -39,12 +48,7 @@ function getLocations($ref_bus_id)
         $all_locations = array();
 
         while ($row = mysqli_fetch_assoc($outlet_results)) {
-            $comp_name = ucwords(strtolower($row['comp_name']));
-            $pos = strpos($comp_name, '(');
-            if ($pos !== false) {
-                $comp_name = trim(substr($comp_name, 0, $pos));
-            }
-            $row['comp_name'] = $comp_name;
+            $row['comp_name'] = normalizeCompName($row['comp_name']);
             $all_locations[] = $row;
         }
 
@@ -127,12 +131,7 @@ function getStaffLocation($staff_id)
         $all_locations = array();
 
         while ($row = mysqli_fetch_assoc($outlet_results)) {
-            $comp_name = ucwords(strtolower($row['comp_name']));
-            $pos = strpos($comp_name, '(');
-            if ($pos !== false) {
-                $comp_name = trim(substr($comp_name, 0, $pos));
-            }
-            $row['comp_name'] = $comp_name;
+            $row['comp_name'] = normalizeCompName($row['comp_name']);
             $all_locations[] = $row;
         }
 
@@ -159,6 +158,37 @@ function getAssignees($location_id)
     return $staffs;
 }
 
+function getStaffDetails($staff_id, $location_id, $bu_id)
+{
+    global $conn;
+
+    $staff_id = mysqli_real_escape_string($conn, $staff_id);
+    $location_id = mysqli_real_escape_string($conn, $location_id);
+    $bu_id = mysqli_real_escape_string($conn, $bu_id);
+
+    $sql = "SELECT 
+            r.name,
+            s.nama_staff, 
+            o.comp_name
+        FROM staff s
+        INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
+        INNER JOIN ref_business_unit r ON r.id = $bu_id
+        WHERE s.id = $staff_id";
+
+    $result = mysqli_query($conn, $sql);
+
+    $staffDetails = array();
+
+    if ($row = mysqli_fetch_assoc($result)) {
+        $staffDetails[] = array(
+            'business_unit' => $row['name'],
+            'staff' => $row['nama_staff'],
+            'outlet' => normalizeCompName($row['comp_name'])
+        );
+    }
+
+    return $staffDetails;
+}
 
 if (isset($_GET['action']) && $_GET['action'] == 'getLocations' && isset($_POST['ref_bus_id'])) {
     header('Content-Type: application/json');
@@ -193,5 +223,12 @@ if (isset($_GET['action']) && $_GET['action'] == 'getAssignees' && isset($_GET['
 if (isset($_GET['action']) && $_GET['action'] == 'getStaffLocation' && isset($_GET['staff_id'])) {
     header('Content-Type: application/json');
     echo json_encode(getStaffLocation($_GET['staff_id']));
+    exit;
+}
+
+
+if (isset($_GET['action']) && $_GET['action'] == 'getStaffDetails' && isset($_GET['staff_id']) && isset($_GET['location_id']) && isset($_GET['bu_id'])) {
+    header('Content-Type: application/json');
+    echo json_encode(getStaffDetails($_GET['staff_id'], $_GET['location_id'], $_GET['bu_id']));
     exit;
 }

@@ -254,11 +254,11 @@ include('../common/index_adv.php');
                     </div>
                     <div class="business-unit-5 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Physio</p>
+                        <p class="r-title">Alpro Pharmacy</p>
                     </div>
                     <div class="business-unit-6 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Pharmacy</p>
+                        <p class="r-title">Alpro Physio</p>
                     </div>
                     <div class="business-unit-7 content">
                         <!-- style="display:none;"-->
