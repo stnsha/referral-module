@@ -124,8 +124,6 @@ $(document).ready(function () {
                     '<option value="' + businessUnit.staff_department_id + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
                     businessUnit.name + '</option>'
                 );
-
-
             });
 
             if (isSelected) {

@@ -1,5 +1,72 @@
+function validateForm(event) {
+    event.preventDefault();
+
+    let isValid = true;
+    $('.error-message').text('');
+
+    const requiredGroups = new Set();
+
+    $('input[type="checkbox"][data-required="true"], input[type="radio"][data-required="true"]').each(function () {
+        requiredGroups.add($(this).data('group'));
+    });
+
+    requiredGroups.forEach(group => {
+        const inputs = $(`input[data-group="${group}"]`);
+        const isChecked = inputs.is(':checked');
+
+        if (!isChecked) {
+            $(`#error-${group}`).text('Please select at least one option.');
+            isValid = false;
+        }
+    });
+
+    const form = document.getElementById('referral-form');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        isValid = false;
+    }
+
+    if (isValid) {
+        // form.submit();
+        const formData = new FormData(form);
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+    }
+
+
+
+    // fetch('post.php', {
+    //     method: 'POST',
+    //     body: formData
+    // })
+    //     .then(response => response.text())
+    //     .then(data => {
+    //         const parsed = JSON.parse(data);
+    //         const inner = JSON.parse(parsed.response);
+    //         console.log('Message:', inner.message);
+    //         console.log('HTTP Code:', parsed.httpCode);
+
+    //         const successCode = parsed.httpCode;
+
+    //         if (successCode === 200 || successCode === 201) {
+    //             sessionStorage.setItem('successMessage', inner.message);
+    //             window.location.href = 'index.php';
+    //         } else {
+    //             console.log('Failed:', inner.message);
+    //         }
+
+    //     })
+    //     .catch(error => {
+    //         console.error('Error:', error);
+    //     });
+
+}
+
 $(document).ready(function () {
     referralAccordion();
+    referAnother();
+
     $.ajax({
         url: 'api.php',
         type: 'POST',
@@ -33,7 +100,6 @@ $(document).ready(function () {
 
             const $container = $('#referralHistoryContainer');
             $.each(sortedDetails, function (index, rd) {
-                console.log(rd);
                 getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
                     const staff = sd[0].staff;
                     const businessUnit = sd[0].business_unit;
@@ -41,20 +107,30 @@ $(document).ready(function () {
                     const createdAt = rd.created_at;
 
                     const accordionHTML = `
-                    <div class="referral-history">
-                        <button class="referral-accordion">
-                            <div class="referral-accordion-content">
-                                <div class="referral-text">
-                                    <span class="referral-title">${staff}, ${outlet}</span>
-                                    <span class="referral-date">${createdAt}</span>
+                        <div class="referral-history">
+                            <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
+                                <div class="referral-accordion-content">
+                                    <div class="referral-text">
+                                        <span class="referral-title">${staff}, ${outlet}</span>
+                                        <span class="referral-date">${createdAt}</span>
+                                    </div>
                                 </div>
+                            </button>
+                            <div class="referral-panel">
+                                <div class="referral-panel-item" data-bu="${rd.business_unit_id}"></div>
                             </div>
-                        </button>
-                        <div class="referral-panel"></div>
-                    </div>
-                `;
+                        </div>
+                        `;
 
-                    $container.append(accordionHTML);
+                    if (rd.is_filled == 1) {
+                        const accordion = $(accordionHTML);
+                        $container.append(accordion);
+
+                        const panel = accordion.find('.referral-panel');
+                        initialTreatment(rd.referral_details, rd.business_unit_id, panel);
+                    } else {
+                        displayContent(rd.business_unit_id);
+                    }
 
                     if (rd.sequence == 1) {
                         assigneeFrom.val(staff);
@@ -66,24 +142,8 @@ $(document).ready(function () {
                         location_to.val(outlet);
                     }
 
-                    if (rd.is_filled == 0) {
-                        displayContent(rd.business_unit_id);
-                    }
 
-                    if (rd.sequence == 1 && rd.is_filled == 1) {
-                        initialTreatment(rd.referral_details, rd.business_unit_id);
-                    }
                 });
-
-                // Reply Form
-                if (rd.is_filled == 0) {
-                    displayContent(rd.business_unit_id);
-                }
-
-                // Initial Treatment
-                if (rd.sequence == 1 && rd.is_filled == 1) {
-                    initialTreatment(rd.referral_details, rd.business_unit_id);
-                }
             });
 
             // Referring Indication
@@ -155,6 +215,84 @@ $(document).ready(function () {
                 customer_gender.val(customer[0].gender);
                 customer_address.val(customer[0].address);
             });
+
+            let status = referringIndication.status;
+            if (status) {
+                const radio = document.querySelector(`input[name="status"][value="${status}"]`);
+                if (radio) radio.checked = true;
+            }
+
+            // For Refer To
+            $('#refer_business_unit').change(function () {
+                const selectedOption = $(this).find(':selected');
+                var refBusId = selectedOption.data('id');
+                var businessUnitId = $(this).val();
+                // displayContent(businessUnitId);
+
+                if (refBusId) {
+                    $.ajax({
+                        url: 'backend.php?action=getLocations',
+                        type: 'POST',
+                        data: {
+                            ref_bus_id: refBusId
+                        },
+                        dataType: 'json',
+                        success: function (response) {
+                            var locationTo = $('#refer_location');
+                            locationTo.empty();
+                            locationTo.append('<option value="">Location</option>');
+
+                            $.each(response, function (index, location) {
+                                locationTo.append(
+                                    '<option value="' + location.id + '" ' + '>' +
+                                    location.comp_name + '</option>'
+                                );
+                            });
+
+                            firstLoad = false;
+                        },
+                        error: function () {
+                            alert('Error loading locations');
+                        }
+                    });
+                } else {
+                    $('#refer_location').empty().append('<option value="">Location</option>');
+                }
+            });
+
+            // For Refer To
+            $('#refer_location').change(function () {
+                var locationId = $(this).val();
+
+                if (locationId) {
+                    $.ajax({
+                        url: 'backend.php',
+                        method: 'GET',
+                        data: {
+                            location_id: locationId,
+                            action: 'getAssignees'
+                        },
+                        dataType: 'json',
+                        success: function (response) {
+
+                            var assigneeTo = $('#refer_to');
+                            assigneeTo.empty();
+                            assigneeTo.append('<option value="">Assignee</option>');
+
+                            $.each(response, function (index, assignee) {
+                                assigneeTo.append(
+                                    '<option value="' + assignee.id + '" ' + '>' +
+                                    assignee.nama_staff + '</option>'
+                                );
+                            });
+
+                        },
+                        error: function () {
+                            alert('Error loading assignees')
+                        }
+                    });
+                }
+            })
         },
         error: function () {
             console.log("Failed to fetch referral details.");
@@ -225,15 +363,19 @@ function displayContent(businessUnitId) {
                         const label = $('<p class="r-text"></p>').html(labelText);
                         input = $('<div></div>');
 
-                        field_value.forEach(option => {
+                        field_value.forEach((option, index) => {
                             const optionWrapper = $('<div class="form-check"></div>');
                             const inputField = $('<input>', {
                                 type: field_type,
                                 class: 'form-check-input border',
                                 name: field_name + (field_type === 'checkbox' ? '[]' : ''),
                                 value: option.form_detail_id,
-                                'data-required': is_required
                             });
+                            if (is_required) {
+                                inputField.attr('data-required', 'true');
+                                inputField.attr('data-group', field_name);
+                            }
+
                             const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
                             optionWrapper.append(inputField, inputLabel);
                             input.append(optionWrapper);
@@ -247,7 +389,7 @@ function displayContent(businessUnitId) {
                             name: field_name,
                             id: field_name,
                             class: 'form-select form-select-sm text-capitalize',
-                            'data-required': is_required
+                            required: is_required
                         });
 
                         input.append($('<option>', {
@@ -272,7 +414,7 @@ function displayContent(businessUnitId) {
                             name: field_name,
                             class: 'form-control form-control-sm',
                             value: field_value || '',
-                            'data-required': is_required
+                            required: is_required
                         });
                         wrapper.append(label, input);
                     }
@@ -318,7 +460,7 @@ function getCustomer(custid, callback) {
     });
 }
 
-function initialTreatment(initialTreatment, bu_id) {
+function initialTreatment(initialTreatment, bu_id, targetPanel) {
     $('.content').hide();
     const targetDiv = $('.business-unit-' + bu_id);
     targetDiv.show();
@@ -357,7 +499,7 @@ function initialTreatment(initialTreatment, bu_id) {
                         class: 'form-check-input border',
                         name: field_name + (field_type === 'checkbox' ? '[]' : ''),
                         value: option.form_detail_id,
-                        'data-required': is_required,
+                        required: is_required,
                         disabled: true
                     });
 
@@ -379,7 +521,7 @@ function initialTreatment(initialTreatment, bu_id) {
                     name: field_name,
                     id: field_name,
                     class: 'form-select form-select-sm text-capitalize',
-                    'data-required': is_required,
+                    required: is_required,
                     disabled: true
                 });
 
@@ -404,7 +546,6 @@ function initialTreatment(initialTreatment, bu_id) {
                 wrapper.append(label, input);
 
             } else {
-                // default text/time/number etc.
                 wrapper = $('<div class="mb-2"></div>');
                 const label = $('<p class="r-text"></p>').html(labelText);
 
@@ -416,7 +557,7 @@ function initialTreatment(initialTreatment, bu_id) {
                     name: field_name,
                     class: 'form-control form-control-sm',
                     value: value,
-                    'data-required': is_required,
+                    required: is_required,
                     readonly: true
                 });
 
@@ -437,21 +578,61 @@ function initialTreatment(initialTreatment, bu_id) {
             formContainer.append(wrapper);
         });
 
-
-        targetDiv.append(formContainer);
+        targetPanel.append(formContainer);
     });
 }
 
+
 function referralAccordion() {
     document.addEventListener("click", function (e) {
-        if (e.target.classList.contains("referral-accordion")) {
-            e.target.classList.toggle("active");
-            var panel = e.target.nextElementSibling;
+        const accordion = e.target.closest(".referral-accordion");
+
+        if (accordion && !accordion.classList.contains("disabled")) {
+            accordion.classList.toggle("active");
+
+            const panel = accordion.nextElementSibling;
             if (panel.style.maxHeight) {
                 panel.style.maxHeight = null;
             } else {
                 panel.style.maxHeight = panel.scrollHeight + "px";
             }
+        }
+    });
+}
+
+function referAnother() {
+    document.getElementById('refer_another').addEventListener('change', function () {
+        const isChecked = this.checked;
+        document.getElementById('refer_business_unit').disabled = !isChecked;
+        document.getElementById('refer_location').disabled = !isChecked;
+        document.getElementById('refer_to').disabled = !isChecked;
+        getBusinessUnits();
+    });
+}
+
+function getBusinessUnits() {
+    $.ajax({
+        url: 'backend.php',
+        type: 'GET',
+        dataType: 'json',
+        data: {
+            action: 'getBusinessUnits'
+        },
+        success: function (response) {
+            var referBusinessUnit = $('#refer_business_unit');
+
+            $.each(response, function (index, businessUnit) {
+                referBusinessUnit.append(
+                    '<option value="' + businessUnit.staff_department_id + '" data-id="' + businessUnit.id + '" ' + '>' +
+                    businessUnit.name + '</option>'
+                );
+            });
+
+            referBusinessUnit.trigger('change');
+
+        },
+        error: function () {
+            alert('Error loading business units');
         }
     });
 }

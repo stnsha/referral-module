@@ -174,9 +174,16 @@ select {
     transition: transform 0.3s ease;
 }
 
-.active::after {
+.referral-accordion.active::after {
     transform: translateY(-50%) rotate(180deg);
 }
+
+.referral-accordion.disabled {
+    background-color: #eee;
+    cursor: not-allowed;
+    pointer-events: auto;
+}
+
 
 .referral-panel {
     padding: 0 18px;
@@ -184,6 +191,10 @@ select {
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.3s ease-out;
+}
+
+.referral-panel-item {
+    padding: 15px 18px;
 }
 
 .referral-history {
