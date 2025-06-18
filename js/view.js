@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    referralAccordion();
     $.ajax({
         url: 'api.php',
         type: 'POST',
@@ -26,17 +27,51 @@ $(document).ready(function () {
 
             // Referral Details
             let referralDetails = response.data.referralDetails;
+            const sortedDetails = Object.values(referralDetails).sort(function (a, b) {
+                return a.sequence - b.sequence;
+            });
 
-            $.each(referralDetails, function (index, rd) {
+            const $container = $('#referralHistoryContainer');
+            $.each(sortedDetails, function (index, rd) {
+                console.log(rd);
                 getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
+                    const staff = sd[0].staff;
+                    const businessUnit = sd[0].business_unit;
+                    const outlet = sd[0].outlet;
+                    const createdAt = rd.created_at;
+
+                    const accordionHTML = `
+                    <div class="referral-history">
+                        <button class="referral-accordion">
+                            <div class="referral-accordion-content">
+                                <div class="referral-text">
+                                    <span class="referral-title">${staff}, ${outlet}</span>
+                                    <span class="referral-date">${createdAt}</span>
+                                </div>
+                            </div>
+                        </button>
+                        <div class="referral-panel"></div>
+                    </div>
+                `;
+
+                    $container.append(accordionHTML);
+
                     if (rd.sequence == 1) {
-                        assigneeFrom.val(sd[0].staff);
-                        business_unit_from.val(sd[0].business_unit);
-                        location_from.val(sd[0].outlet);
+                        assigneeFrom.val(staff);
+                        business_unit_from.val(businessUnit);
+                        location_from.val(outlet);
                     } else {
-                        recipientTo.val(sd[0].staff);
-                        business_unit_to.val(sd[0].business_unit);
-                        location_to.val(sd[0].outlet);
+                        recipientTo.val(staff);
+                        business_unit_to.val(businessUnit);
+                        location_to.val(outlet);
+                    }
+
+                    if (rd.is_filled == 0) {
+                        displayContent(rd.business_unit_id);
+                    }
+
+                    if (rd.sequence == 1 && rd.is_filled == 1) {
+                        initialTreatment(rd.referral_details, rd.business_unit_id);
                     }
                 });
 
@@ -47,7 +82,6 @@ $(document).ready(function () {
 
                 // Initial Treatment
                 if (rd.sequence == 1 && rd.is_filled == 1) {
-                    console.log(rd.referral_details);
                     initialTreatment(rd.referral_details, rd.business_unit_id);
                 }
             });
@@ -92,7 +126,6 @@ $(document).ready(function () {
             customer_age.val('');
             customer_gender.val('');
             customer_address.val('');
-
 
             getCustomer(custid, function (customer) {
                 customer_id.val(customer[0].id);
@@ -406,5 +439,19 @@ function initialTreatment(initialTreatment, bu_id) {
 
 
         targetDiv.append(formContainer);
+    });
+}
+
+function referralAccordion() {
+    document.addEventListener("click", function (e) {
+        if (e.target.classList.contains("referral-accordion")) {
+            e.target.classList.toggle("active");
+            var panel = e.target.nextElementSibling;
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            }
+        }
     });
 }
