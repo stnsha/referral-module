@@ -5,6 +5,7 @@
     <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" />
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 </head>
 <?php

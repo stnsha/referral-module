@@ -1,3 +1,7 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
 .referral-container {
     display: flex;
     flex-direction: column;
@@ -129,51 +133,88 @@ select {
 }
 
 .referral-accordion {
-  background-color: #eee;
-  color: black;
-  cursor: pointer;
-  padding: 15px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  font-size: 14px;
-  transition: 0.4s;
-  position: relative;
-  border-radius: 15px;
-  margin-bottom: 10px;
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 13px;
+    transition: 0.4s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-left: 44px;
+    border-radius: 15px;
 }
 
-.active, .referral-accordion:hover {
-  background-color: #ccc; 
+.referral-accordion::before {
+    content: "";
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>');
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .referral-accordion::after {
-  content: '\25BC'; /* ▼ */
-  font-size: 13px;
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: transform 0.3s ease;
+    content: '\25BC';
+    /* ▼ */
+    font-size: 13px;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
 }
 
-.active::after {
-  transform: translateY(-50%) rotate(180deg); /* Rotates arrow up */
+.referral-accordion.active::after {
+    transform: translateY(-50%) rotate(180deg);
 }
+
+.referral-accordion.disabled {
+    background-color: #eee;
+    cursor: not-allowed;
+    pointer-events: auto;
+}
+
 
 .referral-panel {
-  padding: 0 18px;
-  background-color: white;
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.3s ease-out;
+    padding: 0 18px;
+    background-color: white;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease-out;
 }
 
-.accordion-title {
-    font-size: 13px;
+.referral-panel-item {
+    padding: 15px 18px;
 }
-.accordion-date {
-    font-size: 11px;
-    color:gray;
+
+.referral-history {
+    margin-bottom: 16px;
+}
+
+.referral-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.referral-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #000;
+}
+
+.referral-date {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
 }

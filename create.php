@@ -30,6 +30,8 @@ include('../common/index_adv.php');
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Business Unit</option>
                                 </select>
+                                <input type="hidden" name="business_unit_id_from">
+
                                 <div class="error-message" id="error-business-unit-from"
                                     style="color: red;font-size:12px;">
                                 </div>
@@ -39,6 +41,8 @@ include('../common/index_adv.php');
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Location</option>
                                 </select>
+                                <input type="hidden" name="location_id_from">
+
                                 <div class="error-message" id="error-location-from" style="color: red;font-size:12px;">
                                 </div>
                             </div>
@@ -50,6 +54,7 @@ include('../common/index_adv.php');
                                         style="color: red;font-size:12px;">
                                     </div>
                                 </select>
+                                <input type="hidden" name="assignee_id_from">
                             </div>
                         </div>
                         <p class="r-text">Referring To<span style="color:red;">*</span></p>
@@ -220,21 +225,29 @@ include('../common/index_adv.php');
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Audiology</p>
                     </div>
-                    <div class="business-unit-21 content">
+                    <div class="business-unit-2 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Baby</p>
                     </div>
-                    <div class="business-unit-2 content">
+                    <div class="business-unit-3 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Clinic</p>
                     </div>
-                    <div class="business-unit-35 content">
+                    <div class="business-unit-4 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Optisaver</p>
                     </div>
-                    <div class="business-unit-20 content">
+                    <div class="business-unit-5 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Physio</p>
+                    </div>
+                    <div class="business-unit-6 content">
+                        <!-- style="display:none;"-->
+                        <p class="r-title">Alpro Pharmacy</p>
+                    </div>
+                    <div class="business-unit-7 content">
+                        <!-- style="display:none;"-->
+                        <p class="r-title">Alpro Sugi</p>
                     </div>
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">

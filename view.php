@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" />
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
@@ -28,10 +29,6 @@ include('../common/index_adv.php');
                         <p class="r-text">Referred From<span style="color:red;">*</span></p>
                         <div class="row mb-2">
                             <div class="col">
-                                <!-- <select name="business_unit_from" id="business_unit_from"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="">Business Unit</option>
-                                </select> -->
                                 <input type="text" name="business_unit_from" id="business_unit_from"
                                     class="form-control form-control-sm text-capitalize" readonly>
                                 <div class="error-message" id="error-business-unit-from"
@@ -39,19 +36,16 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                             <div class="col">
-                                <input type="text" name="assignee_from" id="assignee_from"
-                                    class="form-control form-control-sm text-capitalize" readonly>
-                                <div class="error-message" id="error-assignee-from" style="color: red;font-size:12px;">
-                                </div>
-                            </div>
-                            <div class="col">
-                                <!-- <select name="location_from" id="location_from"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="">Location</option>
-                                </select> -->
                                 <input type="text" name="location_from" id="location_from"
                                     class="form-control form-control-sm text-capitalize" readonly>
                                 <div class="error-message" id="error-location-from" style="color: red;font-size:12px;">
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <input type="text" name="assignee_from" id="assignee_from"
+                                    class="form-control form-control-sm text-capitalize" readonly>
+                                <div class="error-message" id="error-assignee-from" style="color: red;font-size:12px;">
                                 </div>
                             </div>
                         </div>
@@ -69,16 +63,6 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                             <div class="col">
-                                <!-- <select name="recipient_to" id="recipient_to"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="">Recipient</option>
-                                </select> -->
-                                <input type="text" name="recipient_to" id="recipient_to"
-                                    class="form-control form-control-sm text-capitalize" readonly>
-                                <div class="error-message" id="error-recipient-to" style="color: red;font-size:12px;">
-                                </div>
-                            </div>
-                            <div class="col">
                                 <!-- <select name="location_to" id="location_to"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Location</option>
@@ -86,6 +70,16 @@ include('../common/index_adv.php');
                                 <input type="text" name="location_to" id="location_to"
                                     class="form-control form-control-sm text-capitalize" readonly>
                                 <div class="error-message" id="error-location-to" style="color: red;font-size:12px;">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <!-- <select name="recipient_to" id="recipient_to"
+                                    class="form-select form-select-sm text-capitalize">
+                                    <option value="">Recipient</option>
+                                </select> -->
+                                <input type="text" name="recipient_to" id="recipient_to"
+                                    class="form-control form-control-sm text-capitalize" readonly>
+                                <div class="error-message" id="error-recipient-to" style="color: red;font-size:12px;">
                                 </div>
                             </div>
                         </div>
@@ -233,64 +227,98 @@ include('../common/index_adv.php');
                     </div>
                 </div>
             </div>
-            <div class="row align-items-start text-start py-2 px-4">
-                <div class="col h-auto border rounded me-2 p-2">
-                    <p class="r-title">Current/Past Treatments</p>
-                    <div class="business-unit-1 content">
-                        <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Audiology</p>
-                    </div>
-                    <div class="business-unit-21 content">
-                        <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Baby</p>
-                    </div>
-                    <div class="business-unit-2 content">
-                        <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Clinic</p>
-                    </div>
-                    <div class="business-unit-35 content">
-                        <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Optisaver</p>
-                    </div>
-                    <div class="business-unit-20 content">
-                        <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Physio</p>
+            <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
+                onsubmit="validateForm(event)" enctype="multipart/form-data">
+                <div class="row align-items-start text-start py-2 px-4">
+                    <div class="col h-auto border rounded ms-2 p-2">
+                        <input type="hidden" name="referral_id" value="<?php echo $_GET['id']  ?>" readonly>
+                        <p class="r-title">Reply Form</p>
+                        <div class="reply-form reply-content">
+                            <!-- style="display:none;"-->
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Additional Remarks</p>
+                            <textarea name="additional_remarks" id="additional_remarks"
+                                class="form-control form-control-sm" rows="5"></textarea>
+                        </div>
                     </div>
                 </div>
+                <div class="row align-items-start text-start py-2 px-4">
+                    <div class="col h-auto border rounded ms-2 p-2">
+                        <div class="d-flex align-items-center gap-2 py-2">
+                            <span class="r-title" style="padding: 0;">Refer Another</span>
+                            <input type="checkbox" name="refer_another" id="refer_another">
+                        </div>
+
+                        <div class="row mb-2 refer-another">
+                            <div class="col">
+                                <select name="refer_business_unit" id="refer_business_unit"
+                                    class="form-select form-select-sm text-capitalize" disabled>
+                                    <option value="">Business Unit</option>
+                                </select>
+                                <div class="error-message text-danger small" id="error-refer-business-unit"></div>
+                            </div>
+
+                            <div class="col">
+                                <select name="refer_location" id="refer_location"
+                                    class="form-select form-select-sm text-capitalize" disabled>
+                                    <option value="">Location</option>
+                                </select>
+                                <div class="error-message text-danger small" id="error-refer-location"></div>
+                            </div>
+
+                            <div class="col">
+                                <select name="refer_to" id="refer_to" class="form-select form-select-sm text-capitalize"
+                                    disabled>
+                                    <option value="">Assignee</option>
+                                </select>
+                                <div class="error-message text-danger small" id="error-refer-to"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 referral-status">
+                            <span class="r-title">Status</span>
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="status" id="statusOpen"
+                                    value="1">
+                                <label class="form-check-label r-text" for="statusOpen">Open</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="status" id="statusProgress"
+                                    value="2">
+                                <label class="form-check-label r-text" for="statusProgress">In Progress</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="status" id="statusForwarded"
+                                    value="3">
+                                <label class="form-check-label r-text" for="statusForwarded">Forwarded</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="status" id="statusClosed"
+                                    value="4">
+                                <label class="form-check-label r-text" for="statusClosed">Closed</label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <input type="submit" value="Submit" class="btn btn-primary">
+                            <a href="index.php" class="btn btn-secondary">Back</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded ms-2 p-2">
                     <p class="r-title">Referral History</p>
-                    <div id="referral-accordion-container">
+                    <div class="referral-history" id="referralHistoryContainer">
+                        <!-- <button class="referral-accordion">Dr. Ong Seong Woo, Clinic A (Malaysia)</button>
+                        <div class="referral-panel">
+                            <span>heyyy</span>
+                        </div> -->
                     </div>
                 </div>
             </div>
         </div>
-        <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
-            onsubmit="validateForm(event)" enctype="multipart/form-data">
-            <div class="row align-items-start text-start py-2 px-4">
-                <div class="col h-auto border rounded ms-2 p-2">
-                    <input type="hidden" name="referral_id" value="<?php echo $_GET['id']  ?>" readonly>
-                    <p class="r-title">Reply Form</p>
-                    <div class="reply-form reply-content">
-                        <!-- style="display:none;"-->
-                    </div>
-                </div>
-            </div>
-            <div class="row py-2 px-4">
-                <div class="d-flex justify-content-end align-items-center">
-                    <div class="d-flex flex-column align-items-center">
-                        <!-- <select name="referral-status" id="" required>
-                            <option value="">All Status</option>
-                            <option value="1">Open</option>
-                            <option value="2">In Progress</option>
-                            <option value="3">Forwarded</option>
-                            <option value="4">Closed</option>
-                        </select> -->
-                        <input type="submit" value="Submit" class="submitButton my-2">
-                        <a href="index.php" class="btn-back">Back</a>
-                    </div>
-                </div>
-            </div>
-        </form>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
