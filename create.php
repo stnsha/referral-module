@@ -64,7 +64,7 @@ include('../common/index_adv.php');
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Business Unit</option>
                                 </select>
-                                <input type="text" name="business_unit_id_to">
+                                <input type="hidden" name="business_unit_id_to">
 
                                 <div class="error-message" id="error-business-unit-to"
                                     style="color: red;font-size:12px;">

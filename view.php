@@ -85,7 +85,7 @@ include('../common/index_adv.php');
                         </div>
                     </div>
                     <div class="border-bottom pb-3 mb-3">
-                        <p class="r-title">Referring Indication</p>
+                        <p class="r-title">Initial Referral</p>
                         <div class="mb-2">
                             <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
                             <input type="text" name="referral_reason" id="referral_reason"

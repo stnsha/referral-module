@@ -5,7 +5,7 @@ header('Content-Type: application/json');
 $data = array();
 
 $business_unit_from = isset($_POST['business_unit_id_from']) ? $_POST['business_unit_id_from'] : null;
-$business_unit_to = isset($_POST['business_unit_to']) ? $_POST['business_unit_to'] : null;
+$business_unit_to = isset($_POST['business_unit_id_to']) ? $_POST['business_unit_id_to'] : null;
 
 $data['business_units'] = array(
     'assignee' => array(
@@ -39,6 +39,7 @@ foreach ($_POST as $key => $value) {
         'assignee_id_from',
         'location_id_from',
         'business_unit_to',
+        'business_unit_id_to',
         'recipient_to',
         'location_to',
         'referral_reason',
@@ -67,7 +68,7 @@ if ($business_unit_from !== null) {
 
 // echo json_encode($data);
 
-$endpoint = 'referral'; // change as needed
+$endpoint = 'referral';
 $response = getApiData($endpoint, $data, 'POST');
 echo json_encode($response);
 
