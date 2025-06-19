@@ -29,9 +29,9 @@ function validateForm(event) {
     if (isValid) {
         // form.submit();
         const formData = new FormData(form);
-        for (const [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
+        // for (const [key, value] of formData.entries()) {
+        //     console.log(`${key}: ${value}`);
+        // }
 
         fetch('update.php', {
             method: 'POST',
