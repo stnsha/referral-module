@@ -243,6 +243,7 @@ $(document).ready(function () {
         var refBusId = selectedOption.data('id');
 
         if (refBusId) {
+            $('input[name="refer_business_unit_id"]').val(refBusId);
             displayReferForm();
             $.ajax({
                 url: 'backend.php?action=getLocations',

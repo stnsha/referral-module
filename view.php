@@ -257,6 +257,8 @@ include('../common/index_adv.php');
                                     class="form-select form-select-sm text-capitalize" disabled>
                                     <option value="">Business Unit</option>
                                 </select>
+                                <input type="hidden" name="refer_business_unit_id">
+
                                 <div class="error-message text-danger small" id="error-refer-business-unit"></div>
                             </div>
 

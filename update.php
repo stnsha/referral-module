@@ -17,7 +17,7 @@ $additional_remarks_reply = isset($_POST['additional_remarks_reply']) ? $_POST['
 
 if (isset($_POST['refer_another']) && $_POST['refer_another'] === 'on') {
     $status = 3;
-    $refer_business_unit = isset($_POST['refer_business_unit']) ? $_POST['refer_business_unit'] : null;
+    $refer_business_unit = isset($_POST['refer_business_unit_id']) ? $_POST['refer_business_unit_id'] : null;
     $refer_location = isset($_POST['refer_location']) ? $_POST['refer_location'] : null;
     $refer_to = isset($_POST['refer_to']) ? $_POST['refer_to'] : null;
     $referral_reason = isset($_POST['referral_reason']) ? $_POST['referral_reason'] : null;
@@ -54,6 +54,7 @@ foreach ($_POST as $key => $value) {
         'additional_remarks_reply',
         'refer_another',
         'refer_business_unit',
+        'refer_business_unit_id',
         'refer_location',
         'refer_to',
         'referral_reason',
@@ -73,7 +74,7 @@ if ($bu_id_reply !== null) {
 
 // echo json_encode($data);
 
-$endpoint = 'referral'; // change as needed
+$endpoint = 'referral';
 $response = getApiData($endpoint, $data, 'PUT');
 echo json_encode($response);
 
