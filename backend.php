@@ -18,6 +18,7 @@ function normalizeCompName($comp_name)
     }
     return $comp_name;
 }
+
 function getBusinessUnits()
 {
     global $conn;
@@ -189,6 +190,8 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
 
     return $staffDetails;
 }
+
+function getBusinessUnit($bu_id) {}
 
 if (isset($_GET['action']) && $_GET['action'] == 'getLocations' && isset($_POST['ref_bus_id'])) {
     header('Content-Type: application/json');

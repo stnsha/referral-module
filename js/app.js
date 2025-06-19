@@ -143,6 +143,7 @@ $(document).ready(function () {
                     '<option value="' + businessUnit.staff_department_id + '" data-id="' + businessUnit.id + '" ' + '>' +
                     businessUnit.name + '</option>'
                 );
+
             });
 
         },
@@ -330,6 +331,9 @@ $(document).ready(function () {
         // displayContent(businessUnitId);
 
         if (refBusId) {
+
+            $('input[name="business_unit_id_to"]').val(refBusId);
+
             $.ajax({
                 url: 'backend.php?action=getLocations',
                 type: 'POST',

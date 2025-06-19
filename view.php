@@ -73,7 +73,7 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                             <div class="col">
-                                <!-- <select name="recipient_to" id="recipient_to"
+                                <!-- <select name="recipient_to_s" id="recipient_to_s"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Recipient</option>
                                 </select> -->
@@ -81,6 +81,7 @@ include('../common/index_adv.php');
                                     class="form-control form-control-sm text-capitalize" readonly>
                                 <div class="error-message" id="error-recipient-to" style="color: red;font-size:12px;">
                                 </div>
+                                <input type="hidden" name="updated_recipient_to">
                             </div>
                         </div>
                     </div>
@@ -322,7 +323,8 @@ include('../common/index_adv.php');
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-            const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+        const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/view.js"></script>
 </body>

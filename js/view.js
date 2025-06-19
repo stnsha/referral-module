@@ -76,7 +76,6 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
-            console.log(response.data);
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -101,6 +100,9 @@ $(document).ready(function () {
 
             const $container = $('#referralHistoryContainer');
             $.each(sortedDetails, function (index, rd) {
+                // rd.staff_id ??= staffId; //change for production
+                rd.staff_id ??= 3333; //testing purposes only
+
                 getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
                     const staff = sd[0].staff;
                     const businessUnit = sd[0].business_unit;
@@ -128,7 +130,7 @@ $(document).ready(function () {
                         $container.append(accordion);
 
                         const panel = accordion.find('.referral-panel');
-                        initialTreatment(rd.referral_details, rd.business_unit_id, panel);
+                        initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
                     } else {
                         displayContent(rd.business_unit_id);
                     }
@@ -461,7 +463,7 @@ function getCustomer(custid, callback) {
     });
 }
 
-function initialTreatment(initialTreatment, bu_id, targetPanel) {
+function initialTreatment(initialTreatment, bu_id, targetPanel, additionalRemarks) {
     $('.content').hide();
     const targetDiv = $('.business-unit-' + bu_id);
     targetDiv.show();
@@ -581,6 +583,18 @@ function initialTreatment(initialTreatment, bu_id, targetPanel) {
 
         targetPanel.append(formContainer);
     });
+
+    const remarksWrapper = $('<div class="mb-3"></div>');
+    const remarksLabel = $('<p class="r-text">Additional Remarks</p>');
+    const remarksTextarea = $('<textarea>', {
+        class: 'form-control form-control-sm',
+        readonly: true,
+        disabled: true,
+        rows: 5
+    }).val(additionalRemarks || '');
+
+    remarksWrapper.append(remarksLabel, remarksTextarea);
+    targetPanel.append(remarksWrapper);
 }
 
 

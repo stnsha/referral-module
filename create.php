@@ -64,6 +64,8 @@ include('../common/index_adv.php');
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Business Unit</option>
                                 </select>
+                                <input type="text" name="business_unit_id_to">
+
                                 <div class="error-message" id="error-business-unit-to"
                                     style="color: red;font-size:12px;">
                                 </div>
@@ -239,15 +241,20 @@ include('../common/index_adv.php');
                     </div>
                     <div class="business-unit-5 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Physio</p>
+                        <p class="r-title">Alpro Pharmacy</p>
                     </div>
                     <div class="business-unit-6 content">
                         <!-- style="display:none;"-->
-                        <p class="r-title">Alpro Pharmacy</p>
+                        <p class="r-title">Alpro Physio</p>
                     </div>
                     <div class="business-unit-7 content">
                         <!-- style="display:none;"-->
                         <p class="r-title">Alpro Sugi</p>
+                    </div>
+                    <div class="mb-2">
+                        <p class="r-text">Additional Remarks</p>
+                        <textarea name="additional_remarks" id="additional_remarks" class="form-control form-control-sm"
+                            rows="5"></textarea>
                     </div>
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">

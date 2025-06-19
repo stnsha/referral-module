@@ -15,6 +15,7 @@ $data['business_units'] = array(
         'referral_reason' => isset($_POST['referral_reason']) ? $_POST['referral_reason'] : '',
         'referral_condition' => isset($_POST['referral_condition']) ? $_POST['referral_condition'] : '',
         'medical_history' => isset($_POST['medical_history']) ? $_POST['medical_history'] : '',
+        'additional_remarks' => isset($_POST['additional_remarks']) ? $_POST['additional_remarks'] : '',
     ),
     'recipient' => array(
         'staff_id' => isset($_POST['recipient_to']) ? (int)$_POST['recipient_to'] : null,
@@ -43,6 +44,7 @@ foreach ($_POST as $key => $value) {
         'referral_reason',
         'referral_condition',
         'medical_history',
+        'additional_remarks',
         'priority',
         'customer_id',
         'customer_ic',
