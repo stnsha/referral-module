@@ -277,6 +277,8 @@ include('../common/index_adv.php');
                             </div>
                         </div>
 
+                        <div class="refer-form reply-content"></div>
+
                         <div class="mb-3 referral-status">
                             <span class="r-title">Status</span>
                             <div class="form-check">
@@ -323,8 +325,8 @@ include('../common/index_adv.php');
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-        const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
-        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+            const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/view.js"></script>
 </body>

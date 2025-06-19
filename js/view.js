@@ -132,7 +132,7 @@ $(document).ready(function () {
                         const panel = accordion.find('.referral-panel');
                         initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
                     } else {
-                        displayContent(rd.business_unit_id);
+                        displayContent(rd.business_unit_id, '.reply-form');
                     }
 
                     if (rd.sequence == 1) {
@@ -230,7 +230,7 @@ $(document).ready(function () {
                 const selectedOption = $(this).find(':selected');
                 var refBusId = selectedOption.data('id');
                 var businessUnitId = $(this).val();
-                // displayContent(businessUnitId);
+                displayContent(refBusId, '.refer-form');
 
                 if (refBusId) {
                     $.ajax({
@@ -323,7 +323,7 @@ function getStaffDetails(staffId, locationId, businessUnitId, callback) {
     });
 }
 
-function displayContent(businessUnitId) {
+function displayContent(businessUnitId, targetSelector) {
     $.ajax({
         url: 'api.php',
         type: 'POST',
@@ -336,7 +336,7 @@ function displayContent(businessUnitId) {
             const forms = response.data.forms;
 
             $('.reply-content').hide();
-            const targetDiv = $('.reply-form');
+            const targetDiv = $(targetSelector);
             targetDiv.show();
             targetDiv.find('[data-required="true"]').prop('required', true);
             $('.reply-content .form-container').remove();
