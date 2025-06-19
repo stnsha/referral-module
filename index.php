@@ -68,7 +68,7 @@ include('../common/index_adv.php');
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
     </script>
-    <script src="js/app.js"></script>
+    <script src="js/index.js"></script>
     <script>
         const message = sessionStorage.getItem('successMessage');
         if (message) {

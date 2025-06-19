@@ -43,7 +43,7 @@ function getApiData($prefix, $data = null, $method)
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
 
-    if ($response === false || ($httpCode !== 200 && $httpCode !== 201)) {
+    if ($response === false || ($httpCode !== 200 && $httpCode !== 201 && $httpCode !== 204)) {
         die(json_encode(array(
             'success' => false,
             'error' => 'API Request Failed',

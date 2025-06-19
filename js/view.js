@@ -89,9 +89,10 @@ $(document).ready(function () {
             recipientTo.val('');
             business_unit_to.val('');
             location_to.val('');
-
+            console.log(response);
             // Referral Details
             let referralDetails = response.data.referralDetails;
+
             const sortedDetails = Object.values(referralDetails).sort(function (a, b) {
                 return a.sequence - b.sequence;
             });
