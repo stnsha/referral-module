@@ -293,9 +293,9 @@ include('../common/index_adv.php');
                                 <label class="form-check-label r-text" for="statusProgress">In Progress</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusForwarded"
+                                <input class="form-check-input border" type="radio" name="status" id="statusReferred"
                                     value="3">
-                                <label class="form-check-label r-text" for="statusForwarded">Forwarded</label>
+                                <label class="form-check-label r-text" for="statusReferred">Referred</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input border" type="radio" name="status" id="statusClosed"
