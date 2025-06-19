@@ -71,11 +71,11 @@ if ($bu_id_reply !== null) {
     );
 }
 
-echo json_encode($data);
+// echo json_encode($data);
 
-// $endpoint = 'referral'; // change as needed
-// $response = getApiData($endpoint, $data, 'PUT');
-// echo json_encode($response);
+$endpoint = 'referral'; // change as needed
+$response = getApiData($endpoint, $data, 'PUT');
+echo json_encode($response);
 
 exit;
 

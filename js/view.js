@@ -98,7 +98,6 @@ $(document).ready(function () {
 
             const $container = $('#referralHistoryContainer');
             $.each(sortedDetails, function (index, rd) {
-
                 //change for production
                 // rd.staff_id ??= staffId; 
 
@@ -144,12 +143,12 @@ $(document).ready(function () {
                         assigneeFrom.val(staff);
                         business_unit_from.val(businessUnit);
                         location_from.val(outlet);
-                    } else {
+                    }
+                    if (rd.sequence == 2) {
                         recipientTo.val(staff);
                         business_unit_to.val(businessUnit);
                         location_to.val(outlet);
                     }
-
 
                 });
             });
@@ -230,83 +229,83 @@ $(document).ready(function () {
                 if (radio) radio.checked = true;
             }
 
-            // For Refer To
-            $('#refer_business_unit').change(function () {
-                const selectedOption = $(this).find(':selected');
-                var refBusId = selectedOption.data('id');
-                var businessUnitId = $(this).val();
 
-
-                if (refBusId) {
-                    displayReferForm();
-                    $.ajax({
-                        url: 'backend.php?action=getLocations',
-                        type: 'POST',
-                        data: {
-                            ref_bus_id: refBusId
-                        },
-                        dataType: 'json',
-                        success: function (response) {
-                            var locationTo = $('#refer_location');
-                            locationTo.empty();
-                            locationTo.append('<option value="">Location</option>');
-
-                            $.each(response, function (index, location) {
-                                locationTo.append(
-                                    '<option value="' + location.id + '" ' + '>' +
-                                    location.comp_name + '</option>'
-                                );
-                            });
-
-                            firstLoad = false;
-                        },
-                        error: function () {
-                            alert('Error loading locations');
-                        }
-                    });
-                } else {
-                    $('#refer_location').empty().append('<option value="">Location</option>');
-                }
-            });
-
-            // For Refer To
-            $('#refer_location').change(function () {
-                var locationId = $(this).val();
-
-                if (locationId) {
-                    $.ajax({
-                        url: 'backend.php',
-                        method: 'GET',
-                        data: {
-                            location_id: locationId,
-                            action: 'getAssignees'
-                        },
-                        dataType: 'json',
-                        success: function (response) {
-
-                            var assigneeTo = $('#refer_to');
-                            assigneeTo.empty();
-                            assigneeTo.append('<option value="">Assignee</option>');
-
-                            $.each(response, function (index, assignee) {
-                                assigneeTo.append(
-                                    '<option value="' + assignee.id + '" ' + '>' +
-                                    assignee.nama_staff + '</option>'
-                                );
-                            });
-
-                        },
-                        error: function () {
-                            alert('Error loading assignees')
-                        }
-                    });
-                }
-            })
         },
         error: function () {
             console.log("Failed to fetch referral details.");
         }
     });
+
+    // For Refer To
+    $('#refer_business_unit').change(function () {
+        const selectedOption = $(this).find(':selected');
+        var refBusId = selectedOption.data('id');
+
+        if (refBusId) {
+            displayReferForm();
+            $.ajax({
+                url: 'backend.php?action=getLocations',
+                type: 'POST',
+                data: {
+                    ref_bus_id: refBusId
+                },
+                dataType: 'json',
+                success: function (response) {
+                    var locationTo = $('#refer_location');
+                    locationTo.empty();
+                    locationTo.append('<option value="">Location</option>');
+
+                    $.each(response, function (index, location) {
+                        locationTo.append(
+                            '<option value="' + location.id + '" ' + '>' +
+                            location.comp_name + '</option>'
+                        );
+                    });
+
+                    firstLoad = false;
+                },
+                error: function () {
+                    alert('Error loading locations');
+                }
+            });
+        } else {
+            $('#refer_location').empty().append('<option value="">Location</option>');
+        }
+    });
+
+    // For Refer To
+    $('#refer_location').change(function () {
+        var locationId = $(this).val();
+
+        if (locationId) {
+            $.ajax({
+                url: 'backend.php',
+                method: 'GET',
+                data: {
+                    location_id: locationId,
+                    action: 'getAssignees'
+                },
+                dataType: 'json',
+                success: function (response) {
+
+                    var assigneeTo = $('#refer_to');
+                    assigneeTo.empty();
+                    assigneeTo.append('<option value="">Assignee</option>');
+
+                    $.each(response, function (index, assignee) {
+                        assigneeTo.append(
+                            '<option value="' + assignee.id + '" ' + '>' +
+                            assignee.nama_staff + '</option>'
+                        );
+                    });
+
+                },
+                error: function () {
+                    alert('Error loading assignees')
+                }
+            });
+        }
+    })
 });
 
 function getStaffDetails(staffId, locationId, businessUnitId, callback) {
@@ -631,14 +630,29 @@ function referralAccordion() {
 }
 
 function referAnother() {
-    document.getElementById('refer_another').addEventListener('change', function () {
+    const checkbox = document.getElementById('refer_another');
+    const referBusinessUnit = document.getElementById('refer_business_unit');
+    const referLocation = document.getElementById('refer_location');
+    const referTo = document.getElementById('refer_to');
+
+    checkbox.addEventListener('change', function () {
         const isChecked = this.checked;
-        document.getElementById('refer_business_unit').disabled = !isChecked;
-        document.getElementById('refer_location').disabled = !isChecked;
-        document.getElementById('refer_to').disabled = !isChecked;
-        getBusinessUnits();
+
+        referBusinessUnit.disabled = !isChecked;
+        referLocation.disabled = !isChecked;
+        referTo.disabled = !isChecked;
+
+        if (!isChecked) {
+            referBusinessUnit.innerHTML = '<option value="">Business Unit</option>';
+            referLocation.innerHTML = '<option value="">Location</option>';
+            referTo.innerHTML = '<option value="">Assignees</option>';
+            document.querySelector('.refer-form').innerHTML = '';
+        } else {
+            getBusinessUnits();
+        }
     });
 }
+
 
 function getBusinessUnits() {
     $.ajax({
