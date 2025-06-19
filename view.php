@@ -227,10 +227,34 @@ include('../common/index_adv.php');
                     </div>
                 </div>
             </div>
-            <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
-                onsubmit="validateForm(event)" enctype="multipart/form-data">
-                <div class="row align-items-start text-start py-2 px-4">
-                    <div class="col h-auto border rounded ms-2 p-2">
+            <div class="row align-items-start text-start py-2 px-4">
+                <div class="col h-auto border rounded me-2 p-2 referring-indication">
+                    <p class="r-title">Referring Indication</p>
+                    <div class="mb-2">
+                        <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                        <input type="text" name="referral_reason_refer" id="referral_reason_refer" class="form-control form-control-sm" readonly>
+                        <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
+                        <textarea name="referral_condition_refer" id="referral_condition_refer" class="form-control form-control-sm"
+                            rows="5" readonly></textarea>
+                        <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <p class="r-text">Relevant Medical History (if applicable)</p>
+                        <textarea name="medical_history_refer" id="medical_history_refer" class="form-control form-control-sm" rows="5" readonly></textarea>
+                        <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row align-items-start text-start py-2 px-4">
+                <div class="col h-auto border rounded me-2 p-2">
+                    <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
+                        onsubmit="validateForm(event)" enctype="multipart/form-data">
                         <input type="hidden" name="updated_recipient_to">
                         <input type="hidden" name="referral_id" value="<?php echo $_GET['id']  ?>" readonly>
                         <p class="r-title">Reply Form</p>
@@ -242,79 +266,79 @@ include('../common/index_adv.php');
                             <textarea name="additional_remarks" id="additional_remarks"
                                 class="form-control form-control-sm" rows="5"></textarea>
                         </div> -->
-                    </div>
                 </div>
-                <div class="row align-items-start text-start py-2 px-4">
-                    <div class="col h-auto border rounded ms-2 p-2">
-                        <div class="d-flex align-items-center gap-2 py-2">
-                            <span class="r-title" style="padding: 0;">Refer Another</span>
-                            <input type="checkbox" name="refer_another" id="refer_another">
+            </div>
+            <div class="row align-items-start text-start py-2 px-4">
+                <div class="col h-auto border rounded me-2 p-2">
+                    <div class="d-flex align-items-center gap-2 py-2">
+                        <span class="r-title" style="padding: 0;">Refer Another</span>
+                        <input type="checkbox" name="refer_another" id="refer_another">
+                    </div>
+
+                    <div class="row mb-2 refer-another">
+                        <div class="col">
+                            <select name="refer_business_unit" id="refer_business_unit"
+                                class="form-select form-select-sm text-capitalize" disabled>
+                                <option value="">Business Unit</option>
+                            </select>
+                            <input type="hidden" name="refer_business_unit_id">
+
+                            <div class="error-message text-danger small" id="error-refer-business-unit"></div>
                         </div>
 
-                        <div class="row mb-2 refer-another">
-                            <div class="col">
-                                <select name="refer_business_unit" id="refer_business_unit"
-                                    class="form-select form-select-sm text-capitalize" disabled>
-                                    <option value="">Business Unit</option>
-                                </select>
-                                <input type="hidden" name="refer_business_unit_id">
-
-                                <div class="error-message text-danger small" id="error-refer-business-unit"></div>
-                            </div>
-
-                            <div class="col">
-                                <select name="refer_location" id="refer_location"
-                                    class="form-select form-select-sm text-capitalize" disabled>
-                                    <option value="">Location</option>
-                                </select>
-                                <div class="error-message text-danger small" id="error-refer-location"></div>
-                            </div>
-
-                            <div class="col">
-                                <select name="refer_to" id="refer_to" class="form-select form-select-sm text-capitalize"
-                                    disabled>
-                                    <option value="">Assignee</option>
-                                </select>
-                                <div class="error-message text-danger small" id="error-refer-to"></div>
-                            </div>
+                        <div class="col">
+                            <select name="refer_location" id="refer_location"
+                                class="form-select form-select-sm text-capitalize" disabled>
+                                <option value="">Location</option>
+                            </select>
+                            <div class="error-message text-danger small" id="error-refer-location"></div>
                         </div>
 
-                        <div class="refer-form">
-                        </div>
-
-                        <div class="mb-3 referral-status">
-                            <span class="r-title">Status</span>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusOpen"
-                                    value="1">
-                                <label class="form-check-label r-text" for="statusOpen">Open</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusProgress"
-                                    value="2">
-                                <label class="form-check-label r-text" for="statusProgress">In Progress</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusReferred"
-                                    value="3">
-                                <label class="form-check-label r-text" for="statusReferred">Referred</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusClosed"
-                                    value="4">
-                                <label class="form-check-label r-text" for="statusClosed">Closed</label>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2">
-                            <input type="submit" value="Submit" class="btn btn-primary">
-                            <a href="index.php" class="btn btn-secondary">Back</a>
+                        <div class="col">
+                            <select name="refer_to" id="refer_to" class="form-select form-select-sm text-capitalize"
+                                disabled>
+                                <option value="">Assignee</option>
+                            </select>
+                            <div class="error-message text-danger small" id="error-refer-to"></div>
                         </div>
                     </div>
+
+                    <div class="refer-form">
+                    </div>
+
+                    <div class="mb-3 referral-status">
+                        <span class="r-title">Status</span>
+                        <div class="form-check">
+                            <input class="form-check-input border" type="radio" name="status" id="statusOpen"
+                                value="1">
+                            <label class="form-check-label r-text" for="statusOpen">Open</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input border" type="radio" name="status" id="statusProgress"
+                                value="2">
+                            <label class="form-check-label r-text" for="statusProgress">In Progress</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input border" type="radio" name="status" id="statusReferred"
+                                value="3">
+                            <label class="form-check-label r-text" for="statusReferred">Referred</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input border" type="radio" name="status" id="statusClosed"
+                                value="4">
+                            <label class="form-check-label r-text" for="statusClosed">Closed</label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <input type="submit" value="Submit" class="btn btn-primary">
+                        <a href="index.php" class="btn btn-secondary">Back</a>
+                    </div>
                 </div>
+            </div>
             </form>
             <div class="row align-items-start text-start py-2 px-4">
-                <div class="col h-auto border rounded ms-2 p-2">
+                <div class="col h-auto border rounded me-2 p-2">
                     <p class="r-title">Referral History</p>
                     <div class="referral-history" id="referralHistoryContainer">
                         <!-- <button class="referral-accordion">Dr. Ong Seong Woo, Clinic A (Malaysia)</button>

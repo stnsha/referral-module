@@ -89,7 +89,7 @@ $(document).ready(function () {
             recipientTo.val('');
             business_unit_to.val('');
             location_to.val('');
-            console.log(response);
+
             // Referral Details
             let referralDetails = response.data.referralDetails;
 
@@ -152,6 +152,23 @@ $(document).ready(function () {
                     }
 
                 });
+
+                $('.referring-indication').hide();
+                var referral_reason_refer = $('#referral_reason_refer');
+                var referral_condition_refer = $('#referral_condition_refer');
+                var medical_history_refer = $('#medical_history_refer');
+
+                referral_reason_refer.val('');
+                referral_condition_refer.val('');
+                medical_history_refer.val('');
+
+                if (rd.is_filled == 0 && rd.sequence != 2) {
+                    $('.referring-indication').show();
+                    referral_reason_refer.val(rd.referral_reason);
+                    referral_condition_refer.val(rd.referral_condition);
+                    medical_history_refer.val(rd.medical_history);
+
+                }
             });
 
             // Referring Indication
@@ -704,12 +721,6 @@ function displayReferForm() {
                     <p class="r-text">Relevant Medical History (if applicable)</p>
                     <textarea name="medical_history" class="form-control form-control-sm" rows="5"></textarea>
                     <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;"></div>
-                </div>
-
-                <div class="mb-2">
-                    <p class="r-text">Additional Remarks</p>
-                    <textarea name="additional_remarks_refer" id="additional_remarks_refer"
-                        class="form-control form-control-sm" rows="5"></textarea>
                 </div>
             </div>
             `;
