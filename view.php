@@ -81,7 +81,6 @@ include('../common/index_adv.php');
                                     class="form-control form-control-sm text-capitalize" readonly>
                                 <div class="error-message" id="error-recipient-to" style="color: red;font-size:12px;">
                                 </div>
-                                <input type="hidden" name="updated_recipient_to">
                             </div>
                         </div>
                     </div>
@@ -232,16 +231,17 @@ include('../common/index_adv.php');
                 onsubmit="validateForm(event)" enctype="multipart/form-data">
                 <div class="row align-items-start text-start py-2 px-4">
                     <div class="col h-auto border rounded ms-2 p-2">
+                        <input type="hidden" name="updated_recipient_to">
                         <input type="hidden" name="referral_id" value="<?php echo $_GET['id']  ?>" readonly>
                         <p class="r-title">Reply Form</p>
                         <div class="reply-form reply-content">
                             <!-- style="display:none;"-->
                         </div>
-                        <div class="mb-2">
+                        <!-- <div class="mb-2">
                             <p class="r-text">Additional Remarks</p>
                             <textarea name="additional_remarks" id="additional_remarks"
                                 class="form-control form-control-sm" rows="5"></textarea>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
                 <div class="row align-items-start text-start py-2 px-4">
@@ -277,7 +277,8 @@ include('../common/index_adv.php');
                             </div>
                         </div>
 
-                        <div class="refer-form reply-content"></div>
+                        <div class="refer-form">
+                        </div>
 
                         <div class="mb-3 referral-status">
                             <span class="r-title">Status</span>

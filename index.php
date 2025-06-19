@@ -33,7 +33,7 @@ include('../common/index_adv.php');
                         <option value="">All Status</option>
                         <option value="1">Open</option>
                         <option value="2">In Progress</option>
-                        <option value="3">Forwarded</option>
+                        <option value="3">Referred</option>
                         <option value="4">Closed</option>
                     </select>
                     <input type="text" name="referral_id" id="referral_id" class="referral-id" placeholder="#REF01234">

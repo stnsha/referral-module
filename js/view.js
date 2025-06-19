@@ -32,34 +32,32 @@ function validateForm(event) {
         for (const [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`);
         }
+
+        fetch('update.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text())
+            .then(data => {
+                const parsed = JSON.parse(data);
+                const inner = JSON.parse(parsed.response);
+                console.log('Message:', inner.message);
+                console.log('HTTP Code:', parsed.httpCode);
+
+                const successCode = parsed.httpCode;
+
+                if (successCode === 200 || successCode === 201) {
+                    sessionStorage.setItem('successMessage', inner.message);
+                    window.location.href = 'index.php';
+                } else {
+                    console.log('Failed:', inner.message);
+                }
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     }
-
-
-
-    // fetch('post.php', {
-    //     method: 'POST',
-    //     body: formData
-    // })
-    //     .then(response => response.text())
-    //     .then(data => {
-    //         const parsed = JSON.parse(data);
-    //         const inner = JSON.parse(parsed.response);
-    //         console.log('Message:', inner.message);
-    //         console.log('HTTP Code:', parsed.httpCode);
-
-    //         const successCode = parsed.httpCode;
-
-    //         if (successCode === 200 || successCode === 201) {
-    //             sessionStorage.setItem('successMessage', inner.message);
-    //             window.location.href = 'index.php';
-    //         } else {
-    //             console.log('Failed:', inner.message);
-    //         }
-
-    //     })
-    //     .catch(error => {
-    //         console.error('Error:', error);
-    //     });
 
 }
 
@@ -100,8 +98,15 @@ $(document).ready(function () {
 
             const $container = $('#referralHistoryContainer');
             $.each(sortedDetails, function (index, rd) {
-                // rd.staff_id ??= staffId; //change for production
-                rd.staff_id ??= 3333; //testing purposes only
+
+                //change for production
+                // rd.staff_id ??= staffId; 
+
+                //testing purposes only
+                const fakeStaffId = 3333;
+                rd.staff_id ??= fakeStaffId;
+
+                $('input[name="updated_recipient_to"]').val(fakeStaffId);
 
                 getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
                     const staff = sd[0].staff;
@@ -230,9 +235,10 @@ $(document).ready(function () {
                 const selectedOption = $(this).find(':selected');
                 var refBusId = selectedOption.data('id');
                 var businessUnitId = $(this).val();
-                displayContent(refBusId, '.refer-form');
+
 
                 if (refBusId) {
+                    displayReferForm();
                     $.ajax({
                         url: 'backend.php?action=getLocations',
                         type: 'POST',
@@ -438,6 +444,16 @@ function displayContent(businessUnitId, targetSelector) {
                 });
                 targetDiv.append(formContainer);
             });
+
+            const remarksWrapper = $(`
+                <div class="mb-2">
+                    <p class="r-text">Additional Remarks</p>
+                    <textarea name="additional_remarks_reply" id="additional_remarks_reply"
+                        class="form-control form-control-sm" rows="5"></textarea>
+                </div>
+            `);
+
+            targetDiv.append(remarksWrapper);
         }
         ,
         error: function () {
@@ -597,7 +613,6 @@ function initialTreatment(initialTreatment, bu_id, targetPanel, additionalRemark
     targetPanel.append(remarksWrapper);
 }
 
-
 function referralAccordion() {
     document.addEventListener("click", function (e) {
         const accordion = e.target.closest(".referral-accordion");
@@ -651,3 +666,39 @@ function getBusinessUnits() {
         }
     });
 }
+
+function displayReferForm() {
+    const referringHTML = `
+            <div class="border-bottom pb-3 my-3">
+                <p class="r-title">Referring Indication</p>
+
+                <div class="mb-2">
+                    <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                    <input type="text" name="referral_reason" class="form-control form-control-sm">
+                    <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;"></div>
+                </div>
+
+                <div class="mb-2">
+                    <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
+                    <textarea name="referral_condition" class="form-control form-control-sm" rows="5"></textarea>
+                    <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;"></div>
+                </div>
+
+                <div class="mb-2">
+                    <p class="r-text">Relevant Medical History (if applicable)</p>
+                    <textarea name="medical_history" class="form-control form-control-sm" rows="5"></textarea>
+                    <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;"></div>
+                </div>
+
+                <div class="mb-2">
+                    <p class="r-text">Additional Remarks</p>
+                    <textarea name="additional_remarks_refer" id="additional_remarks_refer"
+                        class="form-control form-control-sm" rows="5"></textarea>
+                </div>
+            </div>
+            `;
+
+    $('.refer-form').html(referringHTML);
+
+
+} 
