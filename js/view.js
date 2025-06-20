@@ -29,9 +29,9 @@ function validateForm(event) {
     if (isValid) {
         // form.submit();
         const formData = new FormData(form);
-        // for (const [key, value] of formData.entries()) {
-        //     console.log(`${key}: ${value}`);
-        // }
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
 
         fetch('update.php', {
             method: 'POST',
@@ -64,6 +64,7 @@ function validateForm(event) {
 $(document).ready(function () {
     referralAccordion();
     referAnother();
+    $('.refer-form').hide();
 
     $.ajax({
         url: 'api.php',
@@ -74,6 +75,7 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
+            console.log(response);
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -261,7 +263,9 @@ $(document).ready(function () {
 
         if (refBusId) {
             $('input[name="refer_business_unit_id"]').val(refBusId);
-            displayReferForm();
+
+            toggleReferForm();
+
             $.ajax({
                 url: 'backend.php?action=getLocations',
                 type: 'POST',
@@ -289,6 +293,7 @@ $(document).ready(function () {
             });
         } else {
             $('#refer_location').empty().append('<option value="">Location</option>');
+            toggleReferForm();
         }
     });
 
@@ -324,7 +329,12 @@ $(document).ready(function () {
                 }
             });
         }
-    })
+    });
+
+    $('#refer_another').change(function () {
+        toggleReferForm();
+    });
+
 });
 
 function getStaffDetails(staffId, locationId, businessUnitId, callback) {
@@ -665,7 +675,8 @@ function referAnother() {
             referBusinessUnit.innerHTML = '<option value="">Business Unit</option>';
             referLocation.innerHTML = '<option value="">Location</option>';
             referTo.innerHTML = '<option value="">Assignees</option>';
-            document.querySelector('.refer-form').innerHTML = '';
+            $('.refer-form').hide().find('input[type="text"], textarea').val('');
+            $('.refer-form').find('select').prop('selectedIndex', 0);
         } else {
             getBusinessUnits();
         }
@@ -700,32 +711,15 @@ function getBusinessUnits() {
     });
 }
 
-function displayReferForm() {
-    const referringHTML = `
-            <div class="border-bottom pb-3 my-3">
-                <p class="r-title">Referring Indication</p>
+function toggleReferForm() {
+    const isChecked = $('#refer_another').is(':checked');
+    const hasBusinessUnit = $('#refer_business_unit').val();
 
-                <div class="mb-2">
-                    <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                    <input type="text" name="referral_reason" class="form-control form-control-sm">
-                    <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;"></div>
-                </div>
-
-                <div class="mb-2">
-                    <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
-                    <textarea name="referral_condition" class="form-control form-control-sm" rows="5"></textarea>
-                    <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;"></div>
-                </div>
-
-                <div class="mb-2">
-                    <p class="r-text">Relevant Medical History (if applicable)</p>
-                    <textarea name="medical_history" class="form-control form-control-sm" rows="5"></textarea>
-                    <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;"></div>
-                </div>
-            </div>
-            `;
-
-    $('.refer-form').html(referringHTML);
-
-
-} 
+    if (isChecked && hasBusinessUnit) {
+        $('.refer-form').show();
+    } else {
+        $('.refer-form').hide();
+        $('.refer-form').find('input[type="text"], textarea').val('');
+        $('.refer-form').find('select').prop('selectedIndex', 0);
+    }
+}

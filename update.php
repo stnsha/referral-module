@@ -79,31 +79,3 @@ $response = getApiData($endpoint, $data, 'PUT');
 echo json_encode($response);
 
 exit;
-
-/*
-{
-    "refer_another": {
-        "refer_business_unit": "2",
-        "refer_location": "303",
-        "refer_to": "",
-        "referral_reason": "Medical assessment on lower back pain",
-        "referral_condition": "Lower back pain rated at 7/10, persistent despite physiotherapy and pharmacy treatment.\r\nPatient reports stiffness after prolonged sitting and minimal improvement.\r\nPharmacist advised on pain relief medication (paracetamol and muscle rub), but symptoms persist.",
-        "medical_history": "Mild scoliosis diagnosed during teenage years. No history of trauma or major illness.",
-        "additional_remarks_refer": "Patient has been cooperative and compliant with both physiotherapy and pharmacy recommendations. However, the ongoing pain and limited response to conservative treatment suggest the need for further clinical evaluation. Consider ruling out structural or neurological causes. Patient open to further diagnostic tests if required."
-    },
-    "referral": {
-        "referral_id": "4",
-        "updated_recipient_to": "3333",
-        "business_unit_id_reply": "5",
-        "status": 3,
-        "additional_remarks": "No current medications apart from pain relief."
-    },
-    "form_data": {
-        "5": {
-            "drug_allergies": "No",
-            "prescription_status": "25",
-            "pickup_time": "14:20"
-        }
-    }
-}
-*/

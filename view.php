@@ -232,20 +232,22 @@ include('../common/index_adv.php');
                     <p class="r-title">Referring Indication</p>
                     <div class="mb-2">
                         <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                        <input type="text" name="referral_reason_refer" id="referral_reason_refer" class="form-control form-control-sm" readonly>
+                        <input type="text" name="referral_reason_refer" id="referral_reason_refer"
+                            class="form-control form-control-sm" readonly>
                         <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                         </div>
                     </div>
                     <div class="mb-2">
                         <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
-                        <textarea name="referral_condition_refer" id="referral_condition_refer" class="form-control form-control-sm"
-                            rows="5" readonly></textarea>
+                        <textarea name="referral_condition_refer" id="referral_condition_refer"
+                            class="form-control form-control-sm" rows="5" readonly></textarea>
                         <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
                         </div>
                     </div>
                     <div class="mb-2">
                         <p class="r-text">Relevant Medical History (if applicable)</p>
-                        <textarea name="medical_history_refer" id="medical_history_refer" class="form-control form-control-sm" rows="5" readonly></textarea>
+                        <textarea name="medical_history_refer" id="medical_history_refer"
+                            class="form-control form-control-sm" rows="5" readonly></textarea>
                         <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
                         </div>
                     </div>
@@ -253,8 +255,8 @@ include('../common/index_adv.php');
             </div>
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
-                    <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
-                        onsubmit="validateForm(event)" enctype="multipart/form-data">
+                    <form action="update.php" method="POST" id="referral-form" name="referral-form"
+                        class="referral-view" onsubmit="validateForm(event)" enctype="multipart/form-data">
                         <input type="hidden" name="updated_recipient_to">
                         <input type="hidden" name="referral_id" value="<?php echo $_GET['id']  ?>" readonly>
                         <p class="r-title">Reply Form</p>
@@ -304,13 +306,38 @@ include('../common/index_adv.php');
                     </div>
 
                     <div class="refer-form">
+                        <div class="border-bottom pb-3 my-3">
+                            <p class="r-title">Referring Indication</p>
+
+                            <div class="mb-2">
+                                <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                                <input type="text" name="referral_reason" class="form-control form-control-sm">
+                                <div class="error-message" id="error-referral-reason"
+                                    style="color: red;font-size:12px;"></div>
+                            </div>
+
+                            <div class="mb-2">
+                                <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
+                                <textarea name="referral_condition" class="form-control form-control-sm"
+                                    rows="5"></textarea>
+                                <div class="error-message" id="error-referral-condition"
+                                    style="color: red;font-size:12px;"></div>
+                            </div>
+
+                            <div class="mb-2">
+                                <p class="r-text">Relevant Medical History (if applicable)</p>
+                                <textarea name="medical_history" class="form-control form-control-sm"
+                                    rows="5"></textarea>
+                                <div class="error-message" id="error-medical-history"
+                                    style="color: red;font-size:12px;"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3 referral-status">
                         <span class="r-title">Status</span>
                         <div class="form-check">
-                            <input class="form-check-input border" type="radio" name="status" id="statusOpen"
-                                value="1">
+                            <input class="form-check-input border" type="radio" name="status" id="statusOpen" value="1">
                             <label class="form-check-label r-text" for="statusOpen">Open</label>
                         </div>
                         <div class="form-check">
@@ -323,6 +350,7 @@ include('../common/index_adv.php');
                                 value="3">
                             <label class="form-check-label r-text" for="statusReferred">Referred</label>
                         </div>
+
                         <div class="form-check">
                             <input class="form-check-input border" type="radio" name="status" id="statusClosed"
                                 value="4">
@@ -352,8 +380,8 @@ include('../common/index_adv.php');
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-            const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
-            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/view.js"></script>
 </body>
