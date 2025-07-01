@@ -257,9 +257,6 @@ include('../common/index_adv.php');
                             rows="5"></textarea>
                     </div>
                 </div>
-                <div class="col h-auto border rounded ms-2 p-2">
-                    <p class="r-title">Referral PIC History</p>
-                </div>
             </div>
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="d-flex flex-column justify-content-center align-items-center">

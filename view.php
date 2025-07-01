@@ -19,7 +19,6 @@ include('../common/index_adv.php');
     <div class="container text-center bg-white rounded p-2">
         <div class="col align-items-center">
             <span class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></span>
-            <span class="referral-status">hey</span>
         </div>
         <div class="referral-show">
             <div class="row align-items-start text-start py-2 px-4">
@@ -380,8 +379,8 @@ include('../common/index_adv.php');
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-        const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
-        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+            const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/view.js"></script>
 </body>
