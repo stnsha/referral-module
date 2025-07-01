@@ -9,6 +9,7 @@ $(document).ready(function () {
                 if (!json || typeof json !== 'object' || !json.data) {
                     return [];
                 }
+                console.log(json.data);
                 return json.data;
             }
         },
