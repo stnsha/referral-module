@@ -1,107 +1,6 @@
-function validateForm(event) {
-    event.preventDefault();
-    var form = document.forms["referral-form"];
-
-    function getFieldValue(fieldName) {
-        var field = form[fieldName];
-        return field ? field.value : null;
-    }
-
-    function setErrorMessage(fieldName, message) {
-        var errorElement = document.getElementById('error-' + fieldName);
-        if (errorElement) {
-            errorElement.innerHTML = message;
-        }
-    }
-
-    var errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(function (element) {
-        element.innerHTML = '';
-    });
-
-    function isEmpty(val) {
-        return val === null || val.trim() === "";
-    }
-
-    function isInteger(val) {
-        return /^\d+$/.test(val);
-    }
-
-    function isEmail(val) {
-        return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val);
-    }
-
-    function isIC(val) {
-        return /^\d{12}$/.test(val);
-    }
-
-    var hasError = false;
-
-    function markError(fieldName, condition, message) {
-        if (condition) {
-            setErrorMessage(fieldName, message);
-            hasError = true;
-        }
-    }
-
-    markError("business-unit-from", !isInteger(form["business_unit_id_from"].value), "Select one business unit.");
-    markError("assignee-from", !isInteger(form["assignee_id_from"].value), "Select one assignee.");
-    markError("location-from", !isInteger(form["location_id_from"].value), "Select one location.");
-    markError("business-unit-to", !isInteger(form["business_unit_to"].value), "Select one business unit.");
-    // markError("recipient-to", !isInteger(form["recipient_to"].value), "Select one recipient.");
-    markError("location-to", !isInteger(form["location_to"].value), "Select one location.");
-    markError("referral-reason", isEmpty(form["referral_reason"].value), "This field cannot be left blank.");
-    markError("referral-condition", isEmpty(form["referral_condition"].value), "This field cannot be left blank.");
-    markError("priority", isEmpty(form["priority"].value), "This field cannot be left blank.");
-    markError("customer-ic", !isIC(getFieldValue("customer_ic")), "This field must be a 12-digit number.");
-    markError("customer-name", isEmpty(form["customer_name"].value), "This field cannot be left blank.");
-    markError("customer-phone", isEmpty(form["customer_phone"].value), "This field cannot be left blank.");
-    var email = form["customer_email"].value;
-    markError("customer-email", !isEmpty(email) && !isEmail(email), "Invalid email format.");
-    markError("customer-address", isEmpty(form["customer_address"].value), "This field cannot be left blank.");
-
-    if (!hasError) {
-        $(this).find(':input').each(function () {
-            if ($(this).is(':hidden')) {
-                $(this).prop('required', false);
-            }
-        });
-
-        const formData = new FormData(form);
-        for (const [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
-
-        fetch('post.php', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.text())
-            .then(data => {
-                const parsed = JSON.parse(data);
-                const inner = JSON.parse(parsed.response);
-                console.log('Message:', inner.message);
-                console.log('HTTP Code:', parsed.httpCode);
-
-                const successCode = parsed.httpCode;
-
-                if (successCode === 200 || successCode === 201) {
-                    sessionStorage.setItem('successMessage', inner.message);
-                    // window.location.href = 'index.php';
-                } else {
-                    console.log('Failed:', inner.message);
-                }
-
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-
-    }
-}
-
 let firstLoad = true;
 $(document).ready(function () {
+    handleFilePreview('#attachmentInput', '#attachmentPreview');
     $.ajax({
         url: 'backend.php',
         type: 'GET',
@@ -514,7 +413,6 @@ $(document).ready(function () {
         });
     }
 
-
     $('input[name="customer_ic"]').on('change', function () {
         var icno = $(this).val().trim();
         if (icno === '') return;
@@ -569,3 +467,184 @@ $(document).ready(function () {
 
 });
 
+//Function to upload multiple files
+let allUploadedFiles = [];
+const allowedTypes = [
+    'image/jpeg', 'image/png', 'application/pdf',
+    'application/msword', // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    'application/vnd.ms-excel', // .xls
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // .xlsx
+];
+const maxFileSize = 5 * 1024 * 1024; // 5MB
+
+function handleFilePreview(inputSelector, previewSelector) {
+    const uploadedFileNames = new Set();
+
+    $(inputSelector).on('change', function () {
+        const files = this.files;
+        const preview = $(previewSelector);
+
+        Array.from(files).forEach((file, index) => {
+            const isValidType = allowedTypes.includes(file.type);
+            const isValidSize = file.size <= maxFileSize;
+
+            if (!isValidType) {
+                alert(`${file.name} is not an allowed file type.`);
+                return;
+            }
+
+            if (!isValidSize) {
+                alert(`${file.name} exceeds the 5MB size limit.`);
+                return;
+            }
+
+            if (file.name && !uploadedFileNames.has(file.name)) {
+                uploadedFileNames.add(file.name);
+                allUploadedFiles.push(file);
+
+                const fileId = 'file-' + Date.now() + '-' + index;
+
+                const fileItem = `
+                    <div class="col mb-2" id="${fileId}">
+                        <img src="img/document.png" alt="" style="width: 25px;">
+                        <span class="r-text">${file.name}</span>
+                        <button type="button" class="btn btn-sm btn-danger ms-2 remove-file" data-name="${file.name}" data-id="${fileId}">Remove</button>
+                    </div>
+                `;
+
+                preview.append(fileItem);
+            }
+        });
+
+        this.value = ''; // allow same file to be re-selected
+    });
+
+    // Handle remove
+    $(document).on('click', '.remove-file', function () {
+        const fileName = $(this).data('name');
+        const fileId = $(this).data('id');
+
+        // Remove from array
+        allUploadedFiles = allUploadedFiles.filter(file => file.name !== fileName);
+        // Remove from Set
+        uploadedFileNames.delete(fileName);
+        // Remove from DOM
+        $('#' + fileId).remove();
+    });
+}
+
+//Submission validation
+function validateForm(event) {
+    event.preventDefault();
+    var form = document.forms["referral-form"];
+
+    function getFieldValue(fieldName) {
+        var field = form[fieldName];
+        return field ? field.value : null;
+    }
+
+    function setErrorMessage(fieldName, message) {
+        var errorElement = document.getElementById('error-' + fieldName);
+        if (errorElement) {
+            errorElement.innerHTML = message;
+        }
+    }
+
+    var errorElements = document.querySelectorAll('.error-message');
+    errorElements.forEach(function (element) {
+        element.innerHTML = '';
+    });
+
+    function isEmpty(val) {
+        return val === null || val.trim() === "";
+    }
+
+    function isInteger(val) {
+        return /^\d+$/.test(val);
+    }
+
+    function isEmail(val) {
+        return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val);
+    }
+
+    function isIC(val) {
+        return /^\d{12}$/.test(val);
+    }
+
+    var hasError = false;
+
+    function markError(fieldName, condition, message) {
+        if (condition) {
+            setErrorMessage(fieldName, message);
+            hasError = true;
+        }
+    }
+
+    markError("business-unit-from", !isInteger(form["business_unit_id_from"].value), "Select one business unit.");
+    markError("assignee-from", !isInteger(form["assignee_id_from"].value), "Select one assignee.");
+    markError("location-from", !isInteger(form["location_id_from"].value), "Select one location.");
+    markError("business-unit-to", !isInteger(form["business_unit_to"].value), "Select one business unit.");
+    // markError("recipient-to", !isInteger(form["recipient_to"].value), "Select one recipient.");
+    markError("location-to", !isInteger(form["location_to"].value), "Select one location.");
+    markError("referral-reason", isEmpty(form["referral_reason"].value), "This field cannot be left blank.");
+    markError("referral-condition", isEmpty(form["referral_condition"].value), "This field cannot be left blank.");
+    markError("priority", isEmpty(form["priority"].value), "This field cannot be left blank.");
+    markError("customer-ic", !isIC(getFieldValue("customer_ic")), "This field must be a 12-digit number.");
+    markError("customer-name", isEmpty(form["customer_name"].value), "This field cannot be left blank.");
+    markError("customer-phone", isEmpty(form["customer_phone"].value), "This field cannot be left blank.");
+    var email = form["customer_email"].value;
+    markError("customer-email", !isEmpty(email) && !isEmail(email), "Invalid email format.");
+    markError("customer-address", isEmpty(form["customer_address"].value), "This field cannot be left blank.");
+
+    if (!hasError) {
+        $(this).find(':input').each(function () {
+            if ($(this).is(':hidden')) {
+                $(this).prop('required', false);
+            }
+        });
+
+        const formData = new FormData(form);
+        allUploadedFiles.forEach(file => {
+            formData.append('attachments[]', file);
+        });
+
+        for (const [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`${key}:`, {
+                    name: value.name,
+                    size: value.size + ' bytes',
+                    type: value.type,
+                });
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+        }
+
+        fetch('post.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text())
+            .then(data => {
+                const parsed = JSON.parse(data);
+                const inner = JSON.parse(parsed.response);
+                console.log('Message:', inner.message);
+                console.log('HTTP Code:', parsed.httpCode);
+
+                const successCode = parsed.httpCode;
+
+                if (successCode === 200 || successCode === 201) {
+                    sessionStorage.setItem('successMessage', inner.message);
+                    // window.location.href = 'index.php';
+                } else {
+                    console.log('Failed:', inner.message);
+                }
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+    }
+}
