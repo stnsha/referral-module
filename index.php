@@ -23,7 +23,7 @@ include('../common/index_adv.php');
         </div>
         <div class="success-message"></div>
         <div class="head-container">
-            <div class="referral-filter">
+            <!-- <div class="referral-filter">
                 <p style="padding-right:15px;">Filter</p>
                 <div class="referral-select">
                     <select name="business_unit" id="business_unit">
@@ -38,7 +38,7 @@ include('../common/index_adv.php');
                     </select>
                     <input type="text" name="referral_id" id="referral_id" class="referral-id" placeholder="#REF01234">
                 </div>
-            </div>
+            </div> -->
 
             <a href="create.php" type="button" class="btn-referral">New Referral</a>
         </div>

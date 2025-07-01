@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 
 function getApiData($prefix, $data = null, $method)
 {
-    $host = 'http://172.18.28.51:8002/api/';
+    $host = 'http://mytotalhealth.com.my/referral-api/api/';
     $token = '1|4lpr0@r3f3rr4L';
     $url = $host . $prefix;
 
