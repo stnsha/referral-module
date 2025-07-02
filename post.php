@@ -66,26 +66,30 @@ if ($business_unit_from !== null) {
     );
 }
 
-// echo json_encode($data);
-
-$endpoint = 'referral';
-$response = getApiData($endpoint, $data, 'POST');
-echo json_encode($response);
-
-exit;
 
 $uploadedFiles = array();
 
-if (!empty($_FILES['attachments']['name'][0])) {
-    foreach ($_FILES['attachments']['name'] as $index => $name) {
-        if ($_FILES['attachments']['error'][$index] === 0) {
-            $uploadedFiles[] = array(
-                'name' => $name,
-                'type' => $_FILES['attachments']['type'][$index],
-                'tmp_name' => $_FILES['attachments']['tmp_name'][$index],
-                'error' => $_FILES['attachments']['error'][$index],
-                'size' => $_FILES['attachments']['size'][$index]
-            );
-        }
+foreach ($_FILES['attachments']['name'] as $index => $name) {
+    if (!empty($name) && $_FILES['attachments']['error'][$index] === 0) {
+        $tmpPath = $_FILES['attachments']['tmp_name'][$index];
+        $fileContent = file_get_contents($tmpPath);
+        $base64 = base64_encode($fileContent);
+
+        $uploadedFiles[] = array(
+            'name' => $name,
+            'type' => $_FILES['attachments']['type'][$index],
+            'size' => $_FILES['attachments']['size'][$index],
+            'base64' => $base64
+        );
     }
 }
+
+$data['attachments'] = $uploadedFiles;
+echo json_encode($data);
+
+// $endpoint = 'referral';
+// $response = getApiData($endpoint, $data, 'POST');
+// echo json_encode($response);
+
+
+exit;
