@@ -44,12 +44,11 @@ function getLocations($ref_bus_id)
     if ($ref_bus_result = mysqli_fetch_assoc($ref_bus_query)) {
         $ending_code = $ref_bus_result['ending_code'];
 
-        $outlet_results = mysqli_query($conn, "SELECT id, comp_name FROM outlet WHERE RIGHT(code, 1) = '$ending_code' ORDER BY comp_name ASC");
+        $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE RIGHT(code, 1) = '$ending_code' ORDER BY comp_name ASC");
 
         $all_locations = array();
 
         while ($row = mysqli_fetch_assoc($outlet_results)) {
-            $row['comp_name'] = normalizeCompName($row['comp_name']);
             $all_locations[] = $row;
         }
 
@@ -127,12 +126,11 @@ function getStaffLocation($staff_id)
         // Convert to comma-separated string for SQL
         $outlet_ids = implode(',', array_map('intval', $outlets));
 
-        $outlet_results = mysqli_query($conn, "SELECT id, comp_name FROM outlet WHERE id IN ($outlet_ids) ORDER BY comp_name ASC");
+        $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE id IN ($outlet_ids) ORDER BY comp_name ASC");
 
         $all_locations = array();
 
         while ($row = mysqli_fetch_assoc($outlet_results)) {
-            $row['comp_name'] = normalizeCompName($row['comp_name']);
             $all_locations[] = $row;
         }
 
@@ -170,7 +168,8 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
     $sql = "SELECT 
             r.name,
             s.nama_staff, 
-            o.comp_name
+            CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
+            o.code
         FROM staff s
         INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
         INNER JOIN ref_business_unit r ON r.id = $bu_id
@@ -184,7 +183,8 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
         $staffDetails[] = array(
             'business_unit' => $row['name'],
             'staff' => $row['nama_staff'],
-            'outlet' => normalizeCompName($row['comp_name'])
+            'contact' => $row['contact'],
+            'outlet' => $row['code']
         );
     }
 

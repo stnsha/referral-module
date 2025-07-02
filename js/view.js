@@ -99,7 +99,7 @@ $(document).ready(function () {
                 return a.sequence - b.sequence;
             });
 
-            const $container = $('#referralHistoryContainer');
+            const container = $('#referralHistoryContainer');
             $.each(sortedDetails, function (index, rd) {
                 //change for production
                 // rd.staff_id ??= staffId; 
@@ -114,6 +114,7 @@ $(document).ready(function () {
                     const staff = sd[0].staff;
                     const businessUnit = sd[0].business_unit;
                     const outlet = sd[0].outlet;
+                    const contact = sd[0].contact;
                     const createdAt = rd.created_at;
 
                     const accordionHTML = `
@@ -128,16 +129,30 @@ $(document).ready(function () {
                             </button>
                             <div class="referral-panel">
                                 <div class="referral-panel-item" data-bu="${rd.business_unit_id}"></div>
+                                <div class="referral-pic"></div>
                             </div>
                         </div>
                         `;
 
                     if (rd.is_filled == 1) {
                         const accordion = $(accordionHTML);
-                        $container.append(accordion);
-
-                        const panel = accordion.find('.referral-panel');
+                        container.append(accordion);
+                        const panel = accordion.find('.referral-panel-item');
                         initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
+
+                        const referralPic = accordion.find('.referral-pic');
+                        var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
+                        referralPic.html(`
+                            <span class="r-title">Person in Charge</span><br>
+                            <span class="r-text">Name: ${staff} </span><br>
+                            <span class="r-text">
+                                Contact: 
+                                <a href="${whatsapp}" target="_blank">
+                                    <img src="img/whatsapp.png" style="width:25px;">
+                                </a>
+                            </span>
+                        `);
+
                     } else {
                         displayContent(rd.business_unit_id, '.reply-form');
                     }
@@ -281,7 +296,7 @@ $(document).ready(function () {
                     $.each(response, function (index, location) {
                         locationTo.append(
                             '<option value="' + location.id + '" ' + '>' +
-                            location.comp_name + '</option>'
+                            location.code + '</option>'
                         );
                     });
 

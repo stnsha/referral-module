@@ -191,10 +191,13 @@ select {
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
 }
 
-.referral-panel-item {
-    padding: 15px 18px;
+.referral-panel-item,
+.referral-pic {
+    padding-top: 15px;
 }
 
 .referral-history {

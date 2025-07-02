@@ -71,7 +71,7 @@ $(document).ready(function () {
                     $.each(staffLocs, function (index, location) {
                         locationFrom.append(
                             '<option value="' + location.id + '" ' + '>' +
-                            location.comp_name + '</option>'
+                            location.code + '</option>'
                         );
                     });
                 } else {
@@ -93,7 +93,7 @@ $(document).ready(function () {
 
                                 locationFrom.append(
                                     '<option value="' + location.id + '" ' + selected + '>' +
-                                    location.comp_name + '</option>'
+                                    location.code + '</option>'
                                 );
                             });
 
@@ -248,7 +248,7 @@ $(document).ready(function () {
                     $.each(response, function (index, location) {
                         locationTo.append(
                             '<option value="' + location.id + '" ' + '>' +
-                            location.comp_name + '</option>'
+                            location.code + '</option>'
                         );
                     });
 

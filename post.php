@@ -2,14 +2,6 @@
 require 'api.php';
 header('Content-Type: application/json');
 
-echo '<pre>';
-print_r($_POST);
-echo '</pre>';
-echo '<pre>';
-print_r($_FILES);
-echo '</pre>';
-
-exit;
 $data = array();
 
 $business_unit_from = isset($_POST['business_unit_id_from']) ? $_POST['business_unit_id_from'] : null;
