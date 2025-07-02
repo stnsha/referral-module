@@ -609,17 +609,17 @@ function validateForm(event) {
             formData.append('attachments[]', file);
         });
 
-        for (const [key, value] of formData.entries()) {
-            if (value instanceof File) {
-                console.log(`${key}:`, {
-                    name: value.name,
-                    size: value.size + ' bytes',
-                    type: value.type,
-                });
-            } else {
-                console.log(`${key}: ${value}`);
-            }
-        }
+        // for (const [key, value] of formData.entries()) {
+        //     if (value instanceof File) {
+        //         console.log(`${key}:`, {
+        //             name: value.name,
+        //             size: value.size + ' bytes',
+        //             type: value.type,
+        //         });
+        //     } else {
+        //         console.log(`${key}: ${value}`);
+        //     }
+        // }
 
         fetch('post.php', {
             method: 'POST',
@@ -629,14 +629,14 @@ function validateForm(event) {
             .then(data => {
                 const parsed = JSON.parse(data);
                 const inner = JSON.parse(parsed.response);
-                console.log('Message:', inner.message);
+                console.log('ID:', inner.id);
                 console.log('HTTP Code:', parsed.httpCode);
 
                 const successCode = parsed.httpCode;
 
                 if (successCode === 200 || successCode === 201) {
                     sessionStorage.setItem('successMessage', inner.message);
-                    // window.location.href = 'index.php';
+                    window.location.href = 'qr.php?id=' + inner.id;
                 } else {
                     console.log('Failed:', inner.message);
                 }

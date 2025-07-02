@@ -70,24 +70,7 @@ if ($business_unit_from !== null) {
 
 $endpoint = 'referral';
 $response = getApiData($endpoint, $data, 'POST');
-// echo json_encode($response);
-
-if (isset($response['httpCode']) && $response['httpCode'] == 201) {
-    $rawJson = $response['response'];
-    $decoded = json_decode($rawJson, true);
-
-    $id = isset($decoded['id']) ? $decoded['id'] : null;
-
-    if ($id !== null) {
-        // echo 'ID: ' . $id;
-        header('Location: qr.php?id=' . urlencode($id));
-        exit;
-    } else {
-        echo 'ID not found in response.';
-    }
-} else {
-    echo 'Unexpected status code: ' . json_encode($response);
-}
+echo json_encode($response);
 
 exit;
 
