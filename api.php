@@ -42,6 +42,7 @@ function getApiData($prefix, $data = null, $method)
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
+    $headers = curl_getinfo($ch, CURLINFO_HEADER_OUT);
 
     if ($response === false || ($httpCode !== 200 && $httpCode !== 201 && $httpCode !== 204)) {
         die(json_encode(array(
@@ -56,11 +57,14 @@ function getApiData($prefix, $data = null, $method)
         )));
     }
 
-    curl_close($ch);
-    return array(
+    $result = array(
         'response' => $response,
-        'httpCode' => $httpCode
+        'httpCode' => $httpCode,
+        'headers' => $headers,
+        'ch' => $ch
     );
+
+    return $result;
 }
 
 function getBusinessUnit()
@@ -139,55 +143,60 @@ function getReferral($referral_id)
     return isset($decoded) ? $decoded : array();
 }
 
-function downloadAttachment($attachment_id, $filename)
+function downloadAttachment($attachment_id)
 {
-    // Set headers for file download
-    header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
-    header('Cache-Control: no-cache, must-revalidate');
-    header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
-
-    // Get attachment data from your API
     $data = getApiData('attachment/' . $attachment_id, null, 'GET');
 
+    // Always close the curl handle
+    if (isset($data['ch'])) {
+        curl_close($data['ch']);
+    }
+
     if ($data['httpCode'] != 200) {
-        // If API call fails, return error
         header('Content-Type: application/json');
         echo json_encode(array(
             'success' => false,
             'message' => 'Failed to retrieve attachment'
         ));
-        return;
+        exit;
     }
 
-    $decoded = json_decode($data['response'], true);
+    // Get the raw response data
+    $response = $data['response'];
 
-    if (!isset($decoded['data']) || !isset($decoded['data']['file_content'])) {
-        header('Content-Type: application/json');
-        echo json_encode(array(
-            'success' => false,
-            'message' => 'Invalid attachment data'
-        ));
-        return;
+    // Parse the response as JSON to get metadata
+    $responseData = json_decode($response, true);
+    if (json_last_error() === JSON_ERROR_NONE && isset($responseData['data'])) {
+        // If response is valid JSON with data, extract content type and filename
+        $contentType = isset($responseData['data']['content_type']) ? $responseData['data']['content_type'] : 'application/octet-stream';
+        $filename = isset($responseData['data']['filename']) ? $responseData['data']['filename'] : 'download';
+        $fileContent = isset($responseData['data']['file_content']) ? base64_decode($responseData['data']['file_content']) : null;
+
+        if ($fileContent) {
+            // Set headers for file download
+            header('Content-Type: ' . $contentType);
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Transfer-Encoding: binary');
+            header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+            header('Pragma: public');
+            header('Expires: 0');
+
+            // Output the decoded file content
+            echo $fileContent;
+            exit;
+        }
     }
 
-    // Decode base64 content and output
-    $fileContent = base64_decode($decoded['data']['file_content']);
+    // If not JSON or no valid data, treat as binary response
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="download"');
+    header('Content-Transfer-Encoding: binary');
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Pragma: public');
+    header('Expires: 0');
 
-    if ($fileContent === false) {
-        header('Content-Type: application/json');
-        echo json_encode(array(
-            'success' => false,
-            'message' => 'Invalid file content'
-        ));
-        return;
-    }
-
-    // Set content length
-    header('Content-Length: ' . strlen($fileContent));
-
-    // Output the file content
-    echo $fileContent;
+    // Output the raw response
+    echo $response;
     exit;
 }
 
@@ -221,11 +230,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'download-attachment':
-                if (isset($jsonData['attachment_id']) && isset($jsonData['filename'])) {
-                    downloadAttachment($jsonData['attachment_id'], $jsonData['filename']);
-                    // Note: downloadAttachment() will exit, so no response needed here
+                $attachment_id = isset($jsonData['attachment_id']) ? $jsonData['attachment_id'] : null;
+                if ($attachment_id) {
+                    downloadAttachment($attachment_id);
+                    // downloadAttachment handles its own output and exit
+                    return;
                 } else {
-                    $response = array('success' => false, 'message' => 'Missing attachment_id or filename');
+                    $response = array('success' => false, 'message' => 'Missing attachment_id');
                 }
                 break;
         }
@@ -234,9 +245,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['action'])) {
         // Handle form-data requests
         switch ($_POST['action']) {
+            case 'download-attachment':
+                $attachment_id = isset($_POST['attachment_id']) ? $_POST['attachment_id'] : null;
+                if ($attachment_id) {
+                    downloadAttachment($attachment_id);
+                    // downloadAttachment handles its own output and exit
+                    return;
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing attachment_id');
+                }
+                break;
+
             case 'business-units':
                 $response = array('data' => getBusinessUnit());
                 break;
+
             case 'create-form':
                 $formData = array(
                     'business_unit_id' => isset($_POST['business_unit_id']) ? $_POST['business_unit_id'] : null,

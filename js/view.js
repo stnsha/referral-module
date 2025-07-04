@@ -1,66 +1,3 @@
-function validateForm(event) {
-    event.preventDefault();
-
-    let isValid = true;
-    $('.error-message').text('');
-
-    const requiredGroups = new Set();
-
-    $('input[type="checkbox"][data-required="true"], input[type="radio"][data-required="true"]').each(function () {
-        requiredGroups.add($(this).data('group'));
-    });
-
-    requiredGroups.forEach(group => {
-        const inputs = $(`input[data-group="${group}"]`);
-        const isChecked = inputs.is(':checked');
-
-        if (!isChecked) {
-            $(`#error-${group}`).text('Please select at least one option.');
-            isValid = false;
-        }
-    });
-
-    const form = document.getElementById('referral-form');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        isValid = false;
-    }
-
-    if (isValid) {
-        // form.submit();
-        const formData = new FormData(form);
-        for (const [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
-
-        fetch('update.php', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.text())
-            .then(data => {
-                const parsed = JSON.parse(data);
-                const inner = JSON.parse(parsed.response);
-                console.log('Message:', inner.message);
-                console.log('HTTP Code:', parsed.httpCode);
-
-                const successCode = parsed.httpCode;
-
-                if (successCode === 200 || successCode === 201) {
-                    sessionStorage.setItem('successMessage', inner.message);
-                    window.location.href = 'index.php';
-                } else {
-                    console.log('Failed:', inner.message);
-                }
-
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-    }
-
-}
-
 $(document).ready(function () {
     referralAccordion();
     referAnother();
@@ -109,6 +46,7 @@ $(document).ready(function () {
 
                 $('input[name="updated_recipient_to"]').val(fakeStaffId);
 
+                //run through staff details
                 getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
                     const staff = sd[0].staff;
                     const businessUnit = sd[0].business_unit;
@@ -116,6 +54,7 @@ $(document).ready(function () {
                     const contact = sd[0].contact;
                     const createdAt = rd.created_at;
 
+                    //referral history accordion
                     const accordionHTML = `
                         <div class="referral-history">
                             <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
@@ -134,9 +73,11 @@ $(document).ready(function () {
                         `;
 
                     if (rd.is_filled == 1) {
+                        //display history if exist
                         const accordion = $(accordionHTML);
                         container.append(accordion);
                         const panel = accordion.find('.referral-panel-item');
+                        //display initial treatment
                         initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
 
                         const referralPic = accordion.find('.referral-pic');
@@ -152,21 +93,28 @@ $(document).ready(function () {
                             </span>
                         `);
 
+                        //pass object attachments
+                        if (rd.attachments.length > 1) {
+                            displayAttachments(rd.attachments, staff, createdAt);
+                        }
+
                     } else {
+                        //display reply form for next pic
                         displayContent(rd.business_unit_id, '.reply-form');
                     }
 
+                    //assign referred from 
                     if (rd.sequence == 1) {
                         assigneeFrom.val(staff);
                         business_unit_from.val(businessUnit);
                         location_from.val(outlet);
                     }
+                    //assign referred to
                     if (rd.sequence == 2) {
                         recipientTo.val(staff);
                         business_unit_to.val(businessUnit);
                         location_to.val(outlet);
                     }
-
                 });
 
                 $('.referring-indication').hide();
@@ -264,35 +212,32 @@ $(document).ready(function () {
             }
 
             // Referral Attachments
-            const attachmentContainer = $('#attachmentPreview');
+            const attachmentContainer = $('#attachmentDisplay');
 
-            function fetchAttachments() {
-                var attachments = response.data.referralAttachments;
+            function displayAttachments(attachments, staff, created_at) {
                 attachmentContainer.empty(); // Clear existing attachments
+                console.log(attachments);
 
                 attachments.forEach(function (attachment) {
                     let isDownloadableClientSide = false;
 
                     const downloadButtonHtml = isDownloadableClientSide ?
                         `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-encoded="${attachment.encoded}">
-                    <i class="bi bi-download"></i>
+                    <img src="img/download.png" style="width:25px;"/>
                 </button>` :
-                        `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.name}"> <i class="bi bi-download"></i>
+                        `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.attachment_id}"> <img src="img/download.png" style="width:25px;"/>
                 </button>`;
 
                     const attachmentItem = `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
+                <li class="list-group-item d-flex justify-content-between align-items-center list-style-type-disc">
+                    <div class="d-flex align-items-center flex-grow-1">
                         <div>
                             <span class="r-title">${attachment.name}</span>
-                            <small class="d-block r-text text-muted">Shared by ${attachment.sharedBy} on ${attachment.sharedDate}</small>
+                            <small class="d-block r-text text-muted">Uploaded by ${staff} on ${created_at}.</small>
                         </div>
                     </div>
-                    <div>
+                    <div class="d-flex align-items-center">
                         ${downloadButtonHtml}
-                        <button class="btn btn-sm btn-link text-decoration-none" title="More options">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
                     </div>
                 </li>
             `;
@@ -302,7 +247,7 @@ $(document).ready(function () {
                 $('.download-btn').on('click', function () {
                     const fileName = $(this).data('filename');
                     const encodedData = $(this).data('encoded');
-                    const attachmentId = $(this).data('attachment-id'); // For server-side download
+                    const attachmentId = $(this).data('attachment-id');
 
                     if (encodedData) {
                         // Client-side download using Base64
@@ -316,9 +261,9 @@ $(document).ready(function () {
                                 bytes[i] = binaryString.charCodeAt(i);
                             }
 
-                            // Create blob with appropriate MIME type
-                            const mimeType = getMimeTypeFromFileName(fileName);
-                            const blob = new Blob([bytes], { type: mimeType });
+                            // Use content type from API response or fallback to detected MIME type
+                            const contentType = response.data.content_type || getMimeTypeFromFileName(fileName);
+                            const blob = new Blob([bytes], { type: contentType });
 
                             // Create temporary URL and download
                             const url = window.URL.createObjectURL(blob);
@@ -344,33 +289,54 @@ $(document).ready(function () {
                         // Server-side download
                         console.log(`Downloading attachment: ${fileName} (ID: ${attachmentId})`);
 
-                        // Make AJAX call to download from server
+                        // Make AJAX request for download
                         $.ajax({
                             url: 'api.php',
                             method: 'POST',
                             data: JSON.stringify({
                                 action: 'download-attachment',
-                                attachment_id: attachmentId,
-                                filename: fileName
+                                attachment_id: attachmentId
                             }),
+                            contentType: 'application/json',
                             xhrFields: {
-                                responseType: 'blob' // Important for binary data
+                                responseType: 'blob'
                             },
-                            success: function (blob) {
-                                const url = window.URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = fileName;
-                                a.style.display = 'none';
+                            success: function (response) {
+                                try {
+                                    // Try to read the response as text first
+                                    const reader = new FileReader();
+                                    reader.onload = function () {
+                                        try {
+                                            // Check if response is JSON
+                                            const jsonResponse = JSON.parse(reader.result);
+                                            if (!jsonResponse.success) {
+                                                console.error('Download failed:', jsonResponse.message);
+                                                alert(jsonResponse.message || 'Failed to download file. Please try again.');
+                                                return;
+                                            }
+                                        } catch (e) {
+                                            // Not JSON, treat as binary data
+                                            const blob = new Blob([response], { type: response.type || getMimeTypeFromFileName(fileName) });
+                                            const url = window.URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = fileName;
+                                            a.style.display = 'none';
 
-                                document.body.appendChild(a);
-                                a.click();
+                                            document.body.appendChild(a);
+                                            a.click();
 
-                                // Clean up
-                                setTimeout(() => {
-                                    window.URL.revokeObjectURL(url);
-                                    document.body.removeChild(a);
-                                }, 100);
+                                            setTimeout(() => {
+                                                window.URL.revokeObjectURL(url);
+                                                document.body.removeChild(a);
+                                            }, 100);
+                                        }
+                                    };
+                                    reader.readAsText(response);
+                                } catch (error) {
+                                    console.error('Error processing file data:', error);
+                                    alert('Failed to process file data. Please try again.');
+                                }
                             },
                             error: function (xhr, status, error) {
                                 console.error('Download failed:', error);
@@ -381,6 +347,7 @@ $(document).ready(function () {
                         console.warn('No download method available for this attachment.');
                         alert('Download method not available for this file.');
                     }
+
                 });
 
                 // Helper function to determine MIME type from file extension
@@ -409,16 +376,13 @@ $(document).ready(function () {
                     return mimeTypes[extension] || 'application/octet-stream';
                 }
             }
-
-            // Call the function to fetch and display attachments when the page loads
-            fetchAttachments();
-
-
         },
         error: function () {
             console.log("Failed to fetch referral details.");
         }
     });
+
+    handleFilePreview('#attachmentInput', '#attachmentPreview');
 
     // For Refer To
     $('#refer_business_unit').change(function () {
@@ -886,4 +850,137 @@ function toggleReferForm() {
         $('.refer-form').find('input[type="text"], textarea').val('');
         $('.refer-form').find('select').prop('selectedIndex', 0);
     }
+}
+
+//Function to upload multiple files
+let allUploadedFiles = [];
+const allowedTypes = [
+    'image/jpeg', 'image/png', 'application/pdf',
+    'application/msword', // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    'application/vnd.ms-excel', // .xls
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // .xlsx
+];
+const maxFileSize = 5 * 1024 * 1024; // 5MB
+
+function handleFilePreview(inputSelector, previewSelector) {
+    const uploadedFileNames = new Set();
+
+    $(inputSelector).on('change', function () {
+        const files = this.files;
+        const preview = $(previewSelector);
+
+        Array.from(files).forEach((file, index) => {
+            const isValidType = allowedTypes.includes(file.type);
+            const isValidSize = file.size <= maxFileSize;
+
+            if (!isValidType) {
+                alert(`${file.name} is not an allowed file type.`);
+                return;
+            }
+
+            if (!isValidSize) {
+                alert(`${file.name} exceeds the 5MB size limit.`);
+                return;
+            }
+
+            if (file.name && !uploadedFileNames.has(file.name)) {
+                uploadedFileNames.add(file.name);
+                allUploadedFiles.push(file);
+
+                const fileId = 'file-' + Date.now() + '-' + index;
+
+                const fileItem = `
+                    <div class="col mb-2" id="${fileId}">
+                        <img src="img/document.png" alt="" style="width: 25px;">
+                        <span class="r-text">${file.name}</span>
+                        <button type="button" class="btn btn-sm btn-danger ms-2 remove-file" data-name="${file.name}" data-id="${fileId}">Remove</button>
+                    </div>
+                `;
+
+                preview.append(fileItem);
+            }
+        });
+
+        this.value = ''; // allow same file to be re-selected
+    });
+
+    // Handle remove
+    $(document).on('click', '.remove-file', function () {
+        const fileName = $(this).data('name');
+        const fileId = $(this).data('id');
+
+        // Remove from array
+        allUploadedFiles = allUploadedFiles.filter(file => file.name !== fileName);
+        // Remove from Set
+        uploadedFileNames.delete(fileName);
+        // Remove from DOM
+        $('#' + fileId).remove();
+    });
+}
+
+
+function validateForm(event) {
+    event.preventDefault();
+
+    let isValid = true;
+    $('.error-message').text('');
+
+    const requiredGroups = new Set();
+
+    $('input[type="checkbox"][data-required="true"], input[type="radio"][data-required="true"]').each(function () {
+        requiredGroups.add($(this).data('group'));
+    });
+
+    requiredGroups.forEach(group => {
+        const inputs = $(`input[data-group="${group}"]`);
+        const isChecked = inputs.is(':checked');
+
+        if (!isChecked) {
+            $(`#error-${group}`).text('Please select at least one option.');
+            isValid = false;
+        }
+    });
+
+    const form = document.getElementById('referral-form');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        isValid = false;
+    }
+
+    if (isValid) {
+        // form.submit();
+        const formData = new FormData(form);
+        allUploadedFiles.forEach(file => {
+            formData.append('attachments[]', file);
+        });
+        // for (const [key, value] of formData.entries()) {
+        //     console.log(`${key}: ${value}`);
+        // }
+        fetch('update.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text())
+            .then(data => {
+                const parsed = JSON.parse(data);
+                const inner = JSON.parse(parsed.response);
+                console.log('Message:', inner.message);
+                console.log('HTTP Code:', parsed.httpCode);
+
+                const successCode = parsed.httpCode;
+
+                if (successCode === 200 || successCode === 201) {
+                    sessionStorage.setItem('successMessage', inner.message);
+                    window.location.href = 'index.php';
+                } else {
+                    console.log('Failed:', inner.message);
+                }
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
 }

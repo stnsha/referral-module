@@ -211,7 +211,8 @@ include('../common/index_adv.php');
                         <input name="attachments[]" class="form-control mb-2" type="file" multiple id="attachmentInput">
                         <!--png/jpeg/jpg/pdf/word/excel-->
 
-                        <div class="col m-4" id="attachmentPreview">
+                        <div class="col m-4" id="attachmentPreview"></div>
+                        <div class="col m-4" id="attachmentDisplay">
                             <div class="card">
                                 <div class="card-body">
                                     <h5 class="card-title">Attachments</h5>

@@ -195,6 +195,11 @@ select {
     flex-direction: column;
 }
 
+.list-style-type-disc {
+    list-style-type: disc !important;
+    padding-left: 1.5em !important;
+}
+
 .referral-panel-item,
 .referral-pic {
     padding-top: 15px;

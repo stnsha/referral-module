@@ -4,16 +4,11 @@ header('Content-Type: application/json');
 
 $data = array();
 
-// echo '<pre>';
-// print_r($_POST);
-// echo '</pre>';
-
 $referral_id = isset($_POST['referral_id']) ? $_POST['referral_id'] : null;
 $updated_recipient_to = isset($_POST['updated_recipient_to']) ? $_POST['updated_recipient_to'] : null;
 $bu_id_reply = isset($_POST['bu_id_reply']) ? $_POST['bu_id_reply'] : null;
 $status = isset($_POST['status']) ? $_POST['status'] : 1;
 $additional_remarks_reply = isset($_POST['additional_remarks_reply']) ? $_POST['additional_remarks_reply'] : null;
-
 
 if (isset($_POST['refer_another']) && $_POST['refer_another'] === 'on') {
     $status = 3;
@@ -72,10 +67,28 @@ if ($bu_id_reply !== null) {
     );
 }
 
+$uploadedFiles = array();
+
+foreach ($_FILES['attachments']['name'] as $index => $name) {
+    if (!empty($name) && $_FILES['attachments']['error'][$index] === 0) {
+        $tmpPath = $_FILES['attachments']['tmp_name'][$index];
+        $fileContent = file_get_contents($tmpPath);
+        $base64 = base64_encode($fileContent);
+
+        $uploadedFiles[] = array(
+            'name' => $name,
+            'type' => $_FILES['attachments']['type'][$index],
+            'size' => $_FILES['attachments']['size'][$index],
+            'base64' => $base64
+        );
+    }
+}
+
+$data['attachments'] = $uploadedFiles;
+
 // echo json_encode($data);
+// exit;
 
 $endpoint = 'referral';
 $response = getApiData($endpoint, $data, 'PUT');
 echo json_encode($response);
-
-exit;
