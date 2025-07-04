@@ -94,7 +94,9 @@ $(document).ready(function () {
                         `);
 
                         //pass object attachments
-                        displayAttachments(rd.attachments, staff, createdAt);
+                        if (rd.attachments > 0) {
+                            displayAttachments(rd.attachments, staff, createdAt);
+                        }
 
                     } else {
                         //display reply form for next pic
