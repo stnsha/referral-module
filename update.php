@@ -86,8 +86,8 @@ foreach ($_FILES['attachments']['name'] as $index => $name) {
 
 $data['attachments'] = $uploadedFiles;
 
-// echo json_encode($data);
-// exit;
+echo json_encode($data);
+exit;
 
 $endpoint = 'referral';
 $response = getApiData($endpoint, $data, 'PUT');
