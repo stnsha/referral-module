@@ -212,15 +212,7 @@ include('../common/index_adv.php');
                         <!--png/jpeg/jpg/pdf/word/excel-->
 
                         <div class="col m-4" id="attachmentPreview"></div>
-                        <div class="col m-4" id="attachmentDisplay">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Attachments</h5>
-                                    <ul class="list-group list-group-flush" id="attachmentList">
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="col m-4" id="attachmentDisplay"></div>
                     </div>
                 </div>
             </div>

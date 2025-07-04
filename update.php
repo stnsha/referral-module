@@ -91,5 +91,7 @@ $data['attachments'] = $uploadedFiles;
 
 $endpoint = 'referral';
 $response = getApiData($endpoint, $data, 'PUT');
+if (is_array($response) && array_key_exists('ch', $response)) {
+    unset($response['ch']);
+}
 echo json_encode($response);
-exit;

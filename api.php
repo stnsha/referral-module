@@ -57,10 +57,11 @@ function getApiData($prefix, $data = null, $method)
         )));
     }
 
-    curl_close($ch);
-    return array(
+    $result = array(
         'response' => $response,
-        'httpCode' => $httpCode
+        'httpCode' => $httpCode,
+        'headers' => $headers,
+        'ch' => $ch
     );
 
     return $result;
