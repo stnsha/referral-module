@@ -201,6 +201,17 @@ select {
 }
 
 .referral-panel-item,
+.referral-pic,
+.attachment-list {
+    padding-top: 15px;
+}
+
+.attachment-list {
+    border-top: 1px solid #eee;
+    margin-top: 15px;
+}
+
+.referral-panel-item,
 .referral-pic {
     padding-top: 15px;
 }

@@ -94,9 +94,7 @@ $(document).ready(function () {
                         `);
 
                         //pass object attachments
-                        if (rd.attachments.length > 1) {
-                            displayAttachments(rd.attachments, staff, createdAt);
-                        }
+                        displayAttachments(rd.attachments, staff, createdAt);
 
                     } else {
                         //display reply form for next pic
@@ -223,20 +221,20 @@ $(document).ready(function () {
 
                     const downloadButtonHtml = isDownloadableClientSide ?
                         `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-encoded="${attachment.encoded}">
-                    <img src="img/download.png" style="width:25px;"/>
+                    Download
                 </button>` :
-                        `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.attachment_id}"> <img src="img/download.png" style="width:25px;"/>
+                        `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.attachment_id}"> Download
                 </button>`;
 
                     const attachmentItem = `
-                <li class="list-group-item d-flex justify-content-between align-items-center list-style-type-disc">
-                    <div class="d-flex align-items-center flex-grow-1">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
                         <div>
                             <span class="r-title">${attachment.name}</span>
                             <small class="d-block r-text text-muted">Uploaded by ${staff} on ${created_at}.</small>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center">
+                    <div>
                         ${downloadButtonHtml}
                     </div>
                 </li>
@@ -289,7 +287,7 @@ $(document).ready(function () {
                         // Server-side download
                         console.log(`Downloading attachment: ${fileName} (ID: ${attachmentId})`);
 
-                        // Make AJAX request for download
+                        // Make AJAX call to download from server
                         $.ajax({
                             url: 'api.php',
                             method: 'POST',
@@ -298,41 +296,43 @@ $(document).ready(function () {
                                 attachment_id: attachmentId
                             }),
                             contentType: 'application/json',
-                            xhrFields: {
-                                responseType: 'blob'
-                            },
+                            dataType: 'json',
                             success: function (response) {
+                                if (!response.success) {
+                                    console.error('Download failed:', response.message);
+                                    alert(response.message || 'Failed to download file. Please try again.');
+                                    return;
+                                }
+
                                 try {
-                                    // Try to read the response as text first
-                                    const reader = new FileReader();
-                                    reader.onload = function () {
-                                        try {
-                                            // Check if response is JSON
-                                            const jsonResponse = JSON.parse(reader.result);
-                                            if (!jsonResponse.success) {
-                                                console.error('Download failed:', jsonResponse.message);
-                                                alert(jsonResponse.message || 'Failed to download file. Please try again.');
-                                                return;
-                                            }
-                                        } catch (e) {
-                                            // Not JSON, treat as binary data
-                                            const blob = new Blob([response], { type: response.type || getMimeTypeFromFileName(fileName) });
-                                            const url = window.URL.createObjectURL(blob);
-                                            const a = document.createElement('a');
-                                            a.href = url;
-                                            a.download = fileName;
-                                            a.style.display = 'none';
+                                    // Decode base64 data
+                                    const base64Data = response.data.file_content;
+                                    const binaryString = atob(base64Data);
+                                    const bytes = new Uint8Array(binaryString.length);
 
-                                            document.body.appendChild(a);
-                                            a.click();
+                                    for (let i = 0; i < binaryString.length; i++) {
+                                        bytes[i] = binaryString.charCodeAt(i);
+                                    }
 
-                                            setTimeout(() => {
-                                                window.URL.revokeObjectURL(url);
-                                                document.body.removeChild(a);
-                                            }, 100);
-                                        }
-                                    };
-                                    reader.readAsText(response);
+                                    // Create blob with appropriate MIME type
+                                    const contentType = response.data.content_type || getMimeTypeFromFileName(fileName);
+                                    const blob = new Blob([bytes], { type: contentType });
+
+                                    // Create temporary URL and download
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = response.data.filename || fileName;
+                                    a.style.display = 'none';
+
+                                    document.body.appendChild(a);
+                                    a.click();
+
+                                    // Clean up
+                                    setTimeout(() => {
+                                        window.URL.revokeObjectURL(url);
+                                        document.body.removeChild(a);
+                                    }, 100);
                                 } catch (error) {
                                     console.error('Error processing file data:', error);
                                     alert('Failed to process file data. Please try again.');
@@ -347,7 +347,6 @@ $(document).ready(function () {
                         console.warn('No download method available for this attachment.');
                         alert('Download method not available for this file.');
                     }
-
                 });
 
                 // Helper function to determine MIME type from file extension
@@ -376,13 +375,15 @@ $(document).ready(function () {
                     return mimeTypes[extension] || 'application/octet-stream';
                 }
             }
+
+
+
+
         },
         error: function () {
             console.log("Failed to fetch referral details.");
         }
     });
-
-    handleFilePreview('#attachmentInput', '#attachmentPreview');
 
     // For Refer To
     $('#refer_business_unit').change(function () {
@@ -463,6 +464,7 @@ $(document).ready(function () {
         toggleReferForm();
     });
 
+    handleFilePreview('#attachmentInput', '#attachmentPreview');
 });
 
 function getStaffDetails(staffId, locationId, businessUnitId, callback) {
@@ -811,7 +813,6 @@ function referAnother() {
     });
 }
 
-
 function getBusinessUnits() {
     $.ajax({
         url: 'backend.php',
@@ -919,7 +920,6 @@ function handleFilePreview(inputSelector, previewSelector) {
     });
 }
 
-
 function validateForm(event) {
     event.preventDefault();
 
@@ -954,9 +954,19 @@ function validateForm(event) {
         allUploadedFiles.forEach(file => {
             formData.append('attachments[]', file);
         });
+
         // for (const [key, value] of formData.entries()) {
-        //     console.log(`${key}: ${value}`);
+        //     if (value instanceof File) {
+        //         console.log(`${key}:`, {
+        //             name: value.name,
+        //             size: value.size + ' bytes',
+        //             type: value.type,
+        //         });
+        //     } else {
+        //         console.log(`${key}: ${value}`);
+        //     }
         // }
+
         fetch('update.php', {
             method: 'POST',
             body: formData
