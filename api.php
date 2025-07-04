@@ -139,6 +139,58 @@ function getReferral($referral_id)
     return isset($decoded) ? $decoded : array();
 }
 
+function downloadAttachment($attachment_id, $filename)
+{
+    // Set headers for file download
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: no-cache, must-revalidate');
+    header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+
+    // Get attachment data from your API
+    $data = getApiData('attachment/' . $attachment_id, null, 'GET');
+
+    if ($data['httpCode'] != 200) {
+        // If API call fails, return error
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Failed to retrieve attachment'
+        ));
+        return;
+    }
+
+    $decoded = json_decode($data['response'], true);
+
+    if (!isset($decoded['data']) || !isset($decoded['data']['file_content'])) {
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Invalid attachment data'
+        ));
+        return;
+    }
+
+    // Decode base64 content and output
+    $fileContent = base64_decode($decoded['data']['file_content']);
+
+    if ($fileContent === false) {
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Invalid file content'
+        ));
+        return;
+    }
+
+    // Set content length
+    header('Content-Length: ' . strlen($fileContent));
+
+    // Output the file content
+    echo $fileContent;
+    exit;
+}
+
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
@@ -165,6 +217,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'get-referral':
                 if (isset($jsonData['referral_id'])) {
                     $response = array('data' => getReferral($jsonData['referral_id']));
+                }
+                break;
+
+            case 'download-attachment':
+                if (isset($jsonData['attachment_id']) && isset($jsonData['filename'])) {
+                    downloadAttachment($jsonData['attachment_id'], $jsonData['filename']);
+                    // Note: downloadAttachment() will exit, so no response needed here
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing attachment_id or filename');
                 }
                 break;
         }

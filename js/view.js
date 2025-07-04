@@ -306,44 +306,108 @@ $(document).ready(function () {
 
                     if (encodedData) {
                         // Client-side download using Base64
-                        const a = document.createElement('a');
-                        a.href = encodedData;
-                        a.download = fileName;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
+                        try {
+                            // Decode base64 data
+                            const base64Data = encodedData.replace(/^data:[^;]+;base64,/, '');
+                            const binaryString = atob(base64Data);
+                            const bytes = new Uint8Array(binaryString.length);
+
+                            for (let i = 0; i < binaryString.length; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+
+                            // Create blob with appropriate MIME type
+                            const mimeType = getMimeTypeFromFileName(fileName);
+                            const blob = new Blob([bytes], { type: mimeType });
+
+                            // Create temporary URL and download
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = fileName;
+                            a.style.display = 'none';
+
+                            document.body.appendChild(a);
+                            a.click();
+
+                            // Clean up
+                            setTimeout(() => {
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                            }, 100);
+
+                        } catch (error) {
+                            console.error('Error decoding base64 data:', error);
+                            alert('Failed to download file. Invalid file data.');
+                        }
                     } else if (attachmentId) {
-                        // Server-side download (simulated)
-                        // In a real application, this would make an AJAX call or set window.location
-                        console.log(`Simulating server-side download for: ${fileName} (ID: ${attachmentId})`);
-                        // Example of a real server-side download (uncomment and adjust URL):
-                        // window.location.href = `/api/download-attachment/${attachmentId}`;
-                        // Or if using AJAX for more control (e.g., progress bar, error handling):
-                        // $.ajax({
-                        //     url: `/api/download-attachment/${attachmentId}`,
-                        //     method: 'GET',
-                        //     xhrFields: {
-                        //         responseType: 'blob' // Important for binary data
-                        //     },
-                        //     success: function(blob) {
-                        //         const url = window.URL.createObjectURL(blob);
-                        //         const a = document.createElement('a');
-                        //         a.href = url;
-                        //         a.download = fileName;
-                        //         document.body.appendChild(a);
-                        //         a.click();
-                        //         window.URL.revokeObjectURL(url);
-                        //         document.body.removeChild(a);
-                        //     },
-                        //     error: function(xhr, status, error) {
-                        //         console.error('Download failed:', error);
-                        //         alert('Failed to download file.');
-                        //     }
-                        // });
+                        // Server-side download
+                        console.log(`Downloading attachment: ${fileName} (ID: ${attachmentId})`);
+
+                        // Make AJAX call to download from server
+                        $.ajax({
+                            url: 'api.php',
+                            method: 'POST',
+                            data: JSON.stringify({
+                                action: 'download-attachment',
+                                attachment_id: attachmentId,
+                                filename: fileName
+                            }),
+                            xhrFields: {
+                                responseType: 'blob' // Important for binary data
+                            },
+                            success: function (blob) {
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                a.style.display = 'none';
+
+                                document.body.appendChild(a);
+                                a.click();
+
+                                // Clean up
+                                setTimeout(() => {
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                }, 100);
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Download failed:', error);
+                                alert('Failed to download file. Please try again.');
+                            }
+                        });
                     } else {
                         console.warn('No download method available for this attachment.');
+                        alert('Download method not available for this file.');
                     }
                 });
+
+                // Helper function to determine MIME type from file extension
+                function getMimeTypeFromFileName(fileName) {
+                    const extension = fileName.split('.').pop().toLowerCase();
+                    const mimeTypes = {
+                        'pdf': 'application/pdf',
+                        'doc': 'application/msword',
+                        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'xls': 'application/vnd.ms-excel',
+                        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'ppt': 'application/vnd.ms-powerpoint',
+                        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                        'txt': 'text/plain',
+                        'jpg': 'image/jpeg',
+                        'jpeg': 'image/jpeg',
+                        'png': 'image/png',
+                        'gif': 'image/gif',
+                        'bmp': 'image/bmp',
+                        'tiff': 'image/tiff',
+                        'zip': 'application/zip',
+                        'rar': 'application/x-rar-compressed',
+                        '7z': 'application/x-7z-compressed'
+                    };
+
+                    return mimeTypes[extension] || 'application/octet-stream';
+                }
             }
 
             // Call the function to fetch and display attachments when the page loads
