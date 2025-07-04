@@ -206,22 +206,10 @@ include('../common/index_adv.php');
                         </div>
                         <div class="border-bottom pb-3 mb-3">
                             <p class="r-title">Attachments</p>
-                            <input name="attachments[]" class="form-control mb-2" type="file" multiple>
+                            <input name="attachments[]" class="form-control mb-2" type="file" multiple id="attachmentInput">
                             <!--png/jpeg/jpg/pdf/word/excel-->
-                            <div class="col m-4">
-                                <div class="col mb-2">
-                                    <img src="img/document.png" alt="" style="width: 25px;">
-                                    <span class="r-text">prescription.png</span>
-                                </div>
-                                <div class="col mb-2">
-                                    <img src="img/document.png" alt="" style="width: 25px;">
-                                    <span class="r-text">prescription.pdf</span>
-                                </div>
-                                <div class="col mb-2">
-                                    <img src="img/document.png" alt="" style="width: 25px;">
-                                    <span class="r-text">prescription.xlsx</span>
-                                </div>
-                            </div>
+
+                            <div class="col m-4" id="attachmentPreview"></div>
                         </div>
                     </div>
                 </div>
