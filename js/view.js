@@ -264,8 +264,91 @@ $(document).ready(function () {
             }
 
             // Referral Attachments
-            var attachments = response.data.referralAttachments;
-            console.log(attachments);
+            const attachmentContainer = $('#attachmentPreview');
+
+            function fetchAttachments() {
+                var attachments = response.data.referralAttachments;
+                attachmentContainer.empty(); // Clear existing attachments
+
+                attachments.forEach(function (attachment) {
+                    let isDownloadableClientSide = false;
+
+                    const downloadButtonHtml = isDownloadableClientSide ?
+                        `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-encoded="${attachment.encoded}">
+                    <i class="bi bi-download"></i>
+                </button>` :
+                        `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.name}"> <i class="bi bi-download"></i>
+                </button>`;
+
+                    const attachmentItem = `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <span class="r-title">${attachment.name}</span>
+                            <small class="d-block r-text text-muted">Shared by ${attachment.sharedBy} on ${attachment.sharedDate}</small>
+                        </div>
+                    </div>
+                    <div>
+                        ${downloadButtonHtml}
+                        <button class="btn btn-sm btn-link text-decoration-none" title="More options">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </div>
+                </li>
+            `;
+                    attachmentContainer.append(attachmentItem);
+                });
+
+                $('.download-btn').on('click', function () {
+                    const fileName = $(this).data('filename');
+                    const encodedData = $(this).data('encoded');
+                    const attachmentId = $(this).data('attachment-id'); // For server-side download
+
+                    if (encodedData) {
+                        // Client-side download using Base64
+                        const a = document.createElement('a');
+                        a.href = encodedData;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    } else if (attachmentId) {
+                        // Server-side download (simulated)
+                        // In a real application, this would make an AJAX call or set window.location
+                        console.log(`Simulating server-side download for: ${fileName} (ID: ${attachmentId})`);
+                        // Example of a real server-side download (uncomment and adjust URL):
+                        // window.location.href = `/api/download-attachment/${attachmentId}`;
+                        // Or if using AJAX for more control (e.g., progress bar, error handling):
+                        // $.ajax({
+                        //     url: `/api/download-attachment/${attachmentId}`,
+                        //     method: 'GET',
+                        //     xhrFields: {
+                        //         responseType: 'blob' // Important for binary data
+                        //     },
+                        //     success: function(blob) {
+                        //         const url = window.URL.createObjectURL(blob);
+                        //         const a = document.createElement('a');
+                        //         a.href = url;
+                        //         a.download = fileName;
+                        //         document.body.appendChild(a);
+                        //         a.click();
+                        //         window.URL.revokeObjectURL(url);
+                        //         document.body.removeChild(a);
+                        //     },
+                        //     error: function(xhr, status, error) {
+                        //         console.error('Download failed:', error);
+                        //         alert('Failed to download file.');
+                        //     }
+                        // });
+                    } else {
+                        console.warn('No download method available for this attachment.');
+                    }
+                });
+            }
+
+            // Call the function to fetch and display attachments when the page loads
+            fetchAttachments();
+
 
         },
         error: function () {

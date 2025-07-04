@@ -204,12 +204,21 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                         </div>
-                        <div class="border-bottom pb-3 mb-3">
-                            <p class="r-title">Attachments</p>
-                            <input name="attachments[]" class="form-control mb-2" type="file" multiple id="attachmentInput">
-                            <!--png/jpeg/jpg/pdf/word/excel-->
+                    </div>
 
-                            <div class="col m-4" id="attachmentPreview"></div>
+                    <div class="border-bottom pb-3 mb-3">
+                        <p class="r-title">Attachments</p>
+                        <input name="attachments[]" class="form-control mb-2" type="file" multiple id="attachmentInput">
+                        <!--png/jpeg/jpg/pdf/word/excel-->
+
+                        <div class="col m-4" id="attachmentPreview">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Attachments</h5>
+                                    <ul class="list-group list-group-flush" id="attachmentList">
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
