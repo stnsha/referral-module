@@ -68,22 +68,22 @@ if ($business_unit_from !== null) {
 
 
 $uploadedFiles = array();
+if (isset($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is_array($_FILES['attachments']['name'])) {
+    foreach ($_FILES['attachments']['name'] as $index => $name) {
+        if (!empty($name) && $_FILES['attachments']['error'][$index] === 0) {
+            $tmpPath = $_FILES['attachments']['tmp_name'][$index];
+            $fileContent = file_get_contents($tmpPath);
+            $base64 = base64_encode($fileContent);
 
-foreach ($_FILES['attachments']['name'] as $index => $name) {
-    if (!empty($name) && $_FILES['attachments']['error'][$index] === 0) {
-        $tmpPath = $_FILES['attachments']['tmp_name'][$index];
-        $fileContent = file_get_contents($tmpPath);
-        $base64 = base64_encode($fileContent);
-
-        $uploadedFiles[] = array(
-            'name' => $name,
-            'type' => $_FILES['attachments']['type'][$index],
-            'size' => $_FILES['attachments']['size'][$index],
-            'base64' => $base64
-        );
+            $uploadedFiles[] = array(
+                'name' => $name,
+                'type' => $_FILES['attachments']['type'][$index],
+                'size' => $_FILES['attachments']['size'][$index],
+                'base64' => $base64
+            );
+        }
     }
 }
-
 $data['attachments'] = $uploadedFiles;
 
 // echo json_encode($data);

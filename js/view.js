@@ -1,4 +1,7 @@
 $(document).ready(function () {
+    localStorage.clear();
+    sessionStorage.clear();
+
     referralAccordion();
     referAnother();
     $('.refer-form').hide();
@@ -36,6 +39,7 @@ $(document).ready(function () {
             });
 
             const container = $('#referralHistoryContainer');
+            console.log(sortedDetails);
             $.each(sortedDetails, function (index, rd) {
                 //change for production
                 // rd.staff_id ??= staffId; 
@@ -970,7 +974,6 @@ function validateForm(event) {
                 const successCode = parsed.httpCode;
 
                 if (successCode === 200 || successCode === 201) {
-                    sessionStorage.setItem('successMessage', inner.message);
                     window.location.href = 'index.php';
                 } else {
                     console.log('Failed:', inner.message);

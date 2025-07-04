@@ -1,5 +1,7 @@
 let firstLoad = true;
 $(document).ready(function () {
+    localStorage.clear();
+    sessionStorage.clear();
     handleFilePreview('#attachmentInput', '#attachmentPreview');
     $.ajax({
         url: 'backend.php',
@@ -636,6 +638,8 @@ function validateForm(event) {
 
                 if (successCode === 200 || successCode === 201) {
                     sessionStorage.setItem('successMessage', inner.message);
+                    allUploadedFiles = [];
+                    $('#attachmentPreview').empty();
                     window.location.href = 'qr.php?id=' + inner.id;
                 } else {
                     console.log('Failed:', inner.message);
