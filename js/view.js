@@ -39,7 +39,6 @@ $(document).ready(function () {
             });
 
             const container = $('#referralHistoryContainer');
-            console.log(sortedDetails);
             $.each(sortedDetails, function (index, rd) {
                 //change for production
                 // rd.staff_id ??= staffId; 
@@ -814,7 +813,6 @@ function referAnother() {
     });
 }
 
-
 function getBusinessUnits() {
     $.ajax({
         url: 'backend.php',
@@ -957,9 +955,17 @@ function validateForm(event) {
         allUploadedFiles.forEach(file => {
             formData.append('attachments[]', file);
         });
-        // for (const [key, value] of formData.entries()) {
-        //     console.log(`${key}: ${value}`);
-        // }
+        for (const [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`${key}:`, {
+                    name: value.name,
+                    size: value.size + ' bytes',
+                    type: value.type,
+                });
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+        }
         fetch('update.php', {
             method: 'POST',
             body: formData
