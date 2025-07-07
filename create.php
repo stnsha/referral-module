@@ -87,6 +87,11 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                         </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <input type="checkbox" class="me-2" name="external_referral" id="external_referral">
+                            <span class="r-text me-2">External Referral</span>
+                            <div class="external-referral" id="external-referral"></div>
+                        </div>
                     </div>
                     <div class="border-bottom pb-3 mb-3">
                         <p class="r-title">Referring Indication</p>
