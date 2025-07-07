@@ -86,7 +86,7 @@ $(document).ready(function () {
                         const referralPic = accordion.find('.referral-pic');
                         var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
                         referralPic.html(`
-                            <span class="r-title">Person in Charge</span><br>
+                            <span class="r-title">Submitted by</span><br>
                             <span class="r-text">Name: ${staff} </span><br>
                             <span class="r-text">
                                 Contact: 

@@ -92,7 +92,7 @@ include('../common/index_adv.php');
                         <p class="r-title">Referring Indication</p>
                         <div class="mb-2">
                             <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                            <input type="text" name="referral_reason" class="form-control form-control-sm">
+                            <textarea name="referral_reason" class="form-control form-control-sm" rows="5"></textarea>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
                         </div>
@@ -199,7 +199,8 @@ include('../common/index_adv.php');
                         </div>
                         <div class="border-bottom pb-3 mb-3">
                             <p class="r-title">Attachments</p>
-                            <input name="attachments[]" class="form-control mb-2" type="file" multiple id="attachmentInput">
+                            <input name="attachments[]" class="form-control mb-2" type="file" multiple
+                                id="attachmentInput">
                             <!--png/jpeg/jpg/pdf/word/excel-->
 
                             <div class="col m-4" id="attachmentPreview"></div>

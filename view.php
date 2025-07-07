@@ -87,8 +87,8 @@ include('../common/index_adv.php');
                         <p class="r-title">Initial Referral</p>
                         <div class="mb-2">
                             <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                            <input type="text" name="referral_reason" id="referral_reason"
-                                class="form-control form-control-sm" readonly>
+                            <textarea name="referral_reason" id="referral_reason" class="form-control form-control-sm"
+                                rows="5" readonly></textarea>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
                         </div>
@@ -221,8 +221,8 @@ include('../common/index_adv.php');
                     <p class="r-title">Referring Indication</p>
                     <div class="mb-2">
                         <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                        <input type="text" name="referral_reason_refer" id="referral_reason_refer"
-                            class="form-control form-control-sm" readonly>
+                        <textarea name="referral_reason_refer" id="referral_reason_refer"
+                            class="form-control form-control-sm" rows="5" readonly></textarea>
                         <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                         </div>
                     </div>
@@ -300,7 +300,8 @@ include('../common/index_adv.php');
 
                             <div class="mb-2">
                                 <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                                <input type="text" name="referral_reason" class="form-control form-control-sm">
+                                <textarea name="referral_reason" class="form-control form-control-sm"
+                                    rows="5"></textarea>
                                 <div class="error-message" id="error-referral-reason"
                                     style="color: red;font-size:12px;"></div>
                             </div>
