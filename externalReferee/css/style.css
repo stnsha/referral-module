@@ -1,0 +1,47 @@
+/* CSS styles for External Referee form */
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.r-main-title {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.r-title {
+    font-weight: 600;
+    font-size: 14px;
+    padding-bottom: 15px;
+}
+
+.r-text {
+    font-size: 13px;
+}
+
+.btn-back {
+    text-align: center;
+    font-size: 12px;
+    text-decoration: none;
+    color: black;
+}
+
+.submitButton {
+    text-decoration: none;
+    padding: 8px 15px;
+    background: #135caa;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submitButton:hover {
+    color: #fff;
+    background: #0a4788;
+}
+
+.error-message {
+    color: red;
+    font-size: 12px;
+}
