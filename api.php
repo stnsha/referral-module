@@ -200,6 +200,16 @@ function downloadAttachment($attachment_id)
     exit;
 }
 
+function getExternalReferees()
+{
+    $data = getApiData('external-referees', null, 'GET');
+    if ($data['httpCode'] != 200) {
+        return array();
+    }
+    $decoded = json_decode($data['response'], true);
+
+    return isset($decoded['data']) ? $decoded['data'] : array();
+}
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
@@ -286,6 +296,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'all-referral':
                 $response = array('data' => getAllReferral());
+                break;
+
+            case 'external-referees':
+                $response = array('data' => getExternalReferees());
                 break;
         }
 
