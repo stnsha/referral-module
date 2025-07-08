@@ -31,6 +31,14 @@ $(document).ready(function () {
             business_unit_to.val('');
             location_to.val('');
 
+            var organization = $('#organization');
+            var location_organization = $('#location_organization');
+            var referee = $('#referee');
+
+            organization.hide();
+            location_organization.hide();
+            referee.hide();
+
             // Referral Details
             let referralDetails = response.data.referralDetails;
 
@@ -40,25 +48,27 @@ $(document).ready(function () {
 
             const container = $('#referralHistoryContainer');
             $.each(sortedDetails, function (index, rd) {
-                //change for production
-                // rd.staff_id ??= staffId; 
+                //internal
+                if (rd.external_referral.length < 1) {
+                    //change for production
+                    // rd.staff_id ??= staffId; 
 
-                //testing purposes only
-                const fakeStaffId = 3333;
-                rd.staff_id ??= fakeStaffId;
+                    //testing purposes only
+                    const fakeStaffId = 3333;
+                    rd.staff_id ??= fakeStaffId;
 
-                $('input[name="updated_recipient_to"]').val(fakeStaffId);
+                    $('input[name="updated_recipient_to"]').val(fakeStaffId);
 
-                //run through staff details
-                getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
-                    const staff = sd[0].staff;
-                    const businessUnit = sd[0].business_unit;
-                    const outlet = sd[0].outlet;
-                    const contact = sd[0].contact;
-                    const createdAt = rd.created_at;
+                    //run through staff details
+                    getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
+                        const staff = sd[0].staff;
+                        const businessUnit = sd[0].business_unit;
+                        const outlet = sd[0].outlet;
+                        const contact = sd[0].contact;
+                        const createdAt = rd.created_at;
 
-                    //referral history accordion
-                    const accordionHTML = `
+                        //referral history accordion
+                        const accordionHTML = `
                         <div class="referral-history">
                             <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
                                 <div class="referral-accordion-content">
@@ -75,17 +85,17 @@ $(document).ready(function () {
                         </div>
                         `;
 
-                    if (rd.is_filled == 1) {
-                        //display history if exist
-                        const accordion = $(accordionHTML);
-                        container.append(accordion);
-                        const panel = accordion.find('.referral-panel-item');
-                        //display initial treatment
-                        initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
+                        if (rd.is_filled == 1) {
+                            //display history if exist
+                            const accordion = $(accordionHTML);
+                            container.append(accordion);
+                            const panel = accordion.find('.referral-panel-item');
+                            //display initial treatment
+                            initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
 
-                        const referralPic = accordion.find('.referral-pic');
-                        var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
-                        referralPic.html(`
+                            const referralPic = accordion.find('.referral-pic');
+                            var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
+                            referralPic.html(`
                             <span class="r-title">Submitted by</span><br>
                             <span class="r-text">Name: ${staff} </span><br>
                             <span class="r-text">
@@ -96,30 +106,52 @@ $(document).ready(function () {
                             </span>
                         `);
 
-                        //pass object attachments
-                        if (rd.attachments.length > 0) {
-                            displayAttachments(rd.attachments, staff, createdAt);
+                            //pass object attachments
+                            if (rd.attachments.length > 0) {
+                                displayAttachments(rd.attachments, staff, createdAt);
+                            }
+
+                        } else {
+                            //display reply form for next pic
+                            displayContent(rd.business_unit_id, '.reply-form');
                         }
 
-                    } else {
-                        //display reply form for next pic
-                        displayContent(rd.business_unit_id, '.reply-form');
-                    }
+                        //assign referred from 
+                        if (rd.sequence == 1) {
+                            assigneeFrom.val(staff);
+                            business_unit_from.val(businessUnit);
+                            location_from.val(outlet);
+                        }
+                        //assign referred to
+                        if (rd.sequence == 2) {
+                            recipientTo.val(staff);
+                            business_unit_to.val(businessUnit);
+                            location_to.val(outlet);
+                        }
+                    });
+                } else {
+                    //external
+                    $('#referring-to').hide();
+                    recipientTo.hide();
+                    business_unit_to.hide();
+                    location_to.hide();
+                    $('.reply-form-container').css('display', 'none');
+                    $('.refer-another-container').css('display', 'none');
 
-                    //assign referred from 
-                    if (rd.sequence == 1) {
-                        assigneeFrom.val(staff);
-                        business_unit_from.val(businessUnit);
-                        location_from.val(outlet);
-                    }
-                    //assign referred to
-                    if (rd.sequence == 2) {
-                        recipientTo.val(staff);
-                        business_unit_to.val(businessUnit);
-                        location_to.val(outlet);
-                    }
-                });
+                    organization.show();
+                    location_organization.show();
+                    referee.show();
 
+                    var externalReferral = rd.external_referral;
+                    $.each(externalReferral, function (index, er) {
+                        console.log(er);
+                        organization.val(er.organization);
+                        location_organization.val(er.state);
+                        referee.val(er.name);
+                    });
+                }
+
+                $('.referring-indication-container').hide();
                 $('.referring-indication').hide();
                 var referral_reason_refer = $('#referral_reason_refer');
                 var referral_condition_refer = $('#referral_condition_refer');
@@ -130,6 +162,7 @@ $(document).ready(function () {
                 medical_history_refer.val('');
 
                 if (rd.is_filled == 0 && rd.sequence != 2) {
+                    $('.referring-indication-container').show();
                     $('.referring-indication').show();
                     referral_reason_refer.val(rd.referral_reason);
                     referral_condition_refer.val(rd.referral_condition);
