@@ -18,7 +18,7 @@ include('../common/index_adv.php');
 ?>
 
 <body>
-    <div class="container bg-white rounded p-4">
+    <div class="bg-white rounded p-4">
         <p class="r-main-title text-center mb-3">New Referral</p>
         <form name="admin-form" id="admin-form" onsubmit="validateForm(event)" enctype="multipart/form-data">
             <div class="row justify-content-start">

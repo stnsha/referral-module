@@ -711,7 +711,7 @@ function validateForm(event) {
                     sessionStorage.setItem('successMessage', inner.message);
                     allUploadedFiles = [];
                     $('#attachmentPreview').empty();
-                    // window.location.href = 'qr.php?id=' + inner.id;
+                    window.location.href = 'qr.php?id=' + inner.id;
                 } else {
                     console.log('Failed:', inner.message);
                 }

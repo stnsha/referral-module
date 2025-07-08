@@ -82,7 +82,7 @@ include('../common/index_adv.php');
 ?>
 
 <body>
-    <div class="container text-center bg-white rounded p-2">
+    <div class="text-center bg-white rounded p-2">
         <div class="col align-items-center">
             <span class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></span>
         </div>

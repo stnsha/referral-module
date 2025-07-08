@@ -19,7 +19,7 @@ include('../common/index_adv.php');
 ?>
 
 <body>
-    <div class="container text-center bg-white rounded p-2">
+    <div class="text-center bg-white rounded p-2">
         <div class="col align-items-center">
             <span class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></span>
         </div>
@@ -86,50 +86,6 @@ include('../common/index_adv.php');
                             </div>
                         </div>
                     </div>
-                    <div class="border-bottom pb-3 mb-3">
-                        <p class="r-title">Initial Referral</p>
-                        <div class="mb-2">
-                            <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                            <textarea name="referral_reason" id="referral_reason" class="form-control form-control-sm"
-                                rows="5" readonly></textarea>
-                            <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
-                            <textarea name="referral_condition" id="referral_condition"
-                                class="form-control form-control-sm" rows="5" readonly></textarea>
-                            <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <p class="r-text">Relevant Medical History (if applicable)</p>
-                            <textarea name="medical_history" id="medical_history" class="form-control form-control-sm"
-                                rows="5" readonly></textarea>
-                            <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <p class="r-text">Priority <span style="color:red;">*</span></p>
-
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="priority" value="1">
-                                <label class="form-check-label r-text">
-                                    High (1 to 2 working days)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="priority" value="2" checked>
-                                <label class="form-check-label r-text">
-                                    Standard (3 to 5 working days)
-                                </label>
-                            </div>
-                            <div class="error-message" id="error-priority" style="color: red;font-size:12px;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col h-auto border rounded ms-2 p-2">
                     <div class="border-bottom pb-3 mb-3">
                         <p class="r-title">Customer Information</p>
                         <div class="d-flex mb-2">
@@ -208,7 +164,6 @@ include('../common/index_adv.php');
                             </div>
                         </div>
                     </div>
-
                     <div class="border-bottom pb-3 mb-3">
                         <p class="r-title">Attachments</p>
                         <input name="attachments[]" class="form-control mb-2" type="file" multiple id="attachmentInput">
@@ -216,6 +171,51 @@ include('../common/index_adv.php');
 
                         <div class="col m-4" id="attachmentPreview"></div>
                         <div class="col m-4" id="attachmentDisplay"></div>
+                    </div>
+                </div>
+                <div class="col h-auto border rounded ms-2 p-2">
+
+                    <div class="border-bottom pb-3 mb-3">
+                        <p class="r-title">Initial Referral</p>
+                        <div class="mb-2">
+                            <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                            <textarea name="referral_reason" id="referral_reason" class="form-control form-control-sm"
+                                rows="5" readonly></textarea>
+                            <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
+                            <textarea name="referral_condition" id="referral_condition"
+                                class="form-control form-control-sm" rows="5" readonly></textarea>
+                            <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Relevant Medical History (if applicable)</p>
+                            <textarea name="medical_history" id="medical_history" class="form-control form-control-sm"
+                                rows="5" readonly></textarea>
+                            <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Priority <span style="color:red;">*</span></p>
+
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="priority" value="1">
+                                <label class="form-check-label r-text">
+                                    High (1 to 2 working days)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="priority" value="2" checked>
+                                <label class="form-check-label r-text">
+                                    Standard (3 to 5 working days)
+                                </label>
+                            </div>
+                            <div class="error-message" id="error-priority" style="color: red;font-size:12px;">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
