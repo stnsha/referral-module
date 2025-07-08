@@ -200,9 +200,9 @@ function downloadAttachment($attachment_id)
     exit;
 }
 
-function getExternalReferees()
+function getExternalOrganization()
 {
-    $data = getApiData('external-referees', null, 'GET');
+    $data = getApiData('external-organizations', null, 'GET');
     if ($data['httpCode'] != 200) {
         return array();
     }
@@ -298,8 +298,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response = array('data' => getAllReferral());
                 break;
 
-            case 'external-referees':
-                $response = array('data' => getExternalReferees());
+            case 'external-organizations':
+                $response = array('data' => getExternalOrganization());
                 break;
         }
 

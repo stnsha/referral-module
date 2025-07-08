@@ -2,6 +2,9 @@
 <html>
 
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css" />

@@ -70,6 +70,13 @@ select {
     padding: 10px 5px 10px 5px;
 }
 
+select.form-select.form-select-sm {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    line-height: 1.5 !important;
+    height: auto !important;
+}
+
 .referral-id {
     border-radius: 5px;
     font-size: 14px;

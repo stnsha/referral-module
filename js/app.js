@@ -2,6 +2,7 @@ let firstLoad = true;
 $(document).ready(function () {
     localStorage.clear();
     sessionStorage.clear();
+    toggleExternalReferralSection();
     handleFilePreview('#attachmentInput', '#attachmentPreview');
     $.ajax({
         url: 'backend.php',
@@ -466,6 +467,18 @@ $(document).ready(function () {
             }
         });
     });
+
+    function toggleExternalReferralSection() {
+        $('#external_referral').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#external-referral').removeClass('d-none');
+                $('#business_unit_to, #location_to, #recipient_to').prop('disabled', true);
+            } else {
+                $('#external-referral').addClass('d-none');
+                $('#business_unit_to, #location_to, #recipient_to').prop('disabled', false);
+            }
+        });
+    }
 
 });
 

@@ -4,6 +4,13 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
+select.form-select.form-select-sm {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    line-height: 1.5 !important;
+    height: auto !important;
+}
+
 .r-main-title {
     font-weight: bold;
     font-size: 18px;

@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 
     <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
@@ -87,55 +90,45 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2 py-2">
                             <input type="checkbox" class="me-2" name="external_referral" id="external_referral">
-                            <span class="r-text me-2">External Referral</span>
-                            <div class="external-referral" id="external-referral"></div>
+                            <span class="r-text" style="padding: 0;">External Referral</span>
                         </div>
                     </div>
-                    <div class="border-bottom pb-3 mb-3">
-                        <p class="r-title">Referring Indication</p>
-                        <div class="mb-2">
-                            <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
-                            <textarea name="referral_reason" class="form-control form-control-sm" rows="5"></textarea>
-                            <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
-                            </div>
+                    <div class="d-none border-bottom pb-3 mb-3 external-referral" id="external-referral">
+                        <div class="d-flex align-items-center gap-2 pb-2">
+                            <span class="r-title" style="padding: 0;">External Referral</span>
                         </div>
-                        <div class="mb-2">
-                            <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
-                            <textarea name="referral_condition" class="form-control form-control-sm"
-                                rows="5"></textarea>
-                            <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
+                        <div class="row mb-2 external-referral-content">
+                            <div class="col">
+                                <select name="organization" id="organization"
+                                    class="form-select form-select-sm text-capitalize">
+                                    <option value="">Organization</option>
+                                </select>
+                                <input type="hidden" name="organizationid">
+                                <div class="error-message" id="error-organization"
+                                    style="color: red;font-size:12px;">
+                                </div>
                             </div>
-                        </div>
-                        <div class="mb-2">
-                            <p class="r-text">Relevant Medical History (if applicable)</p>
-                            <textarea name="medical_history" class="form-control form-control-sm" rows="5"></textarea>
-                            <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
+                            <div class="col">
+                                <select name="location_organization" id="location_organization"
+                                    class="form-select form-select-sm text-capitalize">
+                                    <option value="">Location</option>
+                                </select>
+                                <div class="error-message" id="error-location-organization" style="color: red;font-size:12px;">
+                                </div>
                             </div>
-                        </div>
-                        <div class="mb-2">
-                            <p class="r-text">Priority <span style="color:red;">*</span></p>
-
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="priority" value="1">
-                                <label class="form-check-label r-text">
-                                    High (1 to 2 working days)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="priority" value="2" checked>
-                                <label class="form-check-label r-text">
-                                    Standard (3 to 5 working days)
-                                </label>
-                            </div>
-                            <div class="error-message" id="error-priority" style="color: red;font-size:12px;">
+                            <div class="col">
+                                <select name="referee" id="referee"
+                                    class="form-select form-select-sm text-capitalize">
+                                    <option value="">Recipient</option>
+                                </select>
+                                <div class="error-message" id="error-referee" style="color: red;font-size:12px;">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col h-auto border rounded ms-2 p-2">
-                    <div class="border-bottom pb-3 mb-3">
+                    <div class=" border-bottom pb-3 mb-3">
                         <p class="r-title">Customer Information</p>
                         <div class="d-flex mb-2">
                             <div class="me-2">
@@ -202,7 +195,7 @@ include('../common/index_adv.php');
                                     style="color: red;font-size:12px;"></div>
                             </div>
                         </div>
-                        <div class="border-bottom pb-3 mb-3">
+                        <div class="mb-3">
                             <p class="r-title">Attachments</p>
                             <input name="attachments[]" class="form-control mb-2" type="file" multiple
                                 id="attachmentInput">
@@ -212,37 +205,109 @@ include('../common/index_adv.php');
                         </div>
                     </div>
                 </div>
+                <div class="col h-auto border rounded ms-2 p-2">
+                    <div class="border-bottom pb-3 mb-3">
+                        <p class="r-title">Referring Indication</p>
+                        <div class="mb-2">
+                            <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                            <textarea name="referral_reason" class="form-control form-control-sm" rows="5"></textarea>
+                            <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
+                            <textarea name="referral_condition" class="form-control form-control-sm"
+                                rows="5"></textarea>
+                            <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Relevant Medical History (if applicable)</p>
+                            <textarea name="medical_history" class="form-control form-control-sm" rows="5"></textarea>
+                            <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Priority <span style="color:red;">*</span></p>
+
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="priority" value="1">
+                                <label class="form-check-label r-text">
+                                    High (1 to 2 working days)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="priority" value="2" checked>
+                                <label class="form-check-label r-text">
+                                    Standard (3 to 5 working days)
+                                </label>
+                            </div>
+                            <div class="error-message" id="error-priority" style="color: red;font-size:12px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-bottom pb-3 mb-3">
+                        <p class="r-title">Current/Past Treatments</p>
+
+                        <div class="business-unit-1 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Audiology</p>
+                        </div>
+                        <div class="business-unit-2 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Baby</p>
+                        </div>
+                        <div class="business-unit-3 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Clinic</p>
+                        </div>
+                        <div class="business-unit-4 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Optisaver</p>
+                        </div>
+                        <div class="business-unit-5 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Pharmacy</p>
+                        </div>
+                        <div class="business-unit-6 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Physio</p>
+                        </div>
+                        <div class="business-unit-7 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Sugi</p>
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Additional Remarks</p>
+                            <textarea name="additional_remarks" id="additional_remarks" class="form-control form-control-sm"
+                                rows="5"></textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="row align-items-start text-start py-2 px-4">
-                <div class="col h-auto border rounded me-2 p-2">
+                <!-- <div class="col h-auto border rounded me-2 p-2">
                     <p class="r-title">Current/Past Treatments</p>
 
                     <div class="business-unit-1 content">
-                        <!-- style="display:none;"-->
                         <p class="r-title">Alpro Audiology</p>
                     </div>
                     <div class="business-unit-2 content">
-                        <!-- style="display:none;"-->
                         <p class="r-title">Alpro Baby</p>
                     </div>
                     <div class="business-unit-3 content">
-                        <!-- style="display:none;"-->
                         <p class="r-title">Alpro Clinic</p>
                     </div>
                     <div class="business-unit-4 content">
-                        <!-- style="display:none;"-->
                         <p class="r-title">Alpro Optisaver</p>
                     </div>
                     <div class="business-unit-5 content">
-                        <!-- style="display:none;"-->
                         <p class="r-title">Alpro Pharmacy</p>
                     </div>
                     <div class="business-unit-6 content">
-                        <!-- style="display:none;"-->
                         <p class="r-title">Alpro Physio</p>
                     </div>
                     <div class="business-unit-7 content">
-                        <!-- style="display:none;"-->
                         <p class="r-title">Alpro Sugi</p>
                     </div>
                     <div class="mb-2">
@@ -250,7 +315,7 @@ include('../common/index_adv.php');
                         <textarea name="additional_remarks" id="additional_remarks" class="form-control form-control-sm"
                             rows="5"></textarea>
                     </div>
-                </div>
+                </div> -->
             </div>
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="d-flex flex-column justify-content-center align-items-center">
