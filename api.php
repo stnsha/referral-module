@@ -208,7 +208,7 @@ function getExternalOrganization()
     }
     $decoded = json_decode($data['response'], true);
 
-    return isset($decoded['data']) ? $decoded['data'] : array();
+    return isset($decoded) ? $decoded : array();
 }
 // Main request handler
 $input = file_get_contents('php://input');

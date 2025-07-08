@@ -473,6 +473,53 @@ $(document).ready(function () {
             if ($(this).is(':checked')) {
                 $('#external-referral').removeClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', true);
+
+                var externalOrganizations = [];
+
+                $.ajax({
+                    url: 'api.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        action: 'external-organizations'
+                    },
+                    success: function (response) {
+                        if (response && response.data) {
+                            externalOrganizations = response.data;
+                            var $org = $('#organization');
+                            $org.empty().append('<option value="">Organization</option>');
+                            externalOrganizations.forEach(function (org) {
+                                $org.append('<option value="' + org.id + '">' + org.name + '</option>');
+                            });
+                        }
+                        $('#location_organization').empty().append('<option value="">Location</option>');
+                        $('#referee').empty().append('<option value="">Recipient</option>');
+                    }
+                });
+
+                $('#organization').on('change', function () {
+                    var orgId = $(this).val();
+                    if (!orgId) {
+                        $('#location_organization').empty().append('<option value="">Location</option>');
+                        $('#referee').empty().append('<option value="">Recipient</option>');
+                        return;
+                    }
+                    var org = externalOrganizations.find(function (o) { return o.id == orgId; });
+                    if (org) {
+                        var $loc = $('#location_organization');
+                        $loc.empty().append('<option value="">Location</option>');
+                        if (org.state) {
+                            $loc.append('<option value="' + org.state + '">' + org.state + '</option>');
+                        }
+                        var $ref = $('#referee');
+                        $ref.empty().append('<option value="">Recipient</option>');
+                        if (org.referees && org.referees.length) {
+                            org.referees.forEach(function (r) {
+                                $ref.append('<option value="' + r.id + '">' + r.name + ' (' + r.position + ')</option>');
+                            });
+                        }
+                    }
+                });
             } else {
                 $('#external-referral').addClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', false);
