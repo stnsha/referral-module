@@ -7,6 +7,25 @@ $data = array();
 $business_unit_from = isset($_POST['business_unit_id_from']) ? $_POST['business_unit_id_from'] : null;
 $business_unit_to = isset($_POST['business_unit_id_to']) ? $_POST['business_unit_id_to'] : null;
 
+//recipient to
+$recipient = array();
+
+if (!isset($_POST['external_referral'])) {
+    //(internal)
+    $recipient = array(
+        'staff_id' => isset($_POST['recipient_to']) ? (int)$_POST['recipient_to'] : null,
+        'business_unit_id' => $business_unit_to,
+        'location' => isset($_POST['location_to']) ? $_POST['location_to'] : null,
+    );
+} else {
+    //external
+    $recipient = array(
+        'organization' => isset($_POST['organization']) ? (int)$_POST['organization'] : null,
+        'location_organization' => isset($_POST['location_organization']) ? $_POST['location_organization'] : null,
+        'referee' => isset($_POST['referee']) ? $_POST['referee'] : null,
+    );
+}
+
 $data['business_units'] = array(
     'assignee' => array(
         'staff_id' => isset($_POST['assignee_id_from']) ? (int)$_POST['assignee_id_from'] : null,
@@ -17,11 +36,7 @@ $data['business_units'] = array(
         'medical_history' => isset($_POST['medical_history']) ? $_POST['medical_history'] : '',
         'additional_remarks' => isset($_POST['additional_remarks']) ? $_POST['additional_remarks'] : '',
     ),
-    'recipient' => array(
-        'staff_id' => isset($_POST['recipient_to']) ? (int)$_POST['recipient_to'] : null,
-        'business_unit_id' => $business_unit_to,
-        'location' => isset($_POST['location_to']) ? $_POST['location_to'] : null,
-    )
+    'recipient' => $recipient
 );
 
 $data['referral'] = array(
@@ -66,7 +81,6 @@ if ($business_unit_from !== null) {
     );
 }
 
-
 $uploadedFiles = array();
 if (isset($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is_array($_FILES['attachments']['name'])) {
     foreach ($_FILES['attachments']['name'] as $index => $name) {
@@ -96,3 +110,44 @@ if (is_array($response) && array_key_exists('ch', $response)) {
 echo json_encode($response);
 
 exit;
+
+/*{
+    "business_units": {
+        "assignee": {
+            "staff_id": 2222,
+            "business_unit_id": "6",
+            "location": "317",
+            "referral_reason": "Persistent Balance Issues with Suspected Auditory or Vestibular Involvement",
+            "referral_condition": "Patient has been attending physiotherapy for balance and coordination training following a recent fall. Despite improvements in strength and motor control, the patient reports ongoing dizziness, disorientation, and delayed response to audio cues during sessions. These signs suggest a possible underlying hearing or vestibular issue.",
+            "medical_history": "No history of ear infections or diagnosed hearing loss. No recent head trauma.",
+            "additional_remarks": "Referral to audiology requested to evaluate hearing function and rule out vestibular involvement that may be limiting physiotherapy outcomes."
+        },
+        "recipient": {
+            "organization": 1,
+            "location_organization": "California",
+            "referee": "2"
+        }
+    },
+    "referral": {
+        "customer_id": 10,
+        "priority": 2
+    },
+    "form_data": {
+        "6": {
+            "external_referral": "on",
+            "organization": "1",
+            "location_organization": "California",
+            "referee": "2",
+            "targeted_area": "Lower limbs and core (balance-focused rehab)",
+            "pain_level": "3",
+            "previous_physiotherapy": "29"
+        }
+    },
+    "attachments": [
+        {
+            "name": "img1a.jpg",
+            "type": "image/jpeg",
+            "size": 65409,
+        }
+    ]
+}*/

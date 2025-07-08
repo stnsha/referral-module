@@ -105,7 +105,6 @@ include('../common/index_adv.php');
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Organization</option>
                                 </select>
-                                <input type="hidden" name="organizationid">
                                 <div class="error-message" id="error-organization"
                                     style="color: red;font-size:12px;">
                                 </div>

@@ -2,6 +2,7 @@ let firstLoad = true;
 $(document).ready(function () {
     localStorage.clear();
     sessionStorage.clear();
+    $('#organization, #location_organization, #referee').prop('disabled', true);
     toggleExternalReferralSection();
     handleFilePreview('#attachmentInput', '#attachmentPreview');
     $.ajax({
@@ -473,6 +474,7 @@ $(document).ready(function () {
             if ($(this).is(':checked')) {
                 $('#external-referral').removeClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', true);
+                $('#organization, #location_organization, #referee').prop('disabled', false);
 
                 var externalOrganizations = [];
 
@@ -524,8 +526,6 @@ $(document).ready(function () {
             } else {
                 $('#external-referral').addClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', false);
-                $('#organization, #location_organization, #referee').val('');
-
             }
         });
     }
@@ -649,9 +649,17 @@ function validateForm(event) {
     markError("business-unit-from", !isInteger(form["business_unit_id_from"].value), "Select one business unit.");
     markError("assignee-from", !isInteger(form["assignee_id_from"].value), "Select one assignee.");
     markError("location-from", !isInteger(form["location_id_from"].value), "Select one location.");
-    markError("business-unit-to", !isInteger(form["business_unit_to"].value), "Select one business unit.");
-    // markError("recipient-to", !isInteger(form["recipient_to"].value), "Select one recipient.");
-    markError("location-to", !isInteger(form["location_to"].value), "Select one location.");
+
+    //change to optional if true
+    var isExternalReferral = $("#external_referral").is(":checked");
+    markError("business-unit-to", !isExternalReferral && !isInteger(form["business_unit_to"].value), "Select one business unit.");
+    markError("location-to", !isExternalReferral && !isInteger(form["location_to"].value), "Select one location.");
+
+    //add validation if external referral = true
+    markError("organization", isExternalReferral && isEmpty(form["organization"].value), "This field cannot be left blank.");
+    markError("location-organization", isExternalReferral && isEmpty(form["location_organization"].value), "This field cannot be left blank.");
+    markError("referee", isExternalReferral && isEmpty(form["referee"].value), "This field cannot be left blank.");
+
     markError("referral-reason", isEmpty(form["referral_reason"].value), "This field cannot be left blank.");
     markError("referral-condition", isEmpty(form["referral_condition"].value), "This field cannot be left blank.");
     markError("priority", isEmpty(form["priority"].value), "This field cannot be left blank.");
@@ -674,17 +682,17 @@ function validateForm(event) {
             formData.append('attachments[]', file);
         });
 
-        // for (const [key, value] of formData.entries()) {
-        //     if (value instanceof File) {
-        //         console.log(`${key}:`, {
-        //             name: value.name,
-        //             size: value.size + ' bytes',
-        //             type: value.type,
-        //         });
-        //     } else {
-        //         console.log(`${key}: ${value}`);
-        //     }
-        // }
+        for (const [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`${key}:`, {
+                    name: value.name,
+                    size: value.size + ' bytes',
+                    type: value.type,
+                });
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+        }
 
         fetch('post.php', {
             method: 'POST',
@@ -703,7 +711,7 @@ function validateForm(event) {
                     sessionStorage.setItem('successMessage', inner.message);
                     allUploadedFiles = [];
                     $('#attachmentPreview').empty();
-                    window.location.href = 'qr.php?id=' + inner.id;
+                    // window.location.href = 'qr.php?id=' + inner.id;
                 } else {
                     console.log('Failed:', inner.message);
                 }
