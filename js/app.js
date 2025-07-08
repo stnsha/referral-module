@@ -494,6 +494,7 @@ $(document).ready(function () {
                         }
                         $('#location_organization').empty().append('<option value="">Location</option>');
                         $('#referee').empty().append('<option value="">Recipient</option>');
+                        $('#organization, #location_organization, #referee').val('');
                     }
                 });
 
@@ -523,6 +524,8 @@ $(document).ready(function () {
             } else {
                 $('#external-referral').addClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', false);
+                $('#organization, #location_organization, #referee').val('');
+
             }
         });
     }
