@@ -23,7 +23,7 @@ $(document).ready(function () {
                 orderable: false,
                 searchable: false,
                 render: function (data, type, row) {
-                    return `<a class="view-btn" type="button" data-id="${row.id}" href="view.php?id=${row.id}">View</a>`;
+                    return `<span class="referral-btn me-3"><a class="view-btn" type="button" data-id="${row.id}" href="view.php?id=${row.id}">View</a></span><span class="referral-btn"><a class="view-btn" type="button" data-id="${row.id}" href="qr.php?id=${row.id}">Generate QR</a></span>`;
                 }
             }
         ]

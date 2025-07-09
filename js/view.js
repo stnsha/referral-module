@@ -50,6 +50,7 @@ $(document).ready(function () {
             $.each(sortedDetails, function (index, rd) {
                 //internal
                 if (rd.external_referral.length < 1) {
+                    $('#external-referral-text').hide();
                     //change for production
                     // rd.staff_id ??= staffId; 
 
@@ -264,12 +265,10 @@ $(document).ready(function () {
                 </button>`;
 
                     const attachmentItem = `
-                <li class="list-group-item d-flex justify-content-between align-items-center list-style-type-disc">
-                    <div class="d-flex align-items-center flex-grow-1">
-                        <div>
-                            <span class="r-title">${attachment.name}</span>
-                            <small class="d-block r-text text-muted">Uploaded by ${staff} on ${created_at}.</small>
-                        </div>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex flex-column align-items-start flex-grow-1">
+                        <span class="fw-bold">${attachment.name}</span>
+                        <small class="d-block r-text text-muted">Uploaded by ${staff} on ${created_at}.</small>
                     </div>
                     <div class="d-flex align-items-center">
                         ${downloadButtonHtml}

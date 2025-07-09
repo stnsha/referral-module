@@ -109,7 +109,7 @@ select.form-select.form-select-sm {
 .submitButton {
     text-decoration: none;
     padding: 8px 15px;
-    background: #135caa;
+    background-color: #135caa;
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -117,9 +117,10 @@ select.form-select.form-select-sm {
 }
 
 .btn-referral:hover,
-.submitButton:hover {
+.submitButton:hover,
+.referral-btn:hover {
     color: #fff;
-    background: #0a4788;
+    background-color: #0a4788;
 }
 
 .referral-show input[readonly],
@@ -245,3 +246,21 @@ select.form-select.form-select-sm {
     color: #666;
     margin-top: 2px;
 }
+
+.referral-btn {
+   text-decoration: none;
+    padding: 5px 15px;
+    background-color: #135caa;
+    color: #fff;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.referral-btn a {
+    text-decoration: none;
+    color: white;
+    font-size: 14px;
+}
+

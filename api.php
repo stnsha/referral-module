@@ -1,6 +1,15 @@
 <?php
 header('Content-Type: application/json');
 
+// header("Access-Control-Allow-Origin: *");
+// header("Access-Control-Allow-Headers: Content-Type");
+// header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+
+// // Handle preflight OPTIONS request
+// if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+//     exit(0);
+// }
+
 function getApiData($prefix, $data = null, $method)
 {
     $host = 'http://mytotalhealth.com.my/referral-api/api/';

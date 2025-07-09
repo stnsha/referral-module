@@ -53,7 +53,8 @@ include('../common/index_adv.php');
                         </div>
                         <p class="r-text referring-to" id="referring-to">Referring To<span style=" color:red;">*</span>
                         </p>
-                        <p class="r-text">External Referral<span style="color:red;">*</span></p>
+                        <p class="r-text external-referral-text" id="external-referral-text">External Referral<span
+                                style="color:red;">*</span></p>
                         <div class="row mb-2">
                             <div class="col">
                                 <!-- <select name="business_unit_to" id="business_unit_to"
@@ -192,8 +193,8 @@ include('../common/index_adv.php');
                         <input name="attachments[]" class="form-control mb-2" type="file" multiple id="attachmentInput">
                         <!--png/jpeg/jpg/pdf/word/excel-->
 
-                        <div class="col m-4" id="attachmentPreview"></div>
-                        <div class="col m-4" id="attachmentDisplay"></div>
+                        <div class="col my-4" id="attachmentPreview"></div>
+                        <div class="col my-4" id="attachmentDisplay"></div>
                     </div>
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">
@@ -402,8 +403,8 @@ include('../common/index_adv.php');
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-            const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
-            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/view.js"></script>
 </body>
