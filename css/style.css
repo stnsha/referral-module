@@ -1,5 +1,6 @@
 body {
     font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
     /* width: auto !important; */
 }
 
@@ -9,6 +10,7 @@ body {
     padding: 15px 25px 35px 15px;
     background-color: white;
     border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(19, 92, 170, 0.1);
 }
 
 .referral_header {
@@ -105,22 +107,66 @@ select.form-select.form-select-sm {
     color: black;
 }
 
+/* Primary Button - Generate Report (Highest Priority) */
 .btn-referral,
 .submitButton {
     text-decoration: none;
-    padding: 8px 15px;
-    background-color: #135caa;
+    padding: 5px 15px;
+    background-color: #173F5F;
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .btn-referral:hover,
-.submitButton:hover,
-.referral-btn:hover {
+.submitButton:hover {
     color: #fff;
     background-color: #0a4788;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(19, 92, 170, 0.3);
+}
+
+/* Secondary Button - View Actions (Medium Priority) */
+.btn-secondary {
+    text-decoration: none;
+    padding: 5px 15px;
+    background-color: #4a7bc8;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    color: #fff;
+    background-color: #3a6bb8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(74, 123, 200, 0.3);
+}
+
+/* Tertiary Button - QR Generation (Lower Priority) */
+.btn-tertiary {
+    text-decoration: none;
+    padding: 5px 15px;
+    background-color: #7ba3d3;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-tertiary:hover {
+    color: #fff;
+    background-color: #6b93c3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(123, 163, 211, 0.3);
 }
 
 .referral-show input[readonly],
@@ -250,12 +296,21 @@ select.form-select.form-select-sm {
 .referral-btn {
    text-decoration: none;
     padding: 5px 15px;
-    background-color: #135caa;
+    background-color: #4a7bc8;
     color: #fff;
     border: none;
     border-radius: 15px;
     cursor: pointer;
     margin-right: 5px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.referral-btn:hover {
+    color: #fff;
+    background-color: #3a6bb8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(74, 123, 200, 0.3);
 }
 
 .referral-btn a {
@@ -264,3 +319,36 @@ select.form-select.form-select-sm {
     font-size: 14px;
 }
 
+.generate-report {
+  transition: opacity 0.3s ease;
+}
+
+ /* Force table and contents to be transparent */
+    #referral-tbl, 
+    #referral-tbl thead, 
+    #referral-tbl tbody, 
+    #referral-tbl tr, 
+    #referral-tbl th, 
+    #referral-tbl td {
+        background-color: transparent !important;
+    }
+
+    /* Optional: if shadows or borders interfere */
+    #referral-tbl {
+        border-collapse: collapse;
+    }
+
+.referral-tbl .bdg-open {
+    background-color: green !important;
+    color: white !important;
+    padding: 5px 15px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.referral-tbl .bdg-close {
+    background-color: red !important;
+    color: white !important;
+    padding: 5px 15px;
+    border-radius: 4px;
+}

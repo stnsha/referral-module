@@ -105,8 +105,7 @@ include('../common/index_adv.php');
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Organization</option>
                                 </select>
-                                <div class="error-message" id="error-organization"
-                                    style="color: red;font-size:12px;">
+                                <div class="error-message" id="error-organization" style="color: red;font-size:12px;">
                                 </div>
                             </div>
                             <div class="col">
@@ -114,12 +113,12 @@ include('../common/index_adv.php');
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Location</option>
                                 </select>
-                                <div class="error-message" id="error-location-organization" style="color: red;font-size:12px;">
+                                <div class="error-message" id="error-location-organization"
+                                    style="color: red;font-size:12px;">
                                 </div>
                             </div>
                             <div class="col">
-                                <select name="referee" id="referee"
-                                    class="form-select form-select-sm text-capitalize">
+                                <select name="referee" id="referee" class="form-select form-select-sm text-capitalize">
                                     <option value="">Recipient</option>
                                 </select>
                                 <div class="error-message" id="error-referee" style="color: red;font-size:12px;">
@@ -278,8 +277,8 @@ include('../common/index_adv.php');
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Additional Remarks</p>
-                            <textarea name="additional_remarks" id="additional_remarks" class="form-control form-control-sm"
-                                rows="5"></textarea>
+                            <textarea name="additional_remarks" id="additional_remarks"
+                                class="form-control form-control-sm" rows="5"></textarea>
                         </div>
                     </div>
                 </div>
@@ -328,8 +327,8 @@ include('../common/index_adv.php');
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-            const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/app.js"></script>
 
