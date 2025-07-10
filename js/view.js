@@ -133,6 +133,7 @@ $(document).ready(function () {
                 } else {
                     //external
                     $('#referring-to').hide();
+                    $('#external-referral-text').show();
                     recipientTo.hide();
                     business_unit_to.hide();
                     location_to.hide();
