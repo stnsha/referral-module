@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Report</title>
+    <title>Referral</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
@@ -24,7 +24,7 @@ include('../common/index_adv.php');
 <body>
     <div class="referral-container">
         <div class="d-flex justify-content-start align-items-center ms-3 mb-3">
-            <h1 class="fw-bold text-start">Referral</h1>
+            <span class="fw-bold text-start" style="font-size:20px;">Referral Dashboard</span>
         </div>
         <div class="d-flex row justify-content-center mb-3">
             <div class="d-flex flex-column col-3 me-3 py-4 rounded-2 shadow align-items-start"
@@ -164,7 +164,7 @@ include('../common/index_adv.php');
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
     </script>
 
-    <script src="js/report.js"></script>
+    <script src="js/index.js"></script>
 </body>
 
 </html>
