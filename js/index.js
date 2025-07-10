@@ -257,8 +257,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }]
             },
             title: {
-                display: false,
-                text: "World Wine Production 2018"
+                display: true,
+                text: "Total Referral by Business Unit"
             }
         }
     });
