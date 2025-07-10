@@ -231,6 +231,17 @@ function getReferralStatus()
     return isset($decoded) ? $decoded : array();
 }
 
+function getReportChart()
+{
+    $data = getApiData('report/chart', null, 'GET');
+    if ($data['httpCode'] != 200) {
+        return array();
+    }
+    $decoded = json_decode($data['response'], true);
+
+    return isset($decoded) ? $decoded : array();
+}
+
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
@@ -325,6 +336,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'referral-status':
                 $response = array('data' => getReferralStatus());
+                break;
+
+            case 'report-chart':
+                $response = array('data' => getReportChart());
                 break;
         }
 

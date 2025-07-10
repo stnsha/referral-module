@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     resetFiltersBtn.addEventListener('click', function () {
                         // Clear all filter inputs
                         document.getElementById('filter-referral-id').value = '';
-                        
+
                         // Reset business unit to originally selected option
                         const businessUnitSelect = document.getElementById('filter-business-unit');
                         const originallySelected = businessUnitSelect.querySelector('option[selected]');
@@ -267,10 +267,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else {
                             businessUnitSelect.value = 'all'; // fallback to "All Business Units"
                         }
-                        
+
                         document.getElementById('filter-status').value = '';
                         document.getElementById('filter-date-range').value = '';
-                        
+
                         // Reset data and apply filters
                         applyFilters();
                     });
@@ -282,29 +282,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     const selectedBusinessUnit = document.getElementById('filter-business-unit').value;
                     const selectedStatus = document.getElementById('filter-status').value;
                     const dateRange = document.getElementById('filter-date-range').value;
-                    
+
                     let filteredData = response.data;
-                    
+
                     // Filter by referral ID
                     if (referralId !== '') {
-                        filteredData = filteredData.filter(function(row) {
+                        filteredData = filteredData.filter(function (row) {
                             return row.ref_id.toLowerCase().includes(referralId);
                         });
                     }
-                    
+
                     // Filter by business unit
                     if (selectedBusinessUnit !== '' && selectedBusinessUnit !== 'all') {
-                        filteredData = filteredData.filter(function(row) {
+                        filteredData = filteredData.filter(function (row) {
                             return row.business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
                         });
                     }
-                    
+
                     // Filter by status
-                     if (selectedStatus !== '') {
-                         filteredData = filteredData.filter(function(row) {
-                             return row.ori_status == selectedStatus;
-                         });
-                     }
+                    if (selectedStatus !== '') {
+                        filteredData = filteredData.filter(function (row) {
+                            return row.ori_status == selectedStatus;
+                        });
+                    }
 
                     // Filter by date range
                     if (dateRange && dateRange.includes(' - ')) {
