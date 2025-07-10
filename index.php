@@ -13,6 +13,7 @@
     <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
 </head>
 <?php
@@ -65,12 +66,10 @@ include('../common/index_adv.php');
                         </div>
                     </div>
                 </div>
-                <button class="btn btn-sm mt-2 w-100" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#businessUnitsCollapse" aria-expanded="false" aria-controls="businessUnitsCollapse"
-                    style="font-size: 12px; background-color: #173F5F; color: white; border: 1px solid #173F5F; font-weight: 500; transition: all 0.3s ease;"
-                    id="toggleButton"
-                    onmouseover="this.style.backgroundColor='#0a4788'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(19, 92, 170, 0.3)';"
-                    onmouseout="this.style.backgroundColor='#173F5F'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                <button type="button" data-bs-toggle="collapse" data-bs-target="#businessUnitsCollapse"
+                    aria-expanded="false" aria-controls="businessUnitsCollapse"
+                    style="background: none; border: none; color: #6c757d; font-size: 10px; padding: 5px 0; cursor: pointer; text-decoration: none;"
+                    id="toggleButton">
                     <span id="toggleText" class="pe-2">Show More</span><i class="bi bi-chevron-down"
                         id="toggleIcon"></i>
                 </button>
@@ -99,38 +98,38 @@ include('../common/index_adv.php');
                 <canvas id="myChart" style="width:100%;height:100%;"></canvas>
             </div>
         </div>
-        <div class="d-flex justify-content-between rounded-2 shadow ms-3 p-2 mb-3"
+        <div class="d-flex flex-column rounded-2 shadow ms-3 p-2 mb-3"
             style="overflow:hidden; background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);">
             <!-- <a href="create.php" type="button" class="btn-referral me-2">New Referral</a> -->
-            <div class="d-flex gap-2">
-                <select name="filter-business-unit" id="filter-business-unit"
-                    class="form-select form-select-sm text-capitalize" style="min-width: 150px;">
-                </select>
-                <select name="filter-status" id="filter-status" class="form-select form-select-sm text-capitalize"
-                    style="min-width: 120px;">
-                    <option value="1">Open</option>
-                    <option value="2">Referred</option>
-                    <option value="3">Status</option>
-                </select>
-                <input type="date" class="form-control form-control-sm" name="filter-start-date" id="filter-start-date"
-                    placeholder="Start Date" style="min-width: 140px;">
-                <input type="date" class="form-control form-control-sm" name="filter-end-date" id="filter-end-date"
-                    placeholder="End Date" style="min-width: 140px;">
-                <input type="text" class="form-control form-control-sm" name="filter-referral-id"
-                    id="filter-referral-id" placeholder="#REF0001" style="min-width: 120px;">
-            </div>
-            <div class="d-inline-flex align-items-center">
-                <button type="button" class="btn-referral" id="generateReportBtn" aria-expanded="false"
-                    aria-controls="generate-report">
-                    Generate Report
-                </button>
-                <div class="generate-report ms-2" id="generate-report" style="display: none;">
-                    <select name="report-parameter" id="report-parameter"
-                        class="form-select form-select-sm text-capitalize">
-                        <option value="monthly">Monthly</option>
-                        <option value="quarterly">Quarterly</option>
-                        <option value="yearly">Yearly</option>
+            <div class="d-flex justify-content-between mb-2">
+                <div class="d-flex gap-2">
+                    <select name="filter-business-unit" id="filter-business-unit"
+                        class="form-select form-select-sm text-capitalize" style="min-width: 150px;">
                     </select>
+                    <select name="filter-status" id="filter-status" class="form-select form-select-sm text-capitalize"
+                        style="min-width: 120px;">
+                    </select>
+                    <input type="text" class="form-control form-control-sm" name="filter-date-range"
+                        id="filter-date-range" placeholder="Select Date Range" style="min-width: 280px;">
+                    <input type="text" class="form-control form-control-sm" name="filter-referral-id"
+                        id="filter-referral-id" placeholder="#REF0001" style="min-width: 120px;">
+                    <button type="button" id="resetFiltersBtn">
+                        Reset Filters
+                    </button>
+                </div>
+                <div class="d-inline-flex align-items-center">
+                    <button type="button" class="btn-referral" id="generateReportBtn" aria-expanded="false"
+                        aria-controls="generate-report">
+                        Generate Report
+                    </button>
+                    <div class="generate-report ms-2" id="generate-report" style="display: none;">
+                        <select name="report-parameter" id="report-parameter"
+                            class="form-select form-select-sm text-capitalize">
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -155,6 +154,8 @@ include('../common/index_adv.php');
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
     <script>

@@ -49,11 +49,58 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Global variables for filtering
+    let allData = [];
+    let currentPage = 1;
+    const itemsPerPage = 15;
+    let globalApplyFilters = null;
+
+    // Date range picker functionality using daterangepicker.com library
+    $(document).ready(function () {
+        console.log('Date range picker initializing...');
+
+        // Initialize the date range picker
+        $('#filter-date-range').daterangepicker({
+            autoUpdateInput: false,
+            locale: {
+                cancelLabel: 'Clear',
+                format: 'YYYY-MM-DD'
+            },
+            ranges: {
+                'Today': [moment(), moment()],
+                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        });
+
+        // Handle date range selection
+        $('#filter-date-range').on('apply.daterangepicker', function (ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+            console.log('Date range selected:', $(this).val());
+
+            // Apply filters automatically
+            if (typeof globalApplyFilters === 'function') {
+                globalApplyFilters();
+            }
+        });
+
+        // Handle date range clear
+        $('#filter-date-range').on('cancel.daterangepicker', function (ev, picker) {
+            $(this).val('');
+            console.log('Date range cleared');
+
+            // Apply filters to show all data
+            if (typeof globalApplyFilters === 'function') {
+                globalApplyFilters();
+            }
+        });
+    });
+
     // Load referral data into  table
     if (document.getElementById('referral-tbl')) {
-        let allData = [];
-        let currentPage = 1;
-        const itemsPerPage = 15;
 
         function displayPage(page) {
             const startIndex = (page - 1) * itemsPerPage;
@@ -133,6 +180,32 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
+        // Load status options from API
+        $.ajax({
+            url: 'api.php',
+            type: 'POST',
+            data: { action: 'referral-status' },
+            success: function (response) {
+                console.log(response);
+                const statusSelect = document.getElementById('filter-status');
+                if (statusSelect && response && response.data) {
+                    // Clear existing options
+                    statusSelect.innerHTML = '<option value="">All Status</option>';
+
+                    // Add status options from object format {"1": "Open", "2": "In Progress", etc.}
+                    Object.keys(response.data).forEach(function (key) {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = response.data[key];
+                        statusSelect.appendChild(option);
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error loading status options:', error);
+            }
+        });
+
         $.ajax({
             url: 'api.php',
             type: 'POST',
@@ -158,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Add filter functionality for referral ID
                 const filterInput = document.getElementById('filter-referral-id');
                 if (filterInput) {
-                    filterInput.addEventListener('input', function() {
+                    filterInput.addEventListener('input', function () {
                         applyFilters();
                     });
                 }
@@ -166,7 +239,39 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Add filter functionality for business unit
                 const businessUnitFilter = document.getElementById('filter-business-unit');
                 if (businessUnitFilter) {
-                    businessUnitFilter.addEventListener('change', function() {
+                    businessUnitFilter.addEventListener('change', function () {
+                        applyFilters();
+                    });
+                }
+
+                // Add filter functionality for status
+                const statusFilter = document.getElementById('filter-status');
+                if (statusFilter) {
+                    statusFilter.addEventListener('change', function () {
+                        applyFilters();
+                    });
+                }
+
+                // Add reset filters functionality
+                const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+                if (resetFiltersBtn) {
+                    resetFiltersBtn.addEventListener('click', function () {
+                        // Clear all filter inputs
+                        document.getElementById('filter-referral-id').value = '';
+                        
+                        // Reset business unit to originally selected option
+                        const businessUnitSelect = document.getElementById('filter-business-unit');
+                        const originallySelected = businessUnitSelect.querySelector('option[selected]');
+                        if (originallySelected) {
+                            businessUnitSelect.value = originallySelected.value;
+                        } else {
+                            businessUnitSelect.value = 'all'; // fallback to "All Business Units"
+                        }
+                        
+                        document.getElementById('filter-status').value = '';
+                        document.getElementById('filter-date-range').value = '';
+                        
+                        // Reset data and apply filters
                         applyFilters();
                     });
                 }
@@ -175,6 +280,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 function applyFilters() {
                     const referralId = document.getElementById('filter-referral-id').value.trim().toLowerCase();
                     const selectedBusinessUnit = document.getElementById('filter-business-unit').value;
+                    const selectedStatus = document.getElementById('filter-status').value;
+                    const dateRange = document.getElementById('filter-date-range').value;
                     
                     let filteredData = response.data;
                     
@@ -192,10 +299,72 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     }
                     
+                    // Filter by status
+                     if (selectedStatus !== '') {
+                         filteredData = filteredData.filter(function(row) {
+                             return row.ori_status == selectedStatus;
+                         });
+                     }
+
+                    // Filter by date range
+                    if (dateRange && dateRange.includes(' - ')) {
+                        const dates = dateRange.split(' - ');
+                        const startDate = new Date(dates[0]);
+                        const endDate = new Date(dates[1]);
+
+                        // Function to parse custom date format "8 July 2025, Tuesday"
+                        function parseCustomDate(dateStr) {
+                            if (!dateStr) return null;
+
+                            // Remove day name if present (e.g., ", Tuesday")
+                            const cleanDateStr = dateStr.replace(/,\s*\w+$/, '');
+
+                            // Try to parse the date
+                            const parsedDate = new Date(cleanDateStr);
+
+                            // If parsing fails, try alternative format
+                            if (isNaN(parsedDate.getTime())) {
+                                // Handle format like "8 July 2025"
+                                const parts = cleanDateStr.split(' ');
+                                if (parts.length === 3) {
+                                    const day = parseInt(parts[0]);
+                                    const month = parts[1];
+                                    const year = parseInt(parts[2]);
+
+                                    // Convert month name to number
+                                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                        'July', 'August', 'September', 'October', 'November', 'December'];
+                                    const monthIndex = monthNames.findIndex(m => m.toLowerCase() === month.toLowerCase());
+
+                                    if (monthIndex !== -1) {
+                                        return new Date(year, monthIndex, day);
+                                    }
+                                }
+                            }
+
+                            return parsedDate;
+                        }
+
+                        filteredData = filteredData.filter(function (row) {
+                            const rowDate = parseCustomDate(row.created_at || row.date || row.timestamp);
+                            if (!rowDate || isNaN(rowDate.getTime())) return false;
+
+                            // Set time to start of day for accurate comparison
+                            const rowDateOnly = new Date(rowDate.getFullYear(), rowDate.getMonth(), rowDate.getDate());
+                            const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+                            return rowDateOnly >= startDateOnly && rowDateOnly <= endDateOnly;
+                        });
+                    }
+
                     allData = filteredData;
                     currentPage = 1;
                     displayPage(currentPage);
                 }
+
+                // Assign to global variable so date picker can access it
+                globalApplyFilters = applyFilters;
             },
             error: function (xhr, status, error) {
                 console.error('Error loading referral data:', error);

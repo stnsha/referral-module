@@ -352,3 +352,44 @@ select.form-select.form-select-sm {
     padding: 5px 15px;
     border-radius: 4px;
 }
+
+#resetFiltersBtn {
+    background: none !important;
+    border: none !important;
+    color: #6c757d !important;
+    font-size: 12px !important;
+    padding: 8px 0 !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+#resetFiltersBtn:hover {
+    color: #3CAEA3 !important;
+    text-decoration: underline !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+#toggleText {
+    font-size: 12px;
+}
+
+#toggleText:hover {
+    color: #3CAEA3 !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+#resetFiltersBtn:focus {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+
+                   

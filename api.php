@@ -219,6 +219,18 @@ function getExternalOrganization()
 
     return isset($decoded) ? $decoded : array();
 }
+
+function getReferralStatus()
+{
+    $data = getApiData('referral/displayStatus', null, 'GET');
+    if ($data['httpCode'] != 200) {
+        return array();
+    }
+    $decoded = json_decode($data['response'], true);
+
+    return isset($decoded) ? $decoded : array();
+}
+
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
@@ -309,6 +321,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'external-organizations':
                 $response = array('data' => getExternalOrganization());
+                break;
+
+            case 'referral-status':
+                $response = array('data' => getReferralStatus());
                 break;
         }
 
