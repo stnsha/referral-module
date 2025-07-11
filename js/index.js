@@ -1,5 +1,50 @@
 
 document.addEventListener('DOMContentLoaded', function () {
+    //dashboard summary
+    $.ajax({
+        url: 'api.php',
+        type: 'POST',
+        data: { action: 'report-dashboard' },
+        success: function (response) {
+            // console.log('Dashboard report success:', response);
+
+            // Update referral dashboard
+            if (response.data.total_referral !== undefined) {
+                $('#total-referral-count').text(response.data.total_referral);
+            }
+
+            if (response.data.referrals) {
+                $('#referral-open-count').text(response.data.referrals.open || 0);
+                $('#referral-progress-count').text(response.data.referrals.in_progress || 0);
+                $('#referral-referred-count').text(response.data.referrals.referred || 0);
+                $('#referral-closed-count').text(response.data.referrals.closed || 0);
+            }
+
+            // Update business units dashboard
+            if (response.data.total_business_unit !== undefined) {
+                $('#total-business-unit-count').text(response.data.total_business_unit);
+            }
+
+            if (response.data.business_units && Array.isArray(response.data.business_units)) {
+                // Clear existing business units
+                $('#business-units-list').empty();
+
+                // Display all business units
+                response.data.business_units.forEach(function (unit) {
+                    $('#business-units-list').append(
+                        '<div class="d-flex justify-content-between w-100 mb-1">' +
+                        '<span>' + unit.name + '</span>' +
+                        '<span>' + unit.count + '</span>' +
+                        '</div>'
+                    );
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            console.log('Dashboard report error:', error);
+        }
+    });
+
     //business unit collapse view
     const collapseElement = document.getElementById('businessUnitsCollapse');
     const toggleIcon = document.getElementById('toggleIcon');
@@ -51,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Global variables for filtering
     let allData = [];
+    let originalData = []; // Store original unfiltered data
     let currentPage = 1;
     const itemsPerPage = 15;
     let globalApplyFilters = null;
@@ -126,8 +172,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
-                    <td style="font-size:14px;width: 40%;text-align:start;">${row.reason}</td>
-                    <td style="font-size:14px;width: 15%;text-align:start;">${row.business_unit}</td>
+                    <td style="font-size:14px;width: 40%;text-align:start;">
+                    ${row.reason}<br>
+                    <span class="text-muted fst-italic r-text">From: ${row.from_business_unit}</span> 
+                    </td>
+                    <td style="font-size:14px;width: 15%;text-align:start;">${row.to_business_unit}</td>
                     <td style="font-size:14px;width: 10%;text-align:center;">
                         <span class="bdg-${row.status.toLowerCase()}">${row.status}</span>
                     </td>
@@ -211,6 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
             type: 'POST',
             data: { action: 'all-referral' },
             success: function (response) {
+                console.log(response);
                 if (!response || typeof response !== 'object' || !response.data) {
                     console.error('Invalid response format');
                     return;
@@ -225,6 +275,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 allData = response.data;
+                originalData = [...response.data]; // Store original data
                 currentPage = 1;
                 displayPage(currentPage);
 
@@ -256,23 +307,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 const resetFiltersBtn = document.getElementById('resetFiltersBtn');
                 if (resetFiltersBtn) {
                     resetFiltersBtn.addEventListener('click', function () {
+                        console.log('Resetting all filters');
+
                         // Clear all filter inputs
                         document.getElementById('filter-referral-id').value = '';
-
-                        // Reset business unit to originally selected option
-                        const businessUnitSelect = document.getElementById('filter-business-unit');
-                        const originallySelected = businessUnitSelect.querySelector('option[selected]');
-                        if (originallySelected) {
-                            businessUnitSelect.value = originallySelected.value;
-                        } else {
-                            businessUnitSelect.value = 'all'; // fallback to "All Business Units"
-                        }
-
+                        document.getElementById('filter-business-unit').value = 'all';
                         document.getElementById('filter-status').value = '';
                         document.getElementById('filter-date-range').value = '';
 
-                        // Reset data and apply filters
-                        applyFilters();
+                        // Clear date range picker
+                        $('#filter-date-range').data('daterangepicker').setStartDate(moment());
+                        $('#filter-date-range').data('daterangepicker').setEndDate(moment());
+
+                        // Reset to original data
+                        allData = [...originalData];
+                        currentPage = 1;
+                        displayPage(currentPage);
+
+                        console.log('Filters reset, showing all data:', allData.length, 'items');
                     });
                 }
 
@@ -283,84 +335,132 @@ document.addEventListener('DOMContentLoaded', function () {
                     const selectedStatus = document.getElementById('filter-status').value;
                     const dateRange = document.getElementById('filter-date-range').value;
 
-                    let filteredData = response.data;
+                    console.log('Applying filters:', {
+                        referralId: referralId,
+                        selectedBusinessUnit: selectedBusinessUnit,
+                        selectedStatus: selectedStatus,
+                        dateRange: dateRange
+                    });
+
+                    let filteredData = [...originalData]; // Always start from original data
+                    console.log('Original data count:', filteredData.length);
 
                     // Filter by referral ID
                     if (referralId !== '') {
+                        console.log('Filtering by referral ID:', referralId);
                         filteredData = filteredData.filter(function (row) {
-                            return row.ref_id.toLowerCase().includes(referralId);
+                            const matches = row.ref_id && row.ref_id.toLowerCase().includes(referralId);
+                            if (matches) {
+                                console.log('Referral ID match:', row.ref_id);
+                            }
+                            return matches;
                         });
+                        console.log('After referral ID filter:', filteredData.length);
                     }
 
                     // Filter by business unit
                     if (selectedBusinessUnit !== '' && selectedBusinessUnit !== 'all') {
+                        console.log('Filtering by business unit:', selectedBusinessUnit);
                         filteredData = filteredData.filter(function (row) {
-                            return row.business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
+                            // Check both from_business_unit and to_business_unit
+                            const fromMatches = row.from_business_unit && row.from_business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
+                            const toMatches = row.to_business_unit && row.to_business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
+                            const matches = fromMatches || toMatches;
+
+                            if (matches) {
+                                console.log('Business unit match:', fromMatches ? `from: ${row.from_business_unit}` : `to: ${row.to_business_unit}`);
+                            }
+                            return matches;
                         });
+                        console.log('After business unit filter:', filteredData.length);
                     }
 
                     // Filter by status
                     if (selectedStatus !== '') {
+                        console.log('Filtering by status:', selectedStatus, 'Type:', typeof selectedStatus);
                         filteredData = filteredData.filter(function (row) {
-                            return row.ori_status == selectedStatus;
+                            console.log('Row status:', row.ori_status, 'Type:', typeof row.ori_status);
+                            const matches = String(row.ori_status) === String(selectedStatus);
+                            if (matches) {
+                                console.log('Status match:', row.ori_status);
+                            }
+                            return matches;
                         });
+                        console.log('After status filter:', filteredData.length);
                     }
 
                     // Filter by date range
                     if (dateRange && dateRange.includes(' - ')) {
+                        console.log('Filtering by date range:', dateRange);
                         const dates = dateRange.split(' - ');
+                        // Parse YYYY-MM-DD format from date picker
                         const startDate = new Date(dates[0]);
                         const endDate = new Date(dates[1]);
+
+                        console.log('Date range:', startDate, 'to', endDate);
 
                         // Function to parse custom date format "8 July 2025, Tuesday"
                         function parseCustomDate(dateStr) {
                             if (!dateStr) return null;
 
                             // Remove day name if present (e.g., ", Tuesday")
-                            const cleanDateStr = dateStr.replace(/,\s*\w+$/, '');
+                            const cleanDateStr = dateStr.replace(/,\s*\w+$/, '').trim();
 
-                            // Try to parse the date
-                            const parsedDate = new Date(cleanDateStr);
+                            // Handle format like "8 July 2025"
+                            const parts = cleanDateStr.split(' ');
+                            if (parts.length === 3) {
+                                const day = parseInt(parts[0]);
+                                const month = parts[1];
+                                const year = parseInt(parts[2]);
 
-                            // If parsing fails, try alternative format
-                            if (isNaN(parsedDate.getTime())) {
-                                // Handle format like "8 July 2025"
-                                const parts = cleanDateStr.split(' ');
-                                if (parts.length === 3) {
-                                    const day = parseInt(parts[0]);
-                                    const month = parts[1];
-                                    const year = parseInt(parts[2]);
+                                // Convert month name to number
+                                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                    'July', 'August', 'September', 'October', 'November', 'December'];
+                                const monthIndex = monthNames.findIndex(m => m.toLowerCase() === month.toLowerCase());
 
-                                    // Convert month name to number
-                                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                                        'July', 'August', 'September', 'October', 'November', 'December'];
-                                    const monthIndex = monthNames.findIndex(m => m.toLowerCase() === month.toLowerCase());
-
-                                    if (monthIndex !== -1) {
-                                        return new Date(year, monthIndex, day);
-                                    }
+                                if (monthIndex !== -1 && !isNaN(day) && !isNaN(year)) {
+                                    return new Date(year, monthIndex, day);
                                 }
                             }
 
-                            return parsedDate;
+                            // Try to parse the date directly as fallback
+                            const parsedDate = new Date(cleanDateStr);
+                            return isNaN(parsedDate.getTime()) ? null : parsedDate;
                         }
 
                         filteredData = filteredData.filter(function (row) {
                             const rowDate = parseCustomDate(row.created_at || row.date || row.timestamp);
-                            if (!rowDate || isNaN(rowDate.getTime())) return false;
+                            if (!rowDate) {
+                                console.log('Invalid row date:', row.created_at);
+                                return false;
+                            }
 
-                            // Set time to start of day for accurate comparison
+                            // Set time to start of day for comparison
                             const rowDateOnly = new Date(rowDate.getFullYear(), rowDate.getMonth(), rowDate.getDate());
                             const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
                             const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
 
-                            return rowDateOnly >= startDateOnly && rowDateOnly <= endDateOnly;
+                            console.log('Comparing dates:', {
+                                rowDate: rowDateOnly.toDateString(),
+                                startDate: startDateOnly.toDateString(),
+                                endDate: endDateOnly.toDateString(),
+                                originalRowDate: row.created_at
+                            });
+
+                            const isInRange = rowDateOnly >= startDateOnly && rowDateOnly <= endDateOnly;
+                            if (isInRange) {
+                                console.log('Date match:', row.created_at, 'parsed as:', rowDate.toDateString());
+                            }
+                            return isInRange;
                         });
+                        console.log('After date filter:', filteredData.length);
                     }
 
+                    // Update display with filtered data
                     allData = filteredData;
                     currentPage = 1;
                     displayPage(currentPage);
+                    console.log('Final filtered data count:', filteredData.length);
                 }
 
                 // Assign to global variable so date picker can access it
@@ -404,40 +504,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 const sentData = [];
                 const receivedData = [];
 
-                // Define all expected business units
-                const allBusinessUnits = ['Pharmacy', 'Clinic', 'Optisaver', 'Baby', 'Physio', 'Sugi', 'Audiology'];
-
-                // Create a map of existing data
-                const existingData = {};
+                // Process actual API response data
                 Object.keys(chartData.data).forEach(businessUnit => {
                     const label = businessUnit.replace(/^Alpro\s+/i, '');
                     const unitData = chartData.data[businessUnit][0];
-                    existingData[label] = {
-                        sent: unitData.sent,
-                        received: unitData.received
-                    };
+
+                    labels.push(label);
+                    sentData.push(unitData.sent);
+                    receivedData.push(unitData.received);
                 });
 
-                // Process all business units (existing + missing)
-                allBusinessUnits.forEach(unit => {
-                    labels.push(unit);
-
-                    if (existingData[unit]) {
-                        // Use existing data, replace zero values with random numbers
-                        const sentValue = existingData[unit].sent === 0 ? Math.floor(Math.random() * 10) + 1 : existingData[unit].sent;
-                        const receivedValue = existingData[unit].received === 0 ? Math.floor(Math.random() * 10) + 1 : existingData[unit].received;
-                        sentData.push(sentValue);
-                        receivedData.push(receivedValue);
-                    } else {
-                        // Create dummy data for missing business units
-                        const dummySent = Math.floor(Math.random() * 8) + 2; // Random between 2-9
-                        const dummyReceived = Math.floor(Math.random() * 8) + 2; // Random between 2-9
-                        sentData.push(dummySent);
-                        receivedData.push(dummyReceived);
-                    }
-                });
-
-                // Update chart with new data
+                // Update chart with actual data
                 updateChart(labels, sentData, receivedData);
 
             } catch (e) {
@@ -455,26 +532,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const ctx = document.getElementById('myChart');
     let chartInstance = null;
 
-    // Initialize chart with default data
-    function initChart(labels = [], data = [], colors = []) {
+    // Initialize chart with empty state
+    function initChart() {
         if (chartInstance) {
             chartInstance.destroy();
         }
 
-        // If no data provided, generate dummy data for all 7 business units
-        const defaultLabels = ['Pharmacy', 'Clinic', 'Optisaver', 'Baby', 'Physio', 'Sugi', 'Audiology'];
-        const finalLabels = labels.length ? labels : defaultLabels;
-        const finalData = data.length ? data : defaultLabels.map(() => Math.floor(Math.random() * 15) + 5); // Random 5-19
-        const finalColors = colors.length ? colors : ['#1e4384', '#17b2a6', '#194621', '#19b8d3', '#21a2dc', 'orange', '#204296'];
-
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: finalLabels,
+                labels: [],
                 datasets: [{
                     label: 'Total Referral',
-                    data: finalData,
-                    backgroundColor: finalColors,
+                    data: [],
+                    backgroundColor: [],
                     borderWidth: 1
                 }]
             },
@@ -568,6 +639,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize chart with default data if no AJAX call succeeds
     initChart();
+
+    // Initialize date range picker
+    $('#filter-date-range').daterangepicker({
+        autoUpdateInput: false,
+        locale: {
+            cancelLabel: 'Clear',
+            format: 'DD/MM/YYYY'
+        }
+    });
+
+    $('#filter-date-range').on('apply.daterangepicker', function (ev, picker) {
+        $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format('DD/MM/YYYY'));
+        if (typeof globalApplyFilters === 'function') {
+            globalApplyFilters();
+        }
+    });
+
+    $('#filter-date-range').on('cancel.daterangepicker', function (ev, picker) {
+        $(this).val('');
+        if (typeof globalApplyFilters === 'function') {
+            globalApplyFilters();
+        }
+    });
 
 });
 

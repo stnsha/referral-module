@@ -242,6 +242,17 @@ function getReportChart()
     return isset($decoded) ? $decoded : array();
 }
 
+function getReportDashboard()
+{
+    $data = getApiData('report/dashboard', null, 'GET');
+    if ($data['httpCode'] != 200) {
+        return array();
+    }
+    $decoded = json_decode($data['response'], true);
+
+    return isset($decoded) ? $decoded : array();
+}
+
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
@@ -340,6 +351,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'report-chart':
                 $response = array('data' => getReportChart());
+                break;
+
+            case 'report-dashboard':
+                $response = array('data' => getReportDashboard());
                 break;
         }
 

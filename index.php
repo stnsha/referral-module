@@ -26,52 +26,52 @@ include('../common/index_adv.php');
     <div class="referral-container mb-3">
         <div class="row mb-3">
             <div class="col-12">
-                <div class="d-flex justify-content-start align-items-center px-3">
-                    <span class="fw-bold text-start" style="font-size:20px;">Referral Dashboard</span>
+                <div class="d-flex flex-column justify-content-center align-items-start px-3">
+                    <span class="fw-bold text-start me-3" style="font-size:20px;">Referral Dashboard</span>
+                    <a href="create.php" type="button" class="btn-new-referral me-2">New Referral</a>
                 </div>
             </div>
         </div>
         <div class="row align-items-stretch mb-3 px-3">
-            <div class="d-flex flex-column col-4">
+            <div class="d-flex flex-column justify-content-between col-4">
                 <div class="d-flex flex-column p-4 rounded-2 shadow align-items-start mb-3"
-                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%); min-height:130px;">
-                    <div class="d-flex justify-content-center align-items-end mb-4" style="line-height: 1;">
-                        <span class="fw-bold"
-                            style="font-size: 32px !important; color: #173F5F; line-height: 1;">12</span>
+                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);">
+                    <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
+                        <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
+                            id="total-referral-count">0</span>
                         <span style="font-size:16px; color: #173F5F; line-height: 1; margin-left: 8px;"
                             class="fw-bold">Referral</span>
                     </div>
                     <div class="d-flex justify-content-between w-100 mb-1">
                         <span>Open</span>
-                        <span>8</span>
+                        <span id="referral-open-count">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between w-100 mb-1">
+                        <span>In Progress</span>
+                        <span id="referral-progress-count">0</span>
                     </div>
                     <div class="d-flex justify-content-between w-100 mb-1">
                         <span>Referred</span>
-                        <span>13</span>
+                        <span id="referral-referred-count">0</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
                         <span>Closed</span>
-                        <span>1</span>
+                        <span id="referral-closed-count">0</span>
                     </div>
                 </div>
                 <div class="d-flex flex-column p-4 rounded-2 shadow align-items-start mb-3"
-                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%); min-height:310px;">
+                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);">
                     <div class="d-flex justify-content-center align-items-end mb-4" style="line-height: 1;">
-                        <span class="fw-bold"
-                            style="font-size: 32px !important; color: #173F5F; line-height: 1;">7</span>
+                        <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
+                            id="total-business-unit-count">0</span>
                         <span style="font-size:16px; color: #173F5F; line-height: 1; margin-left: 8px;"
                             class="fw-bold">Business
                             Unit</span>
                     </div>
-                    <div class="business-units-report w-100">
-                        <div class="d-flex justify-content-between w-100 mb-1">
-                            <span>Alpro Pharmacy</span>
-                            <span>8</span>
-                        </div>
-                        <div class="d-flex justify-content-between w-100 mb-1">
-                            <span>Alpro Clinic</span>
-                            <span>13</span>
-                        </div>
+                    <div class="business-units-report w-100" id="business-units-list">
+                        <!-- Business units will be populated dynamically -->
+                    </div>
+                    <div class="collapse" id="businessUnitsCollapse">
                         <div class="d-flex justify-content-between w-100 mb-1">
                             <span>Alpro Optisaver</span>
                             <span>5</span>
@@ -92,28 +92,6 @@ include('../common/index_adv.php');
                             <span>Alpro Audiology</span>
                             <span>3</span>
                         </div>
-                        <div class="collapse" id="businessUnitsCollapse">
-                            <div class="d-flex justify-content-between w-100 mb-1">
-                                <span>Alpro Optisaver</span>
-                                <span>5</span>
-                            </div>
-                            <div class="d-flex justify-content-between w-100 mb-1">
-                                <span>Alpro Baby</span>
-                                <span>2</span>
-                            </div>
-                            <div class="d-flex justify-content-between w-100 mb-1">
-                                <span>Alpro Physio</span>
-                                <span>5</span>
-                            </div>
-                            <div class="d-flex justify-content-between w-100 mb-1">
-                                <span>Alpro Sugi</span>
-                                <span>1</span>
-                            </div>
-                            <div class="d-flex justify-content-between w-100">
-                                <span>Alpro Audiology</span>
-                                <span>3</span>
-                            </div>
-                        </div>
                     </div>
                     <!-- <button type="button" data-bs-toggle="collapse" data-bs-target="#businessUnitsCollapse"
                         aria-expanded="false" aria-controls="businessUnitsCollapse"
@@ -127,7 +105,7 @@ include('../common/index_adv.php');
 
             <div class="d-flex flex-column col-8">
                 <div class="d-flex flex-column rounded-2 shadow align-items-start"
-                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%); max-height:500px;">
+                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%); max-height:490px;">
                     <canvas id="myChart" style="width:100%;height:100%;"></canvas>
                 </div>
             </div>
@@ -136,7 +114,6 @@ include('../common/index_adv.php');
             <div class="col-12">
                 <div class="d-flex flex-column rounded-2 shadow p-2"
                     style="overflow:hidden; background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);">
-                    <!-- <a href="create.php" type="button" class="btn-referral me-2">New Referral</a> -->
                     <span class="fw-bold text-start pt-3 pb-2" style="font-size:14px;">Filter</span>
 
                     <div class="d-flex justify-content-between pb-3 mb-2">
@@ -184,7 +161,7 @@ include('../common/index_adv.php');
                                 <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
                                 <th style="font-size:16px;width: 40%;text-align:start;">Referral Reason</th>
                                 <th style="font-size:16px;width: 10%;text-align:start;">Business Unit</th>
-                                <th style="font-size:16px;width: 10%;text-align:center;">Status</th>
+                                <th style="font-size:16px;width: 5%;text-align:center;">Status</th>
                                 <th style="font-size:16px;width: 20%;text-align:start;">Action</th>
                             </tr>
                         </thead>

@@ -87,12 +87,13 @@ include('../common/index_adv.php');
             <span class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></span>
         </div>
         <div class="my-4 d-flex flex-column align-items-center">
-            <img src="img/qr/<?php echo $filename; ?>" alt="Referral QR Code" class="img-fluid" style="max-width: 300px;">
+            <img src="img/qr/<?php echo $filename; ?>" alt="Referral QR Code" class="img-fluid"
+                style="max-width: 300px;">
 
-            <a href="img/qr/<?php echo $filename; ?>" download class="btn btn-primary mt-3">
+            <a href="img/qr/<?php echo $filename; ?>" download class="btn-new-referral mt-3">
                 Download QR Code
             </a>
-            <a href="index.php" class="btn btn-secondary mt-2">
+            <a href="index.php" class="btn-referral mt-2">
                 Back to Home
             </a>
         </div>

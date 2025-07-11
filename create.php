@@ -316,10 +316,10 @@ include('../common/index_adv.php');
                 </div> -->
             </div>
             <div class="row align-items-start text-start py-2 px-4">
-                <div class="d-flex flex-column justify-content-center align-items-center">
+                <div class="d-flex justify-content-center align-items-center">
                     <button type="submit" id="real-submit" style="display: none;"></button>
-                    <input type="submit" value="Submit" class="submitButton">
-                    <a href="index.php" class="btn-back">Back</a>
+                    <input type="submit" value="Submit" class="btn-new-referral me-2">
+                    <a href="index.php" class="btn-referral">Back</a>
                 </div>
             </div>
         </form>
@@ -327,8 +327,8 @@ include('../common/index_adv.php');
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+            const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/app.js"></script>
 
