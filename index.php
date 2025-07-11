@@ -62,7 +62,7 @@ include('../common/index_adv.php');
                 </div>
                 <div class="d-flex flex-column p-4 rounded-2 shadow align-items-start mb-3"
                     style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
-                    <div class="d-flex justify-content-center align-items-end mb-4" style="line-height: 1;">
+                    <div class="d-flex justify-content-center align-items-end mb-2 pb-2" style="line-height: 1;">
                         <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
                             id="total-business-unit-count">0</span>
                         <span style="font-size:16px; color: #173F5F; line-height: 1; margin-left: 8px;"
