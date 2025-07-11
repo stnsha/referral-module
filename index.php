@@ -26,16 +26,17 @@ include('../common/index_adv.php');
     <div class="referral-container mb-3">
         <div class="row mb-3">
             <div class="col-12">
-                <div class="d-flex flex-column justify-content-center align-items-start px-3">
+                <div class="d-flex justify-content-start align-items-end px-3">
                     <span class="fw-bold text-start me-3" style="font-size:20px;">Referral Dashboard</span>
                     <a href="create.php" type="button" class="btn-new-referral me-2">New Referral</a>
                 </div>
             </div>
         </div>
         <div class="row align-items-stretch mb-3 px-3">
+            <!--style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);-->
             <div class="d-flex flex-column justify-content-between col-4">
                 <div class="d-flex flex-column p-4 rounded-2 shadow align-items-start mb-3"
-                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);">
+                    style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
                         <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
                             id="total-referral-count">0</span>
@@ -60,7 +61,7 @@ include('../common/index_adv.php');
                     </div>
                 </div>
                 <div class="d-flex flex-column p-4 rounded-2 shadow align-items-start mb-3"
-                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);">
+                    style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <div class="d-flex justify-content-center align-items-end mb-4" style="line-height: 1;">
                         <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
                             id="total-business-unit-count">0</span>
@@ -105,7 +106,7 @@ include('../common/index_adv.php');
 
             <div class="d-flex flex-column col-8">
                 <div class="d-flex flex-column rounded-2 shadow align-items-start"
-                    style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%); max-height:490px;">
+                    style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%); max-height:490px;">
                     <canvas id="myChart" style="width:100%;height:100%;"></canvas>
                 </div>
             </div>
@@ -113,7 +114,7 @@ include('../common/index_adv.php');
         <div class="row mb-3 px-3">
             <div class="col-12">
                 <div class="d-flex flex-column rounded-2 shadow p-2"
-                    style="overflow:hidden; background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);">
+                    style="overflow:hidden; background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <span class="fw-bold text-start pt-3 pb-2" style="font-size:14px;">Filter</span>
 
                     <div class="d-flex justify-content-between pb-3 mb-2">
@@ -153,10 +154,10 @@ include('../common/index_adv.php');
         <div class="row mb-3 px-3">
             <div class="col-12">
                 <div class="d-flex flex-column justify-content-between p-2 rounded-2 shadow"
-                    style="overflow:hidden; background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);">
-                    <table class="referral-tbl table table-borderless table-hover rounded-2" id="referral-tbl"
+                    style="overflow:hidden; background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
+                    <table class="referral-tbl table table-hover rounded-2" id="referral-tbl"
                         style="background-color: transparent !important;">
-                        <thead style="border-bottom: 2px solid white;padding-bottom:5px;">
+                        <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
                             <tr>
                                 <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
                                 <th style="font-size:16px;width: 40%;text-align:start;">Referral Reason</th>
