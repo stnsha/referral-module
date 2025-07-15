@@ -47,6 +47,7 @@ $(document).ready(function () {
             });
 
             const container = $('#referralHistoryContainer');
+            console.log(sortedDetails);
             $.each(sortedDetails, function (index, rd) {
                 //internal
                 if (rd.external_referral.length < 1) {
@@ -55,10 +56,10 @@ $(document).ready(function () {
                     // rd.staff_id ??= staffId; 
 
                     //testing purposes only
-                    const fakeStaffId = 3333;
-                    rd.staff_id ??= fakeStaffId;
+                    // const fakeStaffId = 3333;
+                    // rd.staff_id ??= fakeStaffId;
 
-                    $('input[name="updated_recipient_to"]').val(fakeStaffId);
+                    // $('input[name="updated_recipient_to"]').val(fakeStaffId);
 
                     //run through staff details
                     getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {

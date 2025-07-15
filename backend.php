@@ -165,7 +165,9 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
     $location_id = mysqli_real_escape_string($conn, $location_id);
     $bu_id = mysqli_real_escape_string($conn, $bu_id);
 
-    $sql = "SELECT 
+    //simulate session staff id (testing purposes)
+    if (!empty($staff_id)) {
+        $sql = "SELECT 
             r.name,
             s.nama_staff, 
             CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
@@ -174,6 +176,19 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
         INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
         INNER JOIN ref_business_unit r ON r.id = $bu_id
         WHERE s.id = $staff_id";
+    } else {
+        $sql = "SELECT 
+        r.name,
+        s.nama_staff, 
+        CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
+        o.code
+    FROM staff s
+    INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
+    INNER JOIN ref_business_unit r ON r.id = $bu_id
+    WHERE FIND_IN_SET($location_id, s.outlet)
+    ORDER BY s.id ASC
+    LIMIT 1";
+    }
 
     $result = mysqli_query($conn, $sql);
 
