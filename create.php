@@ -84,7 +84,7 @@ include('../common/index_adv.php');
                             <div class="col">
                                 <select name="recipient_to" id="recipient_to"
                                     class="form-select form-select-sm text-capitalize">
-                                    <option value="">Recipient</option>
+                                    <option value="">Recipient (Optional)</option>
                                 </select>
                                 <div class="error-message" id="error-recipient-to" style="color: red;font-size:12px;">
                                 </div>

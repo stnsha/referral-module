@@ -379,6 +379,12 @@ include('../common/index_adv.php');
                                     value="4">
                                 <label class="form-check-label r-text" for="statusClosed">Closed</label>
                             </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="status" id="statusClosed"
+                                    value="5">
+                                <label class="form-check-label r-text" for="statusClosed">Not Present</label>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">
