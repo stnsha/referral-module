@@ -358,32 +358,8 @@ include('../common/index_adv.php');
 
                         <div class="mb-3 referral-status">
                             <span class="r-title">Status</span>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusOpen"
-                                    value="1">
-                                <label class="form-check-label r-text" for="statusOpen">Open</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusProgress"
-                                    value="2">
-                                <label class="form-check-label r-text" for="statusProgress">In Progress</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusReferred"
-                                    value="3">
-                                <label class="form-check-label r-text" for="statusReferred">Referred</label>
-                            </div>
-
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusClosed"
-                                    value="4">
-                                <label class="form-check-label r-text" for="statusClosed">Closed</label>
-                            </div>
-
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="status" id="statusClosed"
-                                    value="5">
-                                <label class="form-check-label r-text" for="statusClosed">Not Present</label>
+                            <div id="status-options">
+                                <!-- Status options will be loaded dynamically -->
                             </div>
                         </div>
 

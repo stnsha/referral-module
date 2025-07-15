@@ -245,10 +245,8 @@ $(document).ready(function () {
             });
 
             let status = referringIndication.status;
-            if (status) {
-                const radio = document.querySelector(`input[name="status"][value="${status}"]`);
-                if (radio) radio.checked = true;
-            }
+            // Load status options dynamically
+            loadStatusOptions(status);
 
             // Referral Attachments
             const attachmentContainer = $('#attachmentDisplay');
@@ -500,6 +498,66 @@ $(document).ready(function () {
     });
 
 });
+
+// Load status options dynamically from API
+function loadStatusOptions(selectedStatus) {
+    $.ajax({
+        url: 'api.php',
+        type: 'POST',
+        data: { action: 'referral-status' },
+        success: function (response) {
+            const statusContainer = document.getElementById('status-options');
+            if (statusContainer && response && response.data) {
+                // Clear existing options
+                statusContainer.innerHTML = '';
+
+                // Add status options from object format {"1": "Open", "2": "In Progress", etc.}
+                Object.keys(response.data).forEach(function (key) {
+                    const statusDiv = document.createElement('div');
+                    statusDiv.className = 'form-check';
+
+                    const isChecked = selectedStatus && String(selectedStatus) === String(key) ? 'checked' : '';
+
+                    statusDiv.innerHTML = `
+                        <input class="form-check-input border" type="radio" name="status" id="status${key}" value="${key}" ${isChecked}>
+                        <label class="form-check-label r-text" for="status${key}">${response.data[key]}</label>
+                    `;
+
+                    statusContainer.appendChild(statusDiv);
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading status options:', error);
+            // Fallback to default options if API fails
+            const statusContainer = document.getElementById('status-options');
+            if (statusContainer) {
+                statusContainer.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input border" type="radio" name="status" id="statusOpen" value="1">
+                        <label class="form-check-label r-text" for="statusOpen">Open</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input border" type="radio" name="status" id="statusProgress" value="2">
+                        <label class="form-check-label r-text" for="statusProgress">In Progress</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input border" type="radio" name="status" id="statusReferred" value="3">
+                        <label class="form-check-label r-text" for="statusReferred">Referred</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input border" type="radio" name="status" id="statusClosed" value="4">
+                        <label class="form-check-label r-text" for="statusClosed">Closed</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input border" type="radio" name="status" id="statusNotPresent" value="5">
+                        <label class="form-check-label r-text" for="statusNotPresent">Not Present</label>
+                    </div>
+                `;
+            }
+        }
+    });
+}
 
 function getStaffDetails(staffId, locationId, businessUnitId, callback) {
     $.ajax({
