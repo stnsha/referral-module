@@ -566,18 +566,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Handle generate report toggle
-    const generateReportBtn = document.getElementById('generateReportBtn');
-    const generateReportSelect = document.getElementById('generate-report');
+    // const generateReportBtn = document.getElementById('generateReportBtn');
+    // const generateReportSelect = document.getElementById('generate-report');
 
-    generateReportBtn.addEventListener('click', function () {
-        const isVisible = generateReportSelect.style.display !== 'none';
-        generateReportSelect.style.display = isVisible ? 'none' : 'block';
-        this.textContent = isVisible ? 'Generate Report' : 'Hide Options';
-    });
+    // generateReportBtn.addEventListener('click', function () {
+    //     const isVisible = generateReportSelect.style.display !== 'none';
+    //     generateReportSelect.style.display = isVisible ? 'none' : 'block';
+    //     this.textContent = isVisible ? 'Generate Report' : 'Hide Options';
+    // });
 
-    document.getElementById('report-parameter').addEventListener('change', function () {
-        window.location.href = `report.php?period=${this.value}`;
-    });
+    // document.getElementById('report-parameter').addEventListener('change', function () {
+    //     window.location.href = `report.php?period=${this.value}`;
+    // });
 
 
     $.ajax({
