@@ -15,6 +15,7 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
+            console.log(response);
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -47,7 +48,6 @@ $(document).ready(function () {
             });
 
             const container = $('#referralHistoryContainer');
-            console.log(sortedDetails);
             $.each(sortedDetails, function (index, rd) {
                 //internal
                 if (rd.external_referral.length < 1) {
@@ -245,8 +245,31 @@ $(document).ready(function () {
             });
 
             let status = referringIndication.status;
-            // Load status options dynamically
-            loadStatusOptions(status);
+            // Load status options dynamically with disable parameter for status 4 or 5
+            const shouldDisableRadios = (status == 4 || status == 5);
+            loadStatusOptions(status, shouldDisableRadios);
+
+            // Hide submit button if initial status is 4 or 5
+            const submitButton = document.querySelector('.form-btn-submit');
+            if (status == 4 || status == 5) {
+                $('.reply-form-container').hide();
+                if (submitButton) {
+                    submitButton.style.display = 'none';
+                }
+                // Make entire form read-only if initial status is 4 or 5
+                toggleFormReadOnly(true);
+                // Disable priority radio buttons when initial status is 4 or 5
+                $('input[name="priority"]').prop('disabled', true);
+            } else {
+                if (submitButton) {
+                    $('.reply-form-container').hide();
+                    submitButton.style.display = 'inline-block';
+                }
+                // Make form editable if initial status is not 4 or 5
+                toggleFormReadOnly(false);
+                // Enable priority radio buttons when initial status is not 4 or 5
+                $('input[name="priority"]').prop('disabled', false);
+            }
 
             // Referral Attachments
             const attachmentContainer = $('#attachmentDisplay');
@@ -499,8 +522,107 @@ $(document).ready(function () {
 
 });
 
-// Load status options dynamically from API
-function loadStatusOptions(selectedStatus) {
+// Toggle read-only state for the entire form
+function toggleFormReadOnly(isReadOnly) {
+    // Get all form inputs, selects, and textareas
+    const formElements = document.querySelectorAll('input, select, textarea, button');
+
+    formElements.forEach(element => {
+        if (isReadOnly) {
+            // Make elements read-only/disabled
+            if (element.type === 'radio' || element.type === 'checkbox' || element.tagName === 'SELECT' || element.tagName === 'BUTTON') {
+                element.disabled = true;
+                element.setAttribute('data-was-disabled', 'true');
+            } else {
+                element.readOnly = true;
+                element.setAttribute('data-was-readonly', 'true');
+            }
+            // Add visual styling for read-only state
+            element.style.backgroundColor = '#f8f9fa';
+            element.style.cursor = 'not-allowed';
+        } else {
+            // Restore original state
+            if (element.hasAttribute('data-was-disabled')) {
+                element.disabled = false;
+                element.removeAttribute('data-was-disabled');
+            }
+            if (element.hasAttribute('data-was-readonly')) {
+                element.readOnly = false;
+                element.removeAttribute('data-was-readonly');
+            }
+            // Remove read-only styling
+            element.style.backgroundColor = '';
+            element.style.cursor = '';
+        }
+    });
+}
+
+function addStatusChangeListeners() {
+    const statusRadios = document.querySelectorAll('input[name="status"]');
+    const statusNoteContainer = document.querySelector('#status-note-container > div');
+    const statusNoteTextarea = document.getElementById('status_note');
+    const statusNoteError = document.getElementById('error-status_note');
+
+    statusRadios.forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            if (statusNoteContainer && statusNoteTextarea) {
+                if (this.value === '5') {
+                    // Show status_note textarea when status 5 is selected
+                    statusNoteContainer.style.display = 'block';
+                    // Hide reply form when status 5 (Not Present) is selected
+                    $('.reply-form-container').hide();
+                    // Make reply-content form-container fields nullable
+                    toggleReplyFormRequirement(false);
+                    // Hide submit button for status 5
+                    const submitButton = document.querySelector('.form-btn-submit');
+                    if (submitButton) {
+                        submitButton.style.display = 'none';
+                    }
+                    // Make entire form read-only for status 5
+                    toggleFormReadOnly(true);
+                } else if (this.value === '4') {
+                    // Hide and clear status_note textarea for status 4
+                    statusNoteContainer.style.display = 'none';
+                    statusNoteTextarea.value = '';
+                    if (statusNoteError) {
+                        statusNoteError.textContent = '';
+                    }
+                    // Show reply form when status 4 is selected
+                    $('.reply-form-container').show();
+                    // Restore reply-content form-container fields as required
+                    toggleReplyFormRequirement(true);
+                    // Hide submit button for status 4
+                    const submitButton = document.querySelector('.form-btn-submit');
+                    if (submitButton) {
+                        submitButton.style.display = 'none';
+                    }
+                    // Make entire form read-only for status 4
+                    toggleFormReadOnly(true);
+                } else {
+                    // Hide and clear status_note textarea for other statuses
+                    statusNoteContainer.style.display = 'none';
+                    statusNoteTextarea.value = '';
+                    if (statusNoteError) {
+                        statusNoteError.textContent = '';
+                    }
+                    // Show reply form when other statuses are selected
+                    $('.reply-form-container').show();
+                    // Restore reply-content form-container fields as required
+                    toggleReplyFormRequirement(true);
+                    // Show submit button for other statuses
+                    const submitButton = document.querySelector('.form-btn-submit');
+                    if (submitButton) {
+                        submitButton.style.display = 'inline-block';
+                    }
+                    // Make form editable for other statuses
+                    toggleFormReadOnly(false);
+                }
+            }
+        });
+    });
+}
+
+function loadStatusOptions(selectedStatus, shouldDisableRadios = false) {
     $.ajax({
         url: 'api.php',
         type: 'POST',
@@ -517,9 +639,10 @@ function loadStatusOptions(selectedStatus) {
                     statusDiv.className = 'form-check';
 
                     const isChecked = selectedStatus && String(selectedStatus) === String(key) ? 'checked' : '';
+                    const isDisabled = shouldDisableRadios ? 'disabled' : '';
 
                     statusDiv.innerHTML = `
-                        <input class="form-check-input border" type="radio" name="status" id="status${key}" value="${key}" ${isChecked}>
+                        <input class="form-check-input border" type="radio" name="status" id="status${key}" value="${key}" ${isChecked} ${isDisabled}>
                         <label class="form-check-label r-text" for="status${key}">${response.data[key]}</label>
                     `;
 
@@ -536,25 +659,26 @@ function loadStatusOptions(selectedStatus) {
             // Fallback to default options if API fails
             const statusContainer = document.getElementById('status-options');
             if (statusContainer) {
+                const isDisabled = shouldDisableRadios ? 'disabled' : '';
                 statusContainer.innerHTML = `
                     <div class="form-check">
-                        <input class="form-check-input border" type="radio" name="status" id="statusOpen" value="1">
+                        <input class="form-check-input border" type="radio" name="status" id="statusOpen" value="1" ${isDisabled}>
                         <label class="form-check-label r-text" for="statusOpen">Open</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input border" type="radio" name="status" id="statusProgress" value="2">
+                        <input class="form-check-input border" type="radio" name="status" id="statusProgress" value="2" ${isDisabled}>
                         <label class="form-check-label r-text" for="statusProgress">In Progress</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input border" type="radio" name="status" id="statusReferred" value="3">
+                        <input class="form-check-input border" type="radio" name="status" id="statusReferred" value="3" ${isDisabled}>
                         <label class="form-check-label r-text" for="statusReferred">Referred</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input border" type="radio" name="status" id="statusClosed" value="4">
+                        <input class="form-check-input border" type="radio" name="status" id="statusClosed" value="4" ${isDisabled}>
                         <label class="form-check-label r-text" for="statusClosed">Closed</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input border" type="radio" name="status" id="statusNotPresent" value="5">
+                        <input class="form-check-input border" type="radio" name="status" id="statusNotPresent" value="5" ${isDisabled}>
                         <label class="form-check-label r-text" for="statusNotPresent">Not Present</label>
                     </div>
                 `;

@@ -381,6 +381,13 @@ select.form-select.form-select-sm {
     border-radius: 15px;
 }
 
+.referral-tbl .bdg-not-present {
+    background-color: crimson !important;
+    color: white !important;
+    padding: 5px 15px;
+    border-radius: 15px;
+}
+
 .referral-tbl .ref-external {
     color: black !important;
     font-style: italic;

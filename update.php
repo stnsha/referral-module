@@ -98,8 +98,8 @@ if (isset($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is
 }
 $data['attachments'] = $uploadedFiles;
 
-echo json_encode($data);
-exit;
+// echo json_encode($data);
+// exit;
 
 $endpoint = 'referral';
 $response = getApiData($endpoint, $data, 'PUT');
