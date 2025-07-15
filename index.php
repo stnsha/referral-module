@@ -134,18 +134,19 @@ include('../common/index_adv.php');
                                 Filters</button>
                         </div>
                         <div class="d-inline-flex align-items-center">
-                            <button type="button" class="btn-referral" id="generateReportBtn" aria-expanded="false"
-                                aria-controls="generate-report">
+                            <a href="" type="button" class="btn-referral" id="viewReportbtn">View Report</a>
+                            <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
+                                aria-expanded="false" aria-controls="generate-report">
                                 Generate Report
-                            </button>
-                            <div class="generate-report ms-2" id="generate-report" style="display: none;">
-                                <select name="report-parameter" id="report-parameter"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="yearly">Yearly</option>
-                                </select>
-                            </div>
+                                </button>
+                                <div class="generate-report ms-2" id="generate-report" style="display: none;">
+                                    <select name="report-parameter" id="report-parameter"
+                                        class="form-select form-select-sm text-capitalize">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                </div> -->
                         </div>
                     </div>
                 </div>
