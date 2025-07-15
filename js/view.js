@@ -253,6 +253,8 @@ $(document).ready(function () {
             const submitButton = document.querySelector('.form-btn-submit');
             if (status == 4 || status == 5) {
                 $('.reply-form-container').hide();
+                // Hide attachment input for initial status 4 or 5
+                $('#attachmentInput').hide();
                 if (submitButton) {
                     submitButton.style.display = 'none';
                 }
@@ -265,6 +267,8 @@ $(document).ready(function () {
                     $('.reply-form-container').hide();
                     submitButton.style.display = 'inline-block';
                 }
+                // Show attachment input for other initial statuses
+                $('#attachmentInput').show();
                 // Make form editable if initial status is not 4 or 5
                 toggleFormReadOnly(false);
                 // Enable priority radio buttons when initial status is not 4 or 5
@@ -530,7 +534,7 @@ function toggleFormReadOnly(isReadOnly) {
     formElements.forEach(element => {
         if (isReadOnly) {
             // Make elements read-only/disabled
-            if (element.type === 'radio' || element.type === 'checkbox' || element.tagName === 'SELECT' || element.tagName === 'BUTTON') {
+            if (element.type === 'radio' || element.type === 'checkbox' || element.type === 'file' || element.tagName === 'SELECT' || element.tagName === 'BUTTON') {
                 element.disabled = true;
                 element.setAttribute('data-was-disabled', 'true');
             } else {
@@ -571,6 +575,8 @@ function addStatusChangeListeners() {
                     statusNoteContainer.style.display = 'block';
                     // Hide reply form when status 5 (Not Present) is selected
                     $('.reply-form-container').hide();
+                    // Hide attachment input for status 5
+                    $('#attachmentInput').hide();
                     // Make reply-content form-container fields nullable
                     toggleReplyFormRequirement(false);
                     // Hide submit button for status 5
@@ -589,6 +595,8 @@ function addStatusChangeListeners() {
                     }
                     // Show reply form when status 4 is selected
                     $('.reply-form-container').show();
+                    // Hide attachment input for status 4
+                    $('#attachmentInput').hide();
                     // Restore reply-content form-container fields as required
                     toggleReplyFormRequirement(true);
                     // Hide submit button for status 4
@@ -607,6 +615,8 @@ function addStatusChangeListeners() {
                     }
                     // Show reply form when other statuses are selected
                     $('.reply-form-container').show();
+                    // Show attachment input for other statuses
+                    $('#attachmentInput').show();
                     // Restore reply-content form-container fields as required
                     toggleReplyFormRequirement(true);
                     // Show submit button for other statuses

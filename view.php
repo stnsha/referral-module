@@ -188,9 +188,10 @@ include('../common/index_adv.php');
                             </div>
                         </div>
                     </div>
-                    <div class="border-bottom pb-3 mb-3">
+                    <div class="border-bottom pb-3 mb-3 attachment-container">
                         <p class="r-title">Attachments</p>
-                        <input name="attachments[]" class="form-control mb-2" type="file" multiple id="attachmentInput">
+                        <input name="attachments[]" class="form-control mb-2 attachment-input" type="file" multiple
+                            id="attachmentInput">
                         <!--png/jpeg/jpg/pdf/word/excel-->
 
                         <div class="col my-4" id="attachmentPreview"></div>
