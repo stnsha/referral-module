@@ -525,6 +525,10 @@ function loadStatusOptions(selectedStatus) {
 
                     statusContainer.appendChild(statusDiv);
                 });
+                // Add status_note textarea after status options
+                addStatusNoteField(statusContainer, selectedStatus);
+                // Add event listeners for status change
+                addStatusChangeListeners();
             }
         },
         error: function (xhr, status, error) {
@@ -554,10 +558,104 @@ function loadStatusOptions(selectedStatus) {
                         <label class="form-check-label r-text" for="statusNotPresent">Not Present</label>
                     </div>
                 `;
+                // Add status_note textarea after fallback options
+                addStatusNoteField(statusContainer, selectedStatus);
+                // Add event listeners for status change
+                addStatusChangeListeners();
             }
         }
     });
 }
+
+// Add status_note textarea field
+function addStatusNoteField(container, selectedStatus) {
+    const statusNoteDiv = document.createElement('div');
+    statusNoteDiv.className = 'mb-3';
+    statusNoteDiv.id = 'status-note-container';
+
+    // Show the textarea only if status 5 is selected
+    const isStatus5Selected = selectedStatus && String(selectedStatus) === '5';
+    const displayStyle = isStatus5Selected ? 'block' : 'none';
+
+    statusNoteDiv.innerHTML = `
+        <div style="display: ${displayStyle};">
+            <label class="form-label r-text" for="status_note">Status Note</label>
+            <textarea class="form-control form-control-sm" name="status_note" id="status_note" rows="3" placeholder="Please provide additional details..."></textarea>
+            <div id="error-status_note" class="error-message" style="color: red; font-size: 12px;"></div>
+        </div>
+    `;
+
+    container.appendChild(statusNoteDiv);
+}
+
+// Add event listeners for status radio button changes
+function addStatusChangeListeners() {
+    const statusRadios = document.querySelectorAll('input[name="status"]');
+    const statusNoteContainer = document.querySelector('#status-note-container > div');
+    const statusNoteTextarea = document.getElementById('status_note');
+    const statusNoteError = document.getElementById('error-status_note');
+
+    statusRadios.forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            if (statusNoteContainer && statusNoteTextarea) {
+                if (this.value === '5') {
+                    // Show status_note textarea when status 5 is selected
+                    statusNoteContainer.style.display = 'block';
+                    // Make reply-content form-container fields nullable
+                    toggleReplyFormRequirement(false);
+                } else {
+                    // Hide and clear status_note textarea for other statuses
+                    statusNoteContainer.style.display = 'none';
+                    statusNoteTextarea.value = '';
+                    if (statusNoteError) {
+                        statusNoteError.textContent = '';
+                    }
+                    // Restore reply-content form-container fields as required
+                    toggleReplyFormRequirement(true);
+                }
+            }
+        });
+    });
+}
+
+// Toggle required attribute for reply-content form-container fields
+function toggleReplyFormRequirement(isRequired) {
+    const replyFormContainers = document.querySelectorAll('.reply-content .form-container');
+
+    replyFormContainers.forEach(container => {
+        const requiredFields = container.querySelectorAll('input[required], select[required], textarea[required]');
+        const dataRequiredFields = container.querySelectorAll('input[data-required="true"], select[data-required="true"], textarea[data-required="true"]');
+
+        if (isRequired) {
+            // Restore required attributes
+            requiredFields.forEach(field => {
+                if (field.hasAttribute('data-was-required-removed')) {
+                    field.setAttribute('required', true);
+                    field.removeAttribute('data-was-required-removed');
+                }
+            });
+
+            dataRequiredFields.forEach(field => {
+                if (field.hasAttribute('data-was-data-required-removed')) {
+                    field.setAttribute('data-required', 'true');
+                    field.removeAttribute('data-was-data-required-removed');
+                }
+            });
+        } else {
+            // Remove required attributes and mark them for restoration
+            requiredFields.forEach(field => {
+                field.removeAttribute('required');
+                field.setAttribute('data-was-required-removed', 'true');
+            });
+
+            dataRequiredFields.forEach(field => {
+                field.removeAttribute('data-required');
+                field.setAttribute('data-was-data-required-removed', 'true');
+            });
+        }
+    });
+}
+
 
 function getStaffDetails(staffId, locationId, businessUnitId, callback) {
     $.ajax({
@@ -1041,6 +1139,46 @@ function validateForm(event) {
         isValid = false;
     }
 
+    // Add validation for status_note when status 5 is selected
+    const selectedStatus = document.querySelector('input[name="status"]:checked');
+    const statusNoteTextarea = document.getElementById('status_note');
+    const statusNoteError = document.getElementById('error-status_note');
+
+    if (selectedStatus && selectedStatus.value === '5') {
+        if (!statusNoteTextarea || !statusNoteTextarea.value.trim()) {
+            if (statusNoteError) {
+                statusNoteError.textContent = 'Status note is required when status is "Not Present".';
+            }
+            isValid = false;
+        }
+
+        // Double check: For status 5, reply-content form-container fields should be nullable
+        // Clear any validation errors for reply-content fields when status is 5
+        const replyFormContainers = document.querySelectorAll('.reply-content .form-container');
+        replyFormContainers.forEach(container => {
+            const errorMessages = container.querySelectorAll('.error-message');
+            errorMessages.forEach(error => {
+                error.textContent = '';
+            });
+        });
+    } else {
+        // For other statuses, ensure reply-content validation is enforced
+        const replyFormContainers = document.querySelectorAll('.reply-content .form-container');
+        replyFormContainers.forEach(container => {
+            const requiredFields = container.querySelectorAll('input[data-was-required-removed], select[data-was-required-removed], textarea[data-was-required-removed]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    const fieldName = field.getAttribute('name');
+                    const errorElement = document.getElementById(`error-${fieldName}`);
+                    if (errorElement) {
+                        errorElement.textContent = 'This field is required.';
+                    }
+                    isValid = false;
+                }
+            });
+        });
+    }
+
     if (isValid) {
         // form.submit();
         const formData = new FormData(form);
@@ -1082,5 +1220,4 @@ function validateForm(event) {
                 console.error('Error:', error);
             });
     }
-
 }

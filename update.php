@@ -7,7 +7,15 @@ $data = array();
 $referral_id = isset($_POST['referral_id']) ? $_POST['referral_id'] : null;
 $updated_recipient_to = isset($_POST['updated_recipient_to']) ? $_POST['updated_recipient_to'] : null;
 $bu_id_reply = isset($_POST['bu_id_reply']) ? $_POST['bu_id_reply'] : null;
-$status = isset($_POST['status']) ? $_POST['status'] : 1;
+
+// Handle status and status_note based on user selection
+$status = isset($_POST['status']) ? $_POST['status'] : 2;
+$status_note = null;
+
+if ($status == 5) {
+    $status_note = isset($_POST['status_note']) ? $_POST['status_note'] : null;
+}
+
 $additional_remarks_reply = isset($_POST['additional_remarks_reply']) ? $_POST['additional_remarks_reply'] : null;
 
 if (isset($_POST['refer_another']) && $_POST['refer_another'] === 'on') {
@@ -36,28 +44,32 @@ $data['referral'] = array(
     'updated_recipient_to' => $updated_recipient_to,
     'business_unit_id_reply' => $bu_id_reply,
     'status' => $status,
+    'status_note' => $status_note,
     'additional_remarks' => $additional_remarks_reply
 );
 
 $form_data = array();
-foreach ($_POST as $key => $value) {
-    if (!in_array($key, array(
-        'updated_recipient_to',
-        'referral_id',
-        'bu_id_reply',
-        'additional_remarks_refer',
-        'additional_remarks_reply',
-        'refer_another',
-        'refer_business_unit',
-        'refer_business_unit_id',
-        'refer_location',
-        'refer_to',
-        'referral_reason',
-        'referral_condition',
-        'medical_history',
-        'status',
-    ))) {
-        $form_data[$key] = $value;
+if ($status != 5) {
+    foreach ($_POST as $key => $value) {
+        if (!in_array($key, array(
+            'updated_recipient_to',
+            'referral_id',
+            'bu_id_reply',
+            'additional_remarks_refer',
+            'additional_remarks_reply',
+            'refer_another',
+            'refer_business_unit',
+            'refer_business_unit_id',
+            'refer_location',
+            'refer_to',
+            'referral_reason',
+            'referral_condition',
+            'medical_history',
+            'status',
+            'status_note',
+        ))) {
+            $form_data[$key] = $value;
+        }
     }
 }
 
@@ -86,8 +98,8 @@ if (isset($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is
 }
 $data['attachments'] = $uploadedFiles;
 
-// echo json_encode($data);
-// exit;
+echo json_encode($data);
+exit;
 
 $endpoint = 'referral';
 $response = getApiData($endpoint, $data, 'PUT');
