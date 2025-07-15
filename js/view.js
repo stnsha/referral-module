@@ -601,6 +601,8 @@ function addStatusChangeListeners() {
                 if (this.value === '5') {
                     // Show status_note textarea when status 5 is selected
                     statusNoteContainer.style.display = 'block';
+                    // Hide reply form when status 5 (Not Present) is selected
+                    $('.reply-form-container').hide();
                     // Make reply-content form-container fields nullable
                     toggleReplyFormRequirement(false);
                 } else {
@@ -610,6 +612,8 @@ function addStatusChangeListeners() {
                     if (statusNoteError) {
                         statusNoteError.textContent = '';
                     }
+                    // Show reply form when other statuses are selected
+                    $('.reply-form-container').show();
                     // Restore reply-content form-container fields as required
                     toggleReplyFormRequirement(true);
                 }
