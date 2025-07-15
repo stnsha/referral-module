@@ -176,9 +176,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${row.reason}<br>
                     <span class="text-muted fst-italic r-text">From: ${row.from_business_unit}</span> 
                     </td>
-                    <td style="font-size:14px;width: 15%;text-align:start;">${row.to_business_unit}</td>
+                    <td style="font-size:14px;width: 15%;text-align:start;">
+                        <span>${row.to_business_unit} </span>
+                        <span ${row.is_external ? 'class="ref-external"' : ''}>${row.is_external ? '(External)' : ''}</span>
+                    </td>
                     <td style="font-size:14px;width: 10%;text-align:center;">
-                        <span class="bdg-${row.status.toLowerCase()}">${row.status}</span>
+                        <span class="bdg-${row.status.toLowerCase().replace(/\s+/g, '-')}">${row.status}</span>
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
                         <a href="view.php?id=${row.id}" target="_blank" class="btn-referral">View</a>
@@ -260,7 +263,95 @@ document.addEventListener('DOMContentLoaded', function () {
             type: 'POST',
             data: { action: 'all-referral' },
             success: function (response) {
-                console.log(response);
+                // console.log(response);
+                var response = {
+                    "data": [
+                        {
+                            "id": 1,
+                            "ref_id": "#REF0001",
+                            "reason": "Patient experiencing chronic back pain",
+                            "from_business_unit": "Alpro Clinic",
+                            "to_business_unit": "Alpro Physio",
+                            "ori_status": 2,
+                            "status": "In Progress",
+                            "created_at": "7 July 2025, Monday",
+                            "ori_created_at": "2025-07-07T00:44:16.000000Z",
+                            "is_external": false
+                        },
+                        {
+                            "id": 7,
+                            "ref_id": "#REF0007",
+                            "reason": "Neurological hearing assessment required",
+                            "from_business_unit": "Alpro Audiology",
+                            "to_business_unit": "Dr. Michael Chen",
+                            "ori_status": 1,
+                            "status": "Open",
+                            "created_at": "5 July 2025, Saturday",
+                            "ori_created_at": "2025-07-05T00:44:17.000000Z",
+                            "is_external": true
+                        },
+                        {
+                            "id": 5,
+                            "ref_id": "#REF0005",
+                            "reason": "Medication consultation",
+                            "from_business_unit": "Alpro Pharmacy",
+                            "to_business_unit": "Alpro Physio",
+                            "ori_status": 2,
+                            "status": "In Progress",
+                            "created_at": "27 June 2025, Friday",
+                            "ori_created_at": "2025-06-27T00:44:17.000000Z",
+                            "is_external": false
+                        },
+                        {
+                            "id": 3,
+                            "ref_id": "#REF0003",
+                            "reason": "Newborn health checkup",
+                            "from_business_unit": "Alpro Baby",
+                            "to_business_unit": "Alpro Clinic",
+                            "ori_status": 3,
+                            "status": "Referred",
+                            "created_at": "24 June 2025, Tuesday",
+                            "ori_created_at": "2025-06-24T00:44:17.000000Z",
+                            "is_external": false
+                        },
+                        {
+                            "id": 4,
+                            "ref_id": "#REF0004",
+                            "reason": "Vision deterioration",
+                            "from_business_unit": "Alpro Optisaver",
+                            "to_business_unit": "Alpro Optisaver",
+                            "ori_status": 4,
+                            "status": "Closed",
+                            "created_at": "22 June 2025, Sunday",
+                            "ori_created_at": "2025-06-22T00:44:17.000000Z",
+                            "is_external": false
+                        },
+                        {
+                            "id": 2,
+                            "ref_id": "#REF0002",
+                            "reason": "Hearing loss assessment required",
+                            "from_business_unit": "Alpro Audiology",
+                            "to_business_unit": "Alpro Audiology",
+                            "ori_status": 1,
+                            "status": "Open",
+                            "created_at": "18 June 2025, Wednesday",
+                            "ori_created_at": "2025-06-18T00:44:17.000000Z",
+                            "is_external": false
+                        },
+                        {
+                            "id": 6,
+                            "ref_id": "#REF0006",
+                            "reason": "Complex cardiac condition requiring specialist care",
+                            "from_business_unit": "Alpro Clinic",
+                            "to_business_unit": "Dr. John Smith",
+                            "ori_status": 1,
+                            "status": "Open",
+                            "created_at": "17 June 2025, Tuesday",
+                            "ori_created_at": "2025-06-17T00:44:17.000000Z",
+                            "is_external": true
+                        }
+                    ]
+                }
                 if (!response || typeof response !== 'object' || !response.data) {
                     console.error('Invalid response format');
                     return;
