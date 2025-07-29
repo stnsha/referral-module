@@ -109,7 +109,7 @@ $(document).ready(function () {
                             getAssignee(locationId, function (assignees) {
                                 var assigneeFrom = $('#assignee_from');
                                 assigneeFrom.empty();
-                                assigneeFrom.append('<option value="">Assignee</option>');
+                                assigneeFrom.append('<option value="">Recipient (Optional)</option>');
 
                                 let isSelected = false;
                                 let assigneeId = '';
@@ -155,7 +155,7 @@ $(document).ready(function () {
             getAssignee(locationId, function (assignees) {
                 var assigneeFrom = $('#assignee_from');
                 assigneeFrom.empty();
-                assigneeFrom.append('<option value="">Assignee</option>');
+                assigneeFrom.append('<option value="">Recipient (Optional)</option>');
 
                 let isSelected = false;
                 let assigneeId = '';
@@ -182,7 +182,7 @@ $(document).ready(function () {
                 }
             });
         } else {
-            $('#assignee_from').empty().append('<option value="">Assignees</option>');
+            $('#assignee_from').empty().append('<option value="">Recipient (Optional)</option>');
         }
     });
 
@@ -284,7 +284,7 @@ $(document).ready(function () {
 
                     var assigneeTo = $('#recipient_to');
                     assigneeTo.empty();
-                    assigneeTo.append('<option value="">Assignee</option>');
+                    assigneeTo.append('<option value="">Recipient (Optional)</option>');
 
                     $.each(response, function (index, assignee) {
                         assigneeTo.append(

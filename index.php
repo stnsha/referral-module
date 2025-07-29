@@ -134,7 +134,7 @@ include('../common/index_adv.php');
                                 Filters</button>
                         </div>
                         <div class="d-inline-flex align-items-center">
-                            <a href="" type="button" class="btn-referral" id="viewReportbtn">View Report</a>
+                            <a href="report.php" type="button" class="btn-referral" id="viewReportbtn">View Report</a>
                             <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
                                 aria-expanded="false" aria-controls="generate-report">
                                 Generate Report
