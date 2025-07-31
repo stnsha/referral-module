@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             error: function (xhr, status, error) {
-                console.error('Error loading status options:', error);
+                logError(new Error('Error loading status options'), { context: 'loadStatusOptions', status: status, error: error, responseText: xhr.responseText });
             }
         });
 
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
             success: function (response) {
                 // console.log(response);
                 if (!response || typeof response !== 'object' || !response.data) {
-                    console.error('Invalid response format');
+                    logError(new Error('Invalid response format'), { context: 'loadReferralData', response: response });
                     return;
                 }
 
@@ -471,11 +471,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 globalApplyFilters = applyFilters;
             },
             error: function (xhr, status, error) {
-                console.error('Error loading referral data:', error);
+                logError(new Error('Error loading referral data'), { context: 'loadReferralData', status: status, error: error, responseText: xhr.responseText });
             }
         });
     } else {
-        console.error('Referral table element not found');
+        logError(new Error('Referral table element not found'), { context: 'initializeReferralTable' });
     }
 
     // Handle generate report toggle
@@ -522,12 +522,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateChart(labels, sentData, receivedData);
 
             } catch (e) {
-                console.error('Error parsing chart data:', e);
+                logError(new Error('Error parsing chart data'), { context: 'loadReportChart', parseError: e.message });
                 initChart(); // Use default data
             }
         },
         error: function (xhr, status, error) {
-            console.error('Error loading report chart:', error);
+            logError(new Error('Error loading report chart'), { context: 'loadReportChart', status: status, error: error, responseText: xhr.responseText });
             initChart(); // Use default data
         }
     });

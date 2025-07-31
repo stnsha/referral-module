@@ -343,7 +343,7 @@ $(document).ready(function () {
                             }, 100);
 
                         } catch (error) {
-                            console.error('Error decoding base64 data:', error);
+                            logError(new Error('Error decoding base64 data'), { context: 'downloadAttachment', fileName: fileName, error: error.message });
                             alert('Failed to download file. Invalid file data.');
                         }
                     } else if (attachmentId) {
@@ -371,7 +371,7 @@ $(document).ready(function () {
                                             // Check if response is JSON
                                             const jsonResponse = JSON.parse(reader.result);
                                             if (!jsonResponse.success) {
-                                                console.error('Download failed:', jsonResponse.message);
+                                                logError(new Error('Download failed'), { context: 'downloadAttachment', fileName: fileName, message: jsonResponse.message });
                                                 alert(jsonResponse.message || 'Failed to download file. Please try again.');
                                                 return;
                                             }
@@ -395,12 +395,12 @@ $(document).ready(function () {
                                     };
                                     reader.readAsText(response);
                                 } catch (error) {
-                                    console.error('Error processing file data:', error);
+                                    logError(new Error('Error processing file data'), { context: 'downloadAttachment', fileName: fileName, error: error.message });
                                     alert('Failed to process file data. Please try again.');
                                 }
                             },
                             error: function (xhr, status, error) {
-                                console.error('Download failed:', error);
+                                logError(new Error('Download failed'), { context: 'downloadAttachment', fileName: fileName, status: status, error: error, responseText: xhr.responseText });
                                 alert('Failed to download file. Please try again.');
                             }
                         });
@@ -438,8 +438,8 @@ $(document).ready(function () {
                 }
             }
         },
-        error: function () {
-            console.log("Failed to fetch referral details.");
+        error: function (xhr, status, error) {
+            logError(new Error('Failed to fetch referral details'), { context: 'fetchReferralDetails', referralId: referral_id, status: status, error: error });
         }
     });
 
@@ -665,7 +665,7 @@ function loadStatusOptions(selectedStatus, shouldDisableRadios = false) {
             }
         },
         error: function (xhr, status, error) {
-            console.error('Error loading status options:', error);
+            logError(new Error('Error loading status options'), { context: 'loadStatusOptions', status: status, error: error, responseText: xhr.responseText });
             // Fallback to default options if API fails
             const statusContainer = document.getElementById('status-options');
             if (statusContainer) {
@@ -809,7 +809,8 @@ function getStaffDetails(staffId, locationId, businessUnitId, callback) {
         success: function (response) {
             callback(response);
         },
-        error: function () {
+        error: function (xhr, status, error) {
+            logError(new Error('Error fetching staff details'), { context: 'getStaffDetails', staffId: staffId, locationId: locationId, businessUnitId: businessUnitId, status: status, error: error });
             callback("Unknown");
         }
     });
@@ -942,8 +943,8 @@ function displayContent(businessUnitId, targetSelector) {
             targetDiv.append(remarksWrapper);
         }
         ,
-        error: function () {
-            console.log('Failed to display form details');
+        error: function (xhr, status, error) {
+            logError(new Error('Failed to display form details'), { context: 'displayContent', businessUnitId: businessUnitId, status: status, error: error });
         }
     });
 }
@@ -959,7 +960,8 @@ function getCustomer(custid, callback) {
         success: function (response) {
             callback(response);
         },
-        error: function () {
+        error: function (xhr, status, error) {
+            logError(new Error('Error fetching customer data'), { context: 'getCustomer', custid: custid, status: status, error: error });
             callback("Unknown");
         }
     });
@@ -1355,7 +1357,7 @@ function validateForm(event) {
 
             })
             .catch(error => {
-                console.error('Error:', error);
+                logError(new Error('Form submission error'), { context: 'validateForm', error: error.message });
             });
     }
 }

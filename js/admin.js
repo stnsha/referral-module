@@ -170,7 +170,7 @@ function validateForm(e) {
                 }
             },
             error: function (xhr, status, error) {
-                console.error(error);
+                logError(new Error('Form submission error'), { context: 'validateForm', status: status, error: error, responseText: xhr.responseText });
             }
         });
 

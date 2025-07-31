@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Logger Test</title>
+</head>
+<body>
+    <h1>Error Logger Test Page</h1>
+    
+    <div>
+        <button onclick="testBasicError()">Test Basic Error</button>
+        <button onclick="testErrorWithContext()">Test Error with Context</button>
+        <button onclick="testMultipleErrors()">Test Multiple Errors</button>
+        <button onclick="viewLogs()">View Error Logs (Console)</button>
+        <button onclick="exportLogs()">Export Error Logs</button>
+        <button onclick="clearLogs()">Clear Error Logs</button>
+        <button onclick="searchLogs()">Search Logs for 'test'</button>
+    </div>
+
+    <div id="output" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9;">
+        <h3>Test Output:</h3>
+        <div id="results"></div>
+    </div>
+
+    <script src="js/errorLogger.js"></script>
+    <script>
+        function testBasicError() {
+            try {
+                throw new Error('This is a test error');
+            } catch (error) {
+                logError(error);
+                addResult('Basic error logged successfully');
+            }
+        }
+
+        function testErrorWithContext() {
+            try {
+                throw new Error('Test error with context');
+            } catch (error) {
+                logError(error, { 
+                    context: 'testFunction', 
+                    userId: 123, 
+                    action: 'button_click',
+                    timestamp: new Date().toISOString()
+                });
+                addResult('Error with context logged successfully');
+            }
+        }
+
+        function testMultipleErrors() {
+            for (let i = 1; i <= 3; i++) {
+                try {
+                    throw new Error(`Multiple test error #${i}`);
+                } catch (error) {
+                    logError(error, { context: 'multipleErrors', errorNumber: i });
+                }
+            }
+            addResult('Multiple errors logged successfully');
+        }
+
+        function viewLogs() {
+            const logs = getErrorLogs(10);
+            console.log('Error Logs:', logs);
+            addResult(`Retrieved ${logs.length} error logs. Check console for details.`);
+        }
+
+        function exportLogs() {
+            exportErrorLogs();
+            addResult('Error logs exported to download.');
+        }
+
+        function clearLogs() {
+            clearErrorLogs();
+            addResult('All error logs cleared.');
+        }
+
+        function searchLogs() {
+            const results = searchErrorLogs('test');
+            console.log('Search Results:', results);
+            addResult(`Found ${results.length} logs containing 'test'. Check console for details.`);
+        }
+
+        function addResult(message) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            results.appendChild(div);
+        }
+
+        window.addEventListener('error', function(event) {
+            logError(event.error || new Error(event.message), {
+                context: 'globalErrorHandler',
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno
+            });
+        });
+
+        addResult('Error logger test page loaded. Error logging is active.');
+    </script>
+</body>
+</html>

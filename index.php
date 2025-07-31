@@ -188,6 +188,7 @@ include('../common/index_adv.php');
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
     </script>
 
+    <script src="js/errorLogger.js"></script>
     <script src="js/index.js"></script>
 </body>
 

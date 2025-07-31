@@ -389,5 +389,6 @@ include('../common/index_adv.php');
         const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
         const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
+        <script src="js/errorLogger.js"></script>
         <script src="js/view.js"></script>
 </body>

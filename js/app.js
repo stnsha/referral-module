@@ -199,10 +199,11 @@ $(document).ready(function () {
                 try {
                     callback(response);
                 } catch (e) {
-                    console.error('Callback failed:', e);
+                    logError(new Error('Callback failed'), { context: 'getAssignee', callbackError: e.message });
                 }
             },
-            error: function () {
+            error: function (xhr, status, error) {
+                logError(new Error('Error fetching assignees'), { context: 'getAssignee', locationId: locationId, status: status, error: error });
                 callback("Unknown");
             }
         });
@@ -220,7 +221,8 @@ $(document).ready(function () {
             success: function (response) {
                 callback(response);
             },
-            error: function () {
+            error: function (xhr, status, error) {
+                logError(new Error('Error fetching staff location'), { context: 'getStaffLocation', staffId: staffId, status: status, error: error });
                 callback("Unknown");
             }
         });
@@ -718,7 +720,7 @@ function validateForm(event) {
 
             })
             .catch(error => {
-                console.error('Error:', error);
+                logError(new Error('Form submission error'), { context: 'validateForm', error: error.message });
             });
 
     }

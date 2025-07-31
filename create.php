@@ -330,6 +330,7 @@ include('../common/index_adv.php');
             const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
             const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
+        <script src="js/errorLogger.js"></script>
         <script src="js/app.js"></script>
 
 

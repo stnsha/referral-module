@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadSummary(businessUnitId);
         },
         error: function () {
-            console.error('Error loading business unit ID');
+            logError(new Error('Error loading business unit ID'), { context: 'loadBusinessUnit' });
         }
     });
 
@@ -86,7 +86,7 @@ function loadBusinessUnits() {
             }
         },
         error: function () {
-            console.error('Error loading business units');
+            logError(new Error('Error loading business units'), { context: 'loadBusinessUnits' });
         }
     });
 }
@@ -144,7 +144,7 @@ function loadStatus() {
             }
         },
         error: function (xhr, status, error) {
-            console.error('Error loading status options:', error);
+            logError(new Error('Error loading status options'), { context: 'loadStatus', status: status, error: error, responseText: xhr.responseText });
         }
     });
 }
@@ -269,14 +269,14 @@ function generateReport() {
                 }
             } else {
                 // Handle different types of errors
-                console.error('Report generation failed:', response.message);
+                logError(new Error('Report generation failed'), { context: 'generateReport', message: response.message, details: response.details });
 
                 // Log user-friendly error message
                 let errorMessage = response.message || 'Unknown error occurred';
 
                 // Handle validation errors (422)
                 if (response.details) {
-                    console.error('Validation details:', response.details);
+                    logError(new Error('Validation details found'), { context: 'generateReport', validationDetails: response.details });
                     errorMessage += '\nValidation errors:';
                     Object.keys(response.details).forEach(function (field) {
                         errorMessage += '\n- ' + field + ': ' + response.details[field].join(', ');
@@ -284,11 +284,12 @@ function generateReport() {
                 }
 
                 // Log error instead of showing alert
-                console.error('Report Generation Failed:', errorMessage);
+                logError(new Error('Report Generation Failed'), { context: 'generateReport', errorMessage: errorMessage });
             }
         },
         error: function (xhr, status, error) {
-            console.error('AJAX Error generating report:', {
+            logError(new Error('AJAX Error generating report'), {
+                context: 'generateReport',
                 status: status,
                 error: error,
                 responseText: xhr.responseText
@@ -305,7 +306,7 @@ function generateReport() {
                 // Use default message if parsing fails
             }
 
-            console.error('Error:', errorMessage);
+            logError(new Error('Report generation error'), { context: 'generateReport', errorMessage: errorMessage });
         },
         complete: function () {
             // Reset button state
@@ -346,11 +347,12 @@ function loadSummary(businessUnitId) {
                 console.log('Creating charts with data:', data);
                 createCharts(data);
             } else {
-                console.error('No valid data found in response:', response);
+                logError(new Error('No valid data found in response'), { context: 'loadSummary', response: response });
             }
         },
         error: function (xhr, status, error) {
-            console.error('AJAX Error generating report:', {
+            logError(new Error('AJAX Error generating summary report'), {
+                context: 'loadSummary',
                 status: status,
                 error: error,
                 responseText: xhr.responseText
@@ -364,10 +366,10 @@ function loadSummary(businessUnitId) {
                     errorMessage = errorResponse.message;
                 }
             } catch (e) {
-                console.error('Error parsing response:', e);
+                logError(new Error('Error parsing response'), { context: 'loadSummary', parseError: e.message });
             }
 
-            console.error('Error:', errorMessage);
+            logError(new Error('Summary report error'), { context: 'loadSummary', errorMessage: errorMessage });
         }
     });
 }
@@ -393,7 +395,7 @@ function createCharts(data) {
 
         // Check if Chart.js is loaded
         if (typeof Chart === 'undefined') {
-            console.error('Chart.js is not loaded');
+            logError(new Error('Chart.js is not loaded'), { context: 'createCharts' });
             return;
         }
 
@@ -433,7 +435,7 @@ function createCharts(data) {
             });
             console.log('Status chart created successfully');
         } else {
-            console.error('Status chart element not found or no status data');
+            logError(new Error('Status chart element not found or no status data'), { context: 'createCharts', hasElement: !!statusElement, hasData: !!data.status });
         }
 
         // Priority Breakdown Chart (Pie)
@@ -469,7 +471,7 @@ function createCharts(data) {
             });
             console.log('Priority chart created successfully');
         } else {
-            console.error('Priority chart element not found or no priority data');
+            logError(new Error('Priority chart element not found or no priority data'), { context: 'createCharts', hasElement: !!priorityElement, hasData: !!data.priority });
         }
 
         // Sent vs Received Chart (Bar)
@@ -512,7 +514,7 @@ function createCharts(data) {
             });
             console.log('Sent/Received chart created successfully');
         } else {
-            console.error('Sent/Received chart element not found or no sent_received data');
+            logError(new Error('Sent/Received chart element not found or no sent_received data'), { context: 'createCharts', hasElement: !!sentReceivedElement, hasData: !!data.sent_received });
         }
 
         // Location Summary Chart (Bar)
@@ -557,11 +559,11 @@ function createCharts(data) {
             });
             console.log('Location chart created successfully');
         } else {
-            console.error('Location chart element not found or no location_summary data');
+            logError(new Error('Location chart element not found or no location_summary data'), { context: 'createCharts', hasElement: !!locationElement, hasData: !!data.location_summary });
         }
 
     } catch (error) {
-        console.error('Error creating charts:', error);
+        logError(new Error('Error creating charts'), { context: 'createCharts', originalError: error.message, stack: error.stack });
     }
 }
 

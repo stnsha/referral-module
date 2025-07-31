@@ -83,7 +83,7 @@ function validateForm(event) {
 
             })
             .catch(error => {
-                console.error('Error:', error);
+                logError(new Error('Form submission error'), { context: 'validateForm', error: error.message });
             });
 
     }
