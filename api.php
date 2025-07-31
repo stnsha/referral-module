@@ -255,7 +255,9 @@ function getReportDashboard()
 
 function getReport($formData)
 {
-    $data = getApiData('report', $formData, 'POST');
+    return array($formData);
+    exit;
+    $data = getApiData('report', array($formData), 'POST');
     $result = $data['response'];
     $httpCode = $data['httpCode'];
 

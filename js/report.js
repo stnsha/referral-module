@@ -221,7 +221,7 @@ function resetFilters() {
 // Generate Report function
 function generateReport() {
     // Get filter values
-    const businessUnit = $('#filter-business-unit').val();
+    // const businessUnit = $('#filter-business-unit').val();
     const businessUnitId = $('#filter-business-unit option:selected').data('id');
     const location = $('#filter-location').val();
     const status = $('#filter-status').val();
@@ -231,13 +231,14 @@ function generateReport() {
 
     // Prepare data for API call
     const reportData = {
-        business_unit: businessUnit,
-        business_unit_id: businessUnitId,
-        location: location,
-        status: status,
-        priority: priority,
-        month: month,
-        year: year
+        business_unit_id: businessUnitId ? parseInt(businessUnitId) : null,
+        location: location ? parseInt(location) : null,
+        status: status ? parseInt(status) : null,
+        priority: priority ? parseInt(priority) : null,
+        month: month ? parseInt(month) : null,
+        year: year ? parseInt(year) : null,
+        is_external: false,
+        is_referred: false
     };
 
     // Make API call to fetch report data
@@ -327,7 +328,7 @@ function loadSummary(businessUnitId) {
         },
         success: function (response) {
             console.log('API Response:', response);
-            
+
             // Handle different response structures
             let data = null;
             if (response && response.success && response.data) {
@@ -342,7 +343,7 @@ function loadSummary(businessUnitId) {
                 // Direct data structure without wrapper
                 data = response;
             }
-            
+
             if (data) {
                 console.log('Creating charts with data:', data);
                 createCharts(data);
@@ -377,7 +378,7 @@ function loadSummary(businessUnitId) {
 // Function to create charts
 function createCharts(data) {
     console.log('createCharts called with data:', data);
-    
+
     try {
         // Destroy existing charts if they exist
         if (window.statusChart && typeof window.statusChart.destroy === 'function') {
@@ -406,7 +407,7 @@ function createCharts(data) {
             const statusCtx = statusElement.getContext('2d');
             const statusLabels = Object.keys(data.status);
             const statusValues = Object.values(data.status);
-            
+
             window.statusChart = new Chart(statusCtx, {
                 type: 'doughnut',
                 data: {
@@ -414,7 +415,7 @@ function createCharts(data) {
                     datasets: [{
                         data: statusValues,
                         backgroundColor: [
-                            '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', 
+                            '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0',
                             '#9966ff', '#ff9f40', '#e83e8c', '#c9cbcf'
                         ],
                         borderWidth: 2,
@@ -445,7 +446,7 @@ function createCharts(data) {
             const priorityCtx = priorityElement.getContext('2d');
             const priorityLabels = Object.keys(data.priority);
             const priorityValues = Object.values(data.priority);
-            
+
             window.priorityChart = new Chart(priorityCtx, {
                 type: 'pie',
                 data: {
@@ -479,7 +480,7 @@ function createCharts(data) {
         if (sentReceivedElement && data.sent_received) {
             console.log('Creating sent/received chart with data:', data.sent_received);
             const sentReceivedCtx = sentReceivedElement.getContext('2d');
-            
+
             window.sentReceivedChart = new Chart(sentReceivedCtx, {
                 type: 'bar',
                 data: {
@@ -524,7 +525,7 @@ function createCharts(data) {
             const locationCtx = locationElement.getContext('2d');
             const locationLabels = Object.keys(data.location_summary);
             const locationValues = Object.values(data.location_summary);
-            
+
             window.locationChart = new Chart(locationCtx, {
                 type: 'bar',
                 data: {
