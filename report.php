@@ -131,6 +131,11 @@ include('../common/index_adv.php');
                 </div>
             </div>
         </div>
+        <div class="row align-items-start text-start py-2 px-4">
+            <div class="d-flex justify-content-center align-items-center">
+                <a href="index.php" class="btn-referral">Back</a>
+            </div>
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
     </script>
