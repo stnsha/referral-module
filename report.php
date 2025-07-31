@@ -31,5 +31,75 @@ include('../common/index_adv.php');
                 </div>
             </div>
         </div>
+        <div class="row mb-3 px-3">
+            <div class="col-12">
+                <div class="d-flex flex-column rounded-2 shadow p-2"
+                    style="overflow:hidden; background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
+                    <span class="fw-bold text-start pt-3 pb-2" style="font-size:14px;">Filter</span>
+
+                    <div class="d-flex justify-content-between pb-3 mb-2">
+                        <div class="d-flex gap-2" style="flex: 1; max-width: 70%;">
+                            <select name="filter-business-unit" id="filter-business-unit"
+                                class="form-select form-select-sm text-capitalize">
+                            </select>
+                            <select name="filter-location" id="filter-location"
+                                class="form-select form-select-sm text-capitalize">
+                            </select>
+                            <select name="filter-status" id="filter-status"
+                                class="form-select form-select-sm text-capitalize">
+                            </select>
+                            <select name="filter-priority" id="filter-priority"
+                                class="form-select form-select-sm text-capitalize">
+                                <option value="">All Priority</option>
+                                <option value="1">High (1 to 2 working days)</option>
+                                <option value="2"> Standard (3 to 5 working days)</option>
+                            </select>
+                            <select name="filter-month" id="filter-month"
+                                class="form-select form-select-sm text-capitalize">
+                            </select>
+                            <select name="filter-year" id="filter-year"
+                                class="form-select form-select-sm text-capitalize">
+                            </select>
+                            <button type="button" id="resetFiltersBtn" class="btn btn-outline-secondary btn-sm me-1"
+                                style="white-space: nowrap; padding: 0.25rem 0.5rem; font-size: 0.875rem;">Reset
+                                Filters</button>
+                        </div>
+                        <div class="d-inline-flex align-items-center mt-2">
+                            <a href="report.php" type="button" class="btn-referral me-1" id="viewReportbtn">Generate
+                                Report</a>
+                            <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
+                                aria-expanded="false" aria-controls="generate-report">
+                                Generate Report
+                                </button>
+                                <div class="generate-report ms-2" id="generate-report" style="display: none;">
+                                    <select name="report-parameter" id="report-parameter"
+                                        class="form-select form-select-sm text-capitalize">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+    <script>
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staff_outlet =
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+    </script>
+
+    <script src="js/report.js"></script>
 </body>
+
+</html>
