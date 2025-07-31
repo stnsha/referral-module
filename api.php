@@ -253,11 +253,54 @@ function getReportDashboard()
     return isset($decoded) ? $decoded : array();
 }
 
+function getReport($formData)
+{
+    $data = getApiData('report', $formData, 'POST');
+    $result = $data['response'];
+    $httpCode = $data['httpCode'];
+
+    $decoded = json_decode($result, true);
+
+    // Handle different HTTP status codes
+    switch ($httpCode) {
+        case 200:
+            // Success - return the API response with success flag
+            return array(
+                'success' => true,
+                'data' => $decoded,
+            );
+
+        case 422:
+            // Validation error
+            return array(
+                'success' => false,
+                'message' => isset($decoded['message']) ? $decoded['message'] : 'Validation error',
+                'error' => isset($decoded['error']) ? $decoded['error'] : 'Invalid input parameters',
+                'details' => isset($decoded['details']) ? $decoded['details'] : null
+            );
+
+        case 500:
+            // Server error
+            return array(
+                'success' => false,
+                'message' => isset($decoded['message']) ? $decoded['message'] : 'Server error occurred',
+                'error' => isset($decoded['error']) ? $decoded['error'] : 'Internal server error'
+            );
+
+        default:
+            // Other HTTP errors
+            return array(
+                'success' => false,
+                'message' => 'API request failed with HTTP code: ' . $httpCode,
+                'error' => 'Unexpected response from server'
+            );
+    }
+}
+
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
 $response = array('success' => false, 'message' => 'Invalid request');
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($jsonData && isset($jsonData['action'])) {
         // Handle JSON requests
@@ -290,6 +333,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     return;
                 } else {
                     $response = array('success' => false, 'message' => 'Missing attachment_id');
+                }
+                break;
+            case 'get-report':
+                if (isset($jsonData['formData'])) {
+                    $response = getReport($jsonData['formData']);
                 }
                 break;
         }
@@ -355,6 +403,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'report-dashboard':
                 $response = array('data' => getReportDashboard());
+                break;
+
+            case 'get-report':
+                if (isset($_POST['formData'])) {
+                    $response = getReport($_POST['formData']);
+                }
                 break;
         }
 

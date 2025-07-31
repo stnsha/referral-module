@@ -24,19 +24,18 @@ include('../common/index_adv.php');
 
 <body>
     <div class="referral-container mb-3">
-        <div class="row mb-3">
+        <div class="row mb-1">
             <div class="col-12">
                 <div class="d-flex justify-content-start align-items-end px-3">
                     <span class="fw-bold text-start me-3" style="font-size:20px;">Referral Report</span>
                 </div>
             </div>
         </div>
-        <div class="row mb-3 px-3">
+        <div class="row mb-1">
             <div class="col-12">
-                <div class="d-flex flex-column rounded-2 shadow p-2"
+                <div class="d-flex flex-column py-2 px-3"
                     style="overflow:hidden; background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <span class="fw-bold text-start pt-3 pb-2" style="font-size:14px;">Filter</span>
-
                     <div class="d-flex justify-content-between pb-3 mb-2">
                         <div class="d-flex gap-2" style="flex: 1; max-width: 70%;">
                             <select name="filter-business-unit" id="filter-business-unit"
@@ -65,8 +64,7 @@ include('../common/index_adv.php');
                                 Filters</button>
                         </div>
                         <div class="d-inline-flex align-items-center mt-2">
-                            <a href="report.php" type="button" class="btn-referral me-1" id="viewReportbtn">Generate
-                                Report</a>
+                            <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Generate Report</a>
                             <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
                                 aria-expanded="false" aria-controls="generate-report">
                                 Generate Report
@@ -81,6 +79,25 @@ include('../common/index_adv.php');
                                 </div> -->
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3 px-3">
+            <div class="col-12">
+                <div class="d-flex flex-column justify-content-between p-2 rounded-2 shadow"
+                    style="overflow:hidden; background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
+                    <table class="report-table table table-hover rounded-2" id="report-table"
+                        style="background-color: transparent !important;">
+                        <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
+                            <tr>
+                                <th style="font-size:16px;width: 15%;text-align:start;">Referral ID</th>
+                                <th style="font-size:16px;width: 25%;text-align:start;">Referral Histories</th>
+                                <th style="font-size:16px;width: 35%;text-align:start;">Referral Details</th>
+                                <th style="font-size:16px;width: 15%;text-align:center;">Status</th>
+                                <th style="font-size:16px;width: 10%;text-align:center;">Priority</th>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
         </div>
