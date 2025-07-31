@@ -297,6 +297,17 @@ function getReport($formData)
     }
 }
 
+function getSummaryReport($business_unit_id)
+{
+    $data = getApiData('report/summary/' . $business_unit_id, null, 'GET');
+    if ($data['httpCode'] != 200) {
+        return array();
+    }
+    $decoded = json_decode($data['response'], true);
+
+    return isset($decoded) ? $decoded : array();
+}
+
 // Main request handler
 $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
@@ -408,6 +419,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'get-report':
                 if (isset($_POST['formData'])) {
                     $response = getReport($_POST['formData']);
+                }
+                break;
+            case 'get-summary-report':
+                if (isset($_POST['business_unit_id'])) {
+                    $response = getSummaryReport($_POST['business_unit_id']);
                 }
                 break;
         }

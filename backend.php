@@ -206,7 +206,23 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
     return $staffDetails;
 }
 
-function getBusinessUnit($bu_id) {}
+function getBusinessUnit($deptId)
+{
+    global $conn;
+    $deptId = mysqli_real_escape_string($conn, $deptId);
+
+    $query = "SELECT id FROM ref_business_unit WHERE staff_department_id = '$deptId'";
+
+    $result = mysqli_query($conn, $query);
+
+    if (!$result) {
+        return null;
+    }
+
+    $row = mysqli_fetch_assoc($result);
+
+    return $row ? $row['id'] : null;
+}
 
 if (isset($_GET['action']) && $_GET['action'] == 'getLocations' && isset($_POST['ref_bus_id'])) {
     header('Content-Type: application/json');
@@ -248,5 +264,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'getStaffLocation' && isset($_G
 if (isset($_GET['action']) && $_GET['action'] == 'getStaffDetails' && isset($_GET['staff_id']) && isset($_GET['location_id']) && isset($_GET['bu_id'])) {
     header('Content-Type: application/json');
     echo json_encode(getStaffDetails($_GET['staff_id'], $_GET['location_id'], $_GET['bu_id']));
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] == 'getBusinessUnit' && isset($_GET['staffDeptId'])) {
+    header('Content-Type: application/json');
+    echo json_encode(getBusinessUnit($_GET['staffDeptId']));
     exit;
 }

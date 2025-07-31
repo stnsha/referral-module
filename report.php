@@ -64,7 +64,7 @@ include('../common/index_adv.php');
                                 Filters</button>
                         </div>
                         <div class="d-inline-flex align-items-center mt-2">
-                            <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Generate Report</a>
+                            <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Download Report</a>
                             <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
                                 aria-expanded="false" aria-controls="generate-report">
                                 Generate Report
@@ -82,22 +82,52 @@ include('../common/index_adv.php');
                 </div>
             </div>
         </div>
+        <!-- Charts Section -->
         <div class="row mb-3 px-3">
-            <div class="col-12">
-                <div class="d-flex flex-column justify-content-between p-2 rounded-2 shadow"
-                    style="overflow:hidden; background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
-                    <table class="report-table table table-hover rounded-2" id="report-table"
-                        style="background-color: transparent !important;">
-                        <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
-                            <tr>
-                                <th style="font-size:16px;width: 15%;text-align:start;">Referral ID</th>
-                                <th style="font-size:16px;width: 25%;text-align:start;">Referral Histories</th>
-                                <th style="font-size:16px;width: 35%;text-align:start;">Referral Details</th>
-                                <th style="font-size:16px;width: 15%;text-align:center;">Status</th>
-                                <th style="font-size:16px;width: 10%;text-align:center;">Priority</th>
-                            </tr>
-                        </thead>
-                    </table>
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Status Distribution</h6>
+                        <div
+                            style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Priority Breakdown</h6>
+                        <div
+                            style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas id="priorityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3 px-3">
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Sent vs Received</h6>
+                        <div
+                            style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas id="sentReceivedChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Location Summary</h6>
+                        <div
+                            style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas id="locationChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

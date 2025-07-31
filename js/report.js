@@ -5,6 +5,22 @@ document.addEventListener('DOMContentLoaded', function () {
     loadMonths();
     loadYears();
 
+    $.ajax({
+        url: 'backend.php?action=getBusinessUnit',
+        type: 'GET',
+        dataType: 'json',
+        data: {
+            staffDeptId: department
+        },
+        success: function (response) {
+            const businessUnitId = response;
+            loadSummary(businessUnitId);
+        },
+        error: function () {
+            console.error('Error loading business unit ID');
+        }
+    });
+
     // Business unit change handler
     $('#filter-business-unit').on('change', function () {
         const selectedOption = $(this).find('option:selected');
@@ -200,10 +216,6 @@ function resetFilters() {
     // Reset year to current year
     const currentYear = new Date().getFullYear();
     $('#filter-year').val(currentYear);
-
-    // Clear the report table
-    const table = $('#report-table');
-    table.find('tr:not(:first)').remove(); // Remove all rows except header
 }
 
 // Generate Report function
@@ -228,7 +240,6 @@ function generateReport() {
         year: year
     };
 
-
     // Make API call to fetch report data
     $.ajax({
         url: 'api.php',
@@ -245,14 +256,17 @@ function generateReport() {
         },
         success: function (response) {
             if (response && response.success === true) {
-                // Process and display report data
-                displayReportData(response.data);
-
-                // If there's a download URL, you can handle it here
-                // if (response.data && response.data.download_url) {
-                //     // Optionally show download link or auto-download
-                //     document.body.removeChild(link);
-                // }
+                const url = response.data.download_url;
+                if (response.data && url) {
+                    console.log('Download URL available:', url);
+                    // Auto-download the report file
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = '';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
             } else {
                 // Handle different types of errors
                 console.error('Report generation failed:', response.message);
@@ -300,107 +314,254 @@ function generateReport() {
         }
     });
 }
+
 // Function to display report data
-function displayReportData(data) {
-    var results = data.results;
-
-    // Get the table element
-    const table = $('#report-table');
-
-    // Clear existing rows (except header)
-    table.find('tr:not(:first)').remove();
-
-    // Check if we have results
-    if (!results || results.length === 0) {
-        table.append(`
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
-                    No data found for the selected filters
-                </td>
-            </tr>
-        `);
-        return;
-    }
-
-    // Process each result
-    $.each(results, function (index, item) {
-        console.log(item);
-        // Get referral basic info
-        const referralId = item.referral_id;
-        const status = item.referral.status_name;
-        const priority = item.referral.priority;
-
-        // Process referral histories
-        const histories = item.referral_histories || [];
-        let historiesHtml = '';
-        let detailsHtml = '';
-
-        histories.forEach(function (history, historyIndex) {
-            if (history.is_filled === 1) {
-                // Build history summary
-                historiesHtml += `
-                    <div class="history-item" style="margin-bottom: 10px; padding: 8px; border-left: 3px solid #007bff;">
-                        <strong>Sequence ${history.sequence}:</strong> ${history.business_unit}<br>
-                        <small>Reason: ${history.referral_reason || 'N/A'}</small><br>
-                        <small>Condition: ${history.referral_condition || 'N/A'}</small>
-                    </div>
-                `;
-
-                // Build referral details
-                if (history.referral_details && history.referral_details.length > 0) {
-                    detailsHtml += `<div class="details-section"><strong>Sequence ${history.sequence} Details:</strong><ul>`;
-                    history.referral_details.forEach(function (detail) {
-                        detailsHtml += `<li><strong>${detail.form_name}:</strong> ${detail.value}</li>`;
-                    });
-                    detailsHtml += '</ul></div>';
-                }
-            } else {
-                historiesHtml += `
-                    <div class="history-item" style="margin-bottom: 10px; padding: 8px; border-left: 3px solid #ccc;">
-                        <strong>Sequence ${history.sequence}:</strong> ${history.business_unit || 'Pending'}<br>
-                        <small style="color: #666;">Not filled yet</small>
-                    </div>
-                `;
+function loadSummary(businessUnitId) {
+    $.ajax({
+        url: 'api.php',
+        type: 'POST',
+        data: {
+            action: 'get-summary-report',
+            business_unit_id: businessUnitId
+        },
+        success: function (response) {
+            console.log('API Response:', response);
+            
+            // Handle different response structures
+            let data = null;
+            if (response && response.success && response.data) {
+                data = response.data;
+            } else if (response && !response.success && response.data) {
+                // Sometimes data might be present even if success is false
+                data = response.data;
+            } else if (response && response.statistics) {
+                // Data nested under 'statistics' key
+                data = response.statistics;
+            } else if (response && typeof response === 'object' && response.total_referrals !== undefined) {
+                // Direct data structure without wrapper
+                data = response;
             }
-        });
+            
+            if (data) {
+                console.log('Creating charts with data:', data);
+                createCharts(data);
+            } else {
+                console.error('No valid data found in response:', response);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('AJAX Error generating report:', {
+                status: status,
+                error: error,
+                responseText: xhr.responseText
+            });
 
-        // Add row to table
-        table.append(`
-            <tr>
-                <td>
-                    <strong>${referralId}</strong><br>
-                    <small>Created: ${item.referral.created_at}</small><br>
-                    <small>Updated: ${item.referral.updated_at}</small>
-                </td>
-                <td>
-                    ${historiesHtml || 'No histories available'}
-                </td>
-                <td style="vertical-align: top; max-width: 300px;">
-                    ${detailsHtml || 'No details available'}
-                </td>
-                <td>
-                    <span class="status-badge" style="padding: 4px 8px; border-radius: 4px; background-color: ${status === 'Open' ? '#28a745' : status === 'In Progress' ? '#ffc107' : '#6c757d'}; color: white;">
-                        ${status}
-                    </span>
-                </td>
-                <td>
-                    <span class="priority-badge" style="padding: 4px 8px; border-radius: 4px; background-color: ${priority === 1 ? '#dc3545' : priority === 2 ? '#fd7e14' : '#28a745'}; color: white;">
-                        ${priority === 1 ? 'High' : priority === 2 ? 'Medium' : 'Low'}
-                    </span>
-                </td>
-            </tr>
-        `);
+            // Try to parse error response
+            let errorMessage = 'Network error occurred while generating report';
+            try {
+                const errorResponse = JSON.parse(xhr.responseText);
+                if (errorResponse.message) {
+                    errorMessage = errorResponse.message;
+                }
+            } catch (e) {
+                console.error('Error parsing response:', e);
+            }
+
+            console.error('Error:', errorMessage);
+        }
     });
-
-    // Handle download URL if available
-    // if (data.download_url) {
-    //     console.log('Download URL available:', data.download_url);
-    //     // Auto-download the report file
-    //     const link = document.createElement('a');
-    //     link.href = data.download_url;
-    //     link.download = '';
-    //     document.body.appendChild(link);
-    //     link.click();
-    //     document.body.removeChild(link);
-    // }
 }
+
+// Function to create charts
+function createCharts(data) {
+    console.log('createCharts called with data:', data);
+    
+    try {
+        // Destroy existing charts if they exist
+        if (window.statusChart && typeof window.statusChart.destroy === 'function') {
+            window.statusChart.destroy();
+        }
+        if (window.priorityChart && typeof window.priorityChart.destroy === 'function') {
+            window.priorityChart.destroy();
+        }
+        if (window.sentReceivedChart && typeof window.sentReceivedChart.destroy === 'function') {
+            window.sentReceivedChart.destroy();
+        }
+        if (window.locationChart && typeof window.locationChart.destroy === 'function') {
+            window.locationChart.destroy();
+        }
+
+        // Check if Chart.js is loaded
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded');
+            return;
+        }
+
+        // Status Distribution Chart (Doughnut)
+        const statusElement = document.getElementById('statusChart');
+        if (statusElement && data.status) {
+            console.log('Creating status chart with data:', data.status);
+            const statusCtx = statusElement.getContext('2d');
+            const statusLabels = Object.keys(data.status);
+            const statusValues = Object.values(data.status);
+            
+            window.statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusValues,
+                        backgroundColor: [
+                            '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', 
+                            '#9966ff', '#ff9f40', '#e83e8c', '#c9cbcf'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1,
+                    animation: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            console.log('Status chart created successfully');
+        } else {
+            console.error('Status chart element not found or no status data');
+        }
+
+        // Priority Breakdown Chart (Pie)
+        const priorityElement = document.getElementById('priorityChart');
+        if (priorityElement && data.priority) {
+            console.log('Creating priority chart with data:', data.priority);
+            const priorityCtx = priorityElement.getContext('2d');
+            const priorityLabels = Object.keys(data.priority);
+            const priorityValues = Object.values(data.priority);
+            
+            window.priorityChart = new Chart(priorityCtx, {
+                type: 'pie',
+                data: {
+                    labels: priorityLabels,
+                    datasets: [{
+                        data: priorityValues,
+                        backgroundColor: ['#ff6384', '#36a2eb'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1,
+                    animation: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            console.log('Priority chart created successfully');
+        } else {
+            console.error('Priority chart element not found or no priority data');
+        }
+
+        // Sent vs Received Chart (Bar)
+        const sentReceivedElement = document.getElementById('sentReceivedChart');
+        if (sentReceivedElement && data.sent_received) {
+            console.log('Creating sent/received chart with data:', data.sent_received);
+            const sentReceivedCtx = sentReceivedElement.getContext('2d');
+            
+            window.sentReceivedChart = new Chart(sentReceivedCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sent', 'Received'],
+                    datasets: [{
+                        label: 'Referrals',
+                        data: [data.sent_received.sent, data.sent_received.received],
+                        backgroundColor: ['#36a2eb', '#ff6384'],
+                        borderColor: ['#36a2eb', '#ff6384'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
+                    animation: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            console.log('Sent/Received chart created successfully');
+        } else {
+            console.error('Sent/Received chart element not found or no sent_received data');
+        }
+
+        // Location Summary Chart (Bar)
+        const locationElement = document.getElementById('locationChart');
+        if (locationElement && data.location_summary) {
+            console.log('Creating location chart with data:', data.location_summary);
+            const locationCtx = locationElement.getContext('2d');
+            const locationLabels = Object.keys(data.location_summary);
+            const locationValues = Object.values(data.location_summary);
+            
+            window.locationChart = new Chart(locationCtx, {
+                type: 'bar',
+                data: {
+                    labels: locationLabels,
+                    datasets: [{
+                        label: 'Referrals',
+                        data: locationValues,
+                        backgroundColor: '#4bc0c0',
+                        borderColor: '#4bc0c0',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
+                    animation: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            console.log('Location chart created successfully');
+        } else {
+            console.error('Location chart element not found or no location_summary data');
+        }
+
+    } catch (error) {
+        console.error('Error creating charts:', error);
+    }
+}
+
