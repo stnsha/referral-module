@@ -29,6 +29,8 @@ include('../common/index_adv.php');
                 <div class="d-flex justify-content-start align-items-end px-3">
                     <span class="fw-bold text-start me-3" style="font-size:20px;">Referral Dashboard</span>
                     <a href="create.php" type="button" class="btn-new-referral me-2">New Referral</a>
+                    <a href="report.php" type="button" class="btn-referral" id="viewReportbtn">View
+                        Report</a>
                 </div>
             </div>
         </div>
@@ -134,8 +136,7 @@ include('../common/index_adv.php');
                                 Filters</button>
                         </div>
                         <div class="d-inline-flex align-items-center">
-                            <a href="report.php" type="button" class="btn-referral" id="viewReportbtn">View
-                                Report</a>
+
                             <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
                                 aria-expanded="false" aria-controls="generate-report">
                                 Generate Report
@@ -182,10 +183,10 @@ include('../common/index_adv.php');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
     <script>
-        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-        const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-        const staff_outlet =
-            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+    const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+    const staff_outlet =
+        <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
     </script>
 
     <script src="js/errorLogger.js"></script>

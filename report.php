@@ -28,6 +28,7 @@ include('../common/index_adv.php');
             <div class="col-12">
                 <div class="d-flex justify-content-start align-items-end px-3">
                     <span class="fw-bold text-start me-3" style="font-size:20px;">Referral Report</span>
+                    <a href="index.php" class="btn-referral">Back</a>
                 </div>
             </div>
         </div>
@@ -82,58 +83,68 @@ include('../common/index_adv.php');
                 </div>
             </div>
         </div>
-        <!-- Charts Section -->
-        <div class="row mb-3 px-3">
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Status Distribution</h6>
-                        <div
-                            style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
-                            <canvas id="statusChart"></canvas>
+        <div class="row mb-1 mx-3 rounded-2 shadow">
+            <div class="row mt-2 mb-3 px-3">
+                <div class="col-12">
+                    <span class="fw-bold text-start me-3" style="font-size:16px;">Monthly Summary of
+                        <?php echo date('F') . ', ' . date('Y'); ?>
+                    </span>
+                </div>
+            </div>
+            <!-- Charts Section -->
+            <div class="row mb-3 px-3">
+                <div class="col-md-6 mb-3">
+                    <div class="card border-0">
+                        <div class="card-body">
+                            <h6 class="card-title">Status Distribution</h6>
+                            <div
+                                style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card border-0">
+                        <div class="card-body">
+                            <h6 class="card-title">Priority Breakdown</h6>
+                            <div
+                                style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                                <canvas id="priorityChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Priority Breakdown</h6>
-                        <div
-                            style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
-                            <canvas id="priorityChart"></canvas>
+            <div class="row mb-3 px-3">
+                <div class="col-md-6 mb-3">
+                    <div class="card border-0">
+                        <div class="card-body">
+                            <h6 class="card-title">Sent vs Received</h6>
+                            <div
+                                style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                                <canvas id="sentReceivedChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card border-0">
+                        <div class="card-body">
+                            <h6 class="card-title">Location Summary</h6>
+                            <div
+                                style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                                <canvas id="locationChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row mb-3 px-3">
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Sent vs Received</h6>
-                        <div
-                            style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
-                            <canvas id="sentReceivedChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Location Summary</h6>
-                        <div
-                            style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
-                            <canvas id="locationChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
         <div class="row align-items-start text-start py-2 px-4">
             <div class="d-flex justify-content-center align-items-center">
-                <a href="index.php" class="btn-referral">Back</a>
+
             </div>
         </div>
     </div>
@@ -145,10 +156,10 @@ include('../common/index_adv.php');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
     <script>
-        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-        const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-        const staff_outlet =
-            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+    const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+    const staff_outlet =
+        <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
     </script>
 
     <script src="js/errorLogger.js"></script>
