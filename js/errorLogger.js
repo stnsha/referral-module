@@ -10,7 +10,7 @@ class ErrorLogger {
     }
 
     logError(error, context = {}) {
-        const timestamp = new Date().toISOString();
+        const timestamp = this.getMalaysiaTimestamp();
         const errorEntry = {
             timestamp,
             message: error.message || error.toString(),
@@ -33,6 +33,18 @@ class ErrorLogger {
         return errorEntry.id;
     }
 
+    getMalaysiaTimestamp() {
+        const now = new Date();
+        const malaysiaTime = new Date(now.toLocaleString('en-US', {timeZone: 'Asia/Kuala_Lumpur'}));
+        const year = malaysiaTime.getFullYear();
+        const month = String(malaysiaTime.getMonth() + 1).padStart(2, '0');
+        const day = String(malaysiaTime.getDate()).padStart(2, '0');
+        const hours = String(malaysiaTime.getHours()).padStart(2, '0');
+        const minutes = String(malaysiaTime.getMinutes()).padStart(2, '0');
+        const seconds = String(malaysiaTime.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
@@ -53,7 +65,7 @@ class ErrorLogger {
         
         const a = document.createElement('a');
         a.href = url;
-        a.download = `error-logs-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `error-logs-${this.getMalaysiaTimestamp().split(' ')[0]}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -73,10 +85,34 @@ class ErrorLogger {
             const saved = localStorage.getItem('errorLogs');
             if (saved) {
                 this.logs = JSON.parse(saved);
+                this.convertOldTimestamps();
             }
         } catch (e) {
             console.warn('Failed to load error logs from localStorage:', e);
             this.logs = [];
+        }
+    }
+
+    convertOldTimestamps() {
+        let converted = false;
+        this.logs = this.logs.map(log => {
+            if (log.timestamp && log.timestamp.includes('T') && log.timestamp.includes('Z')) {
+                const oldDate = new Date(log.timestamp);
+                const malaysiaTime = new Date(oldDate.getTime() + (8 * 60 * 60 * 1000));
+                const year = malaysiaTime.getFullYear();
+                const month = String(malaysiaTime.getMonth() + 1).padStart(2, '0');
+                const day = String(malaysiaTime.getDate()).padStart(2, '0');
+                const hours = String(malaysiaTime.getHours()).padStart(2, '0');
+                const minutes = String(malaysiaTime.getMinutes()).padStart(2, '0');
+                const seconds = String(malaysiaTime.getSeconds()).padStart(2, '0');
+                log.timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                converted = true;
+            }
+            return log;
+        });
+        
+        if (converted) {
+            this.saveLogs();
         }
     }
 

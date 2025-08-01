@@ -23,7 +23,7 @@
         <div id="results"></div>
     </div>
 
-    <script src="js/errorLogger.js"></script>
+    <script src="js/errorLogger.js?v=20250801"></script>
     <script>
         function testBasicError() {
             try {
@@ -41,8 +41,7 @@
                 logError(error, { 
                     context: 'testFunction', 
                     userId: 123, 
-                    action: 'button_click',
-                    timestamp: new Date().toISOString()
+                    action: 'button_click'
                 });
                 addResult('Error with context logged successfully');
             }
