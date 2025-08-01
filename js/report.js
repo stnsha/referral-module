@@ -275,6 +275,11 @@ function generateReport() {
                 // Log user-friendly error message
                 let errorMessage = response.message || 'Unknown error occurred';
 
+                if (response.details.http_code === 404) {
+                    alert('No referral report found based on the filter');
+                    return;
+                }
+
                 // Handle validation errors (422)
                 if (response.details) {
                     logError(new Error('Validation details found'), { context: 'generateReport', validationDetails: response.details });

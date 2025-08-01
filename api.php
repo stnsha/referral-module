@@ -255,13 +255,13 @@ function getReportDashboard()
 
 function getReport($formData)
 {
-    return array($formData);
-    exit;
     $data = getApiData('report', array($formData), 'POST');
     $result = $data['response'];
     $httpCode = $data['httpCode'];
 
     $decoded = json_decode($result, true);
+
+
 
     // Handle different HTTP status codes
     switch ($httpCode) {
@@ -270,6 +270,14 @@ function getReport($formData)
             return array(
                 'success' => true,
                 'data' => $decoded,
+            );
+
+        case 404:
+            //No referral found
+            return array(
+                'success' => false,
+                'message' => isset($decoded['message']) ? $decoded['message'] : 'No referral found',
+                'error' => isset($decoded['error']) ? $decoded['error'] : 'Referral not found'
             );
 
         case 422:
