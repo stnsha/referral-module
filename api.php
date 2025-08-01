@@ -251,6 +251,7 @@ function getReportDashboard()
     $decoded = json_decode($data['response'], true);
 
     return isset($decoded) ? $decoded : array();
+    // return array();
 }
 
 function getReport($formData)
@@ -260,8 +261,6 @@ function getReport($formData)
     $httpCode = $data['httpCode'];
 
     $decoded = json_decode($result, true);
-
-
 
     // Handle different HTTP status codes
     switch ($httpCode) {

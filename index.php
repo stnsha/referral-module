@@ -34,10 +34,9 @@ include('../common/index_adv.php');
                 </div>
             </div>
         </div>
-        <div class="row align-items-stretch mb-3 px-3">
-            <!--style="background: linear-gradient(135deg, #e8f2ff 0%, #f0f8ff 100%);-->
-            <div class="d-flex flex-column justify-content-between col-4">
-                <div class="d-flex flex-column p-4 rounded-2 shadow align-items-start mb-3"
+        <div class="row align-items-stretch mb-3 px-3 g-2">
+            <div class="col-4">
+                <div class="d-flex flex-column p-3 rounded-2 shadow align-items-start mb-3"
                     style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
                         <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
@@ -45,15 +44,15 @@ include('../common/index_adv.php');
                         <span style="font-size:16px; color: #173F5F; line-height: 1; margin-left: 8px;"
                             class="fw-bold">Referral</span>
                     </div>
-                    <div class="d-flex justify-content-between w-100 mb-1">
+                    <div class="d-flex justify-content-between w-100">
                         <span>Open</span>
                         <span id="referral-open-count">0</span>
                     </div>
-                    <div class="d-flex justify-content-between w-100 mb-1">
+                    <div class="d-flex justify-content-between w-100">
                         <span>In Progress</span>
                         <span id="referral-progress-count">0</span>
                     </div>
-                    <div class="d-flex justify-content-between w-100 mb-1">
+                    <div class="d-flex justify-content-between w-100">
                         <span>Referred</span>
                         <span id="referral-referred-count">0</span>
                     </div>
@@ -61,10 +60,39 @@ include('../common/index_adv.php');
                         <span>Closed</span>
                         <span id="referral-closed-count">0</span>
                     </div>
+                    <div class="d-flex justify-content-between w-100">
+                        <span>Not Present</span>
+                        <span id="referral-not-present-count">0</span>
+                    </div>
                 </div>
-                <div class="d-flex flex-column p-4 rounded-2 shadow align-items-start mb-3"
+            </div>
+            <div class="col-4">
+                <div class="d-flex flex-column p-3 rounded-2 shadow align-items-start mb-3"
                     style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
-                    <div class="d-flex justify-content-center align-items-end mb-2 pb-2" style="line-height: 1;">
+                    <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
+                        <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
+                            id="total-priority-count">0</span>
+                        <span style="font-size:16px; color: #173F5F; line-height: 1; margin-left: 8px;"
+                            class="fw-bold">Priority</span>
+                    </div>
+                    <div class="d-flex justify-content-between w-100">
+                        <span>Low</span>
+                        <span id="referral-low-count">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between w-100">
+                        <span>Medium</span>
+                        <span id="referral-medium-count">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between w-100">
+                        <span>High</span>
+                        <span id="referral-high-count">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="d-flex flex-column p-3 rounded-2 shadow align-items-start mb-3"
+                    style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
+                    <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
                         <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
                             id="total-business-unit-count">0</span>
                         <span style="font-size:16px; color: #173F5F; line-height: 1; margin-left: 8px;"
@@ -72,44 +100,18 @@ include('../common/index_adv.php');
                             Unit</span>
                     </div>
                     <div class="business-units-report w-100" id="business-units-list">
-                        <!-- Business units will be populated dynamically -->
+                        <!-- First 4 business units will be shown here to match referral column height -->
                     </div>
-                    <div class="collapse" id="businessUnitsCollapse">
-                        <div class="d-flex justify-content-between w-100 mb-1">
-                            <span>Alpro Optisaver</span>
-                            <span>5</span>
-                        </div>
-                        <div class="d-flex justify-content-between w-100 mb-1">
-                            <span>Alpro Baby</span>
-                            <span>2</span>
-                        </div>
-                        <div class="d-flex justify-content-between w-100 mb-1">
-                            <span>Alpro Physio</span>
-                            <span>5</span>
-                        </div>
-                        <div class="d-flex justify-content-between w-100 mb-1">
-                            <span>Alpro Sugi</span>
-                            <span>1</span>
-                        </div>
-                        <div class="d-flex justify-content-between w-100">
-                            <span>Alpro Audiology</span>
-                            <span>3</span>
-                        </div>
+                    <div class="collapse w-100" id="businessUnitsCollapse">
+                        <!-- Additional business units will be shown here when expanded -->
                     </div>
-                    <!-- <button type="button" data-bs-toggle="collapse" data-bs-target="#businessUnitsCollapse"
+                    <button type="button" data-bs-toggle="collapse" data-bs-target="#businessUnitsCollapse"
                         aria-expanded="false" aria-controls="businessUnitsCollapse"
                         style="background: none; border: none; color: #6c757d; font-size: 10px; padding: 5px 0; cursor: pointer; text-decoration: none;"
-                        id="toggleButton">
+                        id="toggleButton" class="d-none">
                         <span id="toggleText" class="pe-2">Show More</span><i class="bi bi-chevron-down"
                             id="toggleIcon"></i>
-                    </button> -->
-                </div>
-            </div>
-
-            <div class="d-flex flex-column col-8">
-                <div class="d-flex flex-column rounded-2 shadow align-items-start"
-                    style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%); max-height:490px;">
-                    <canvas id="myChart" style="width:100%;height:100%;"></canvas>
+                    </button>
                 </div>
             </div>
         </div>
@@ -183,10 +185,10 @@ include('../common/index_adv.php');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
     <script>
-    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-    const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-    const staff_outlet =
-        <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staff_outlet =
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
     </script>
 
     <script src="js/errorLogger.js"></script>
