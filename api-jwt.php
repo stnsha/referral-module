@@ -316,6 +316,7 @@ function getAllReferral($staff_id)
 function getReferral($referral_id, $staff_id)
 {
     $result = getApiDataWithJWT('referral/' . $referral_id, null, 'GET', $staff_id);
+
     if (!$result['success']) {
         return array();
     }

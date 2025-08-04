@@ -199,8 +199,15 @@ include('../common/index_adv.php');
                     </div>
                 </div>
                 <div class="col h-auto border rounded ms-2 p-2">
-
-                    <div class="border-bottom pb-3 mb-3">
+                    <p class="r-title">Referral History</p>
+                    <div class="referral-history" id="referralHistoryContainer">
+                        <!-- <button class="referral-accordion">Dr. Ong Seong Woo, Clinic A (Malaysia)</button>
+                        <div class="referral-panel">
+                            <span>heyyy</span>
+                        </div> -->
+                    </div>
+                    <!-- tukar to referral history slide -->
+                    <!-- <div class="border-bottom pb-3 mb-3">
                         <p class="r-title">Initial Referral</p>
                         <div class="mb-2">
                             <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
@@ -241,10 +248,10 @@ include('../common/index_adv.php');
                             <div class="error-message" id="error-priority" style="color: red;font-size:12px;">
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
-            <div class="row align-items-start text-start py-2 px-4 referring-indication-container">
+            <!-- <div class="row align-items-start text-start py-2 px-4 referring-indication-container">
                 <div class="col h-auto border rounded me-2 p-2 referring-indication">
                     <p class="r-title">Referring Indication</p>
                     <div class="mb-2">
@@ -269,7 +276,7 @@ include('../common/index_adv.php');
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
                 onsubmit="validateForm(event)" enctype="multipart/form-data">
@@ -371,17 +378,17 @@ include('../common/index_adv.php');
                     </div>
                 </div>
             </form>
-            <div class="row align-items-start text-start py-2 px-4">
+            <!-- <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
                     <p class="r-title">Referral History</p>
                     <div class="referral-history" id="referralHistoryContainer">
-                        <!-- <button class="referral-accordion">Dr. Ong Seong Woo, Clinic A (Malaysia)</button>
+                        <button class="referral-accordion">Dr. Ong Seong Woo, Clinic A (Malaysia)</button>
                         <div class="referral-panel">
                             <span>heyyy</span>
-                        </div> -->
+                        </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -390,5 +397,5 @@ include('../common/index_adv.php');
             const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/errorLogger.js"></script>
-        <!-- <script src="js/view.js"></script> -->
+        <script src="js/view.js"></script>
 </body>

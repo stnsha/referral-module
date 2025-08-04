@@ -7,7 +7,7 @@ $(document).ready(function () {
     $('.refer-form').hide();
 
     $.ajax({
-        url: 'api.php',
+        url: 'api-jwt.php',
         type: 'POST',
         dataType: 'json',
         data: JSON.stringify({
@@ -15,7 +15,7 @@ $(document).ready(function () {
             referral_id: referral_id
         }),
         success: function (response) {
-            console.log(response);
+            var data = response.data;
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -41,7 +41,7 @@ $(document).ready(function () {
             referee.hide();
 
             // Referral Details
-            let referralDetails = response.data.referralDetails;
+            let referralDetails = data.referralDetails;
 
             const sortedDetails = Object.values(referralDetails).sort(function (a, b) {
                 return a.sequence - b.sequence;
@@ -75,7 +75,8 @@ $(document).ready(function () {
                             <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
                                 <div class="referral-accordion-content">
                                     <div class="referral-text">
-                                        <span class="referral-title">${staff}, ${outlet}</span>
+                                        <span class="referral-title">
+                                            ${businessUnit}, ${staff}, ${outlet}</span>
                                         <span class="referral-date">${createdAt}</span>
                                     </div>
                                 </div>
@@ -92,8 +93,43 @@ $(document).ready(function () {
                             const accordion = $(accordionHTML);
                             container.append(accordion);
                             const panel = accordion.find('.referral-panel-item');
+
+                            //display referral info in panel
+                            if (rd.referral_reason || rd.referral_condition || rd.medical_history) {
+                                panel.append(`
+                                <div class="referral-info-section border-bottom pb-3 mb-3">
+                                    <p class="r-title">Referral Information</p>
+                                    <div class="mb-2">
+                                        <p class="r-text">Reason of Referral</p>
+                                        <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_reason || 'N/A'}</textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <p class="r-text">Details of Patient's Condition</p>
+                                        <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_condition || 'N/A'}</textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <p class="r-text">Relevant Medical History</p>
+                                        <textarea class="form-control form-control-sm" rows="3" readonly>${rd.medical_history || 'N/A'}</textarea>
+                                    </div>
+                                </div>
+                                `);
+                            }
+
+                            //add title for initial treatment
+                            panel.append(`
+                                <div class="treatment-section">
+                                    <p class="r-title">Current/Past Treatment</p>
+                                </div>
+                            `);
+
                             //display initial treatment
                             initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
+
+                            //auto-open accordion
+                            const accordionButton = accordion.find('.referral-accordion');
+                            const accordionPanel = accordion.find('.referral-panel');
+                            accordionButton.addClass('active');
+                            accordionPanel.css('maxHeight', accordionPanel[0].scrollHeight + 'px');
 
                             const referralPic = accordion.find('.referral-pic');
                             var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
@@ -116,6 +152,7 @@ $(document).ready(function () {
                         } else {
                             //display reply form for next pic
                             displayContent(rd.business_unit_id, '.reply-form');
+                            $('.reply-form-container').css('display', 'block');
                         }
 
                         //assign referred from 
@@ -138,7 +175,13 @@ $(document).ready(function () {
                     recipientTo.hide();
                     business_unit_to.hide();
                     location_to.hide();
-                    $('.reply-form-container').css('display', 'none');
+                    // Show reply form if not filled, hide if filled
+                    if (rd.is_filled == 0) {
+                        displayContent(rd.business_unit_id, '.reply-form');
+                        $('.reply-form-container').css('display', 'block');
+                    } else {
+                        $('.reply-form-container').css('display', 'none');
+                    }
                     $('.refer-another-container').css('display', 'none');
 
                     organization.show();
@@ -174,27 +217,12 @@ $(document).ready(function () {
                 }
             });
 
-            // Referring Indication
-            let referringIndication = response.data.referringIndication;
-
-            var referral_reason = $('#referral_reason');
-            var referral_condition = $('#referral_condition');
-            var medical_history = $('#medical_history');
-
-            referral_reason.val('');
-            referral_condition.val('');
-            medical_history.val('');
-
-            referral_reason.val(referringIndication.referral_reason);
-            referral_condition.val(referringIndication.referral_condition);
-            medical_history.val(referringIndication.medical_history);
-
             $('input[name="priority"]').on('click', function (e) {
                 e.preventDefault();
             });
-            $('input[name="priority"][value="' + referringIndication.priority + '"]').prop('checked', true);
+            $('input[name="priority"][value="' + data.priority + '"]').prop('checked', true);
 
-            var custid = referringIndication.customer_id;
+            var custid = data.customer_id;
 
             var customer_id = $('#customer_id');
             var customer_ic = $('#customer_ic');
@@ -244,7 +272,7 @@ $(document).ready(function () {
                 customer_address.val(customer[0].address);
             });
 
-            let status = referringIndication.status;
+            let status = data.status;
             // Load status options dynamically with disable parameter for status 4 or 5
             const shouldDisableRadios = (status == 4 || status == 5);
             loadStatusOptions(status, shouldDisableRadios);
@@ -264,9 +292,9 @@ $(document).ready(function () {
                 $('input[name="priority"]').prop('disabled', true);
             } else {
                 if (submitButton) {
-                    $('.reply-form-container').hide();
                     submitButton.style.display = 'inline-block';
                 }
+                // Don't hide reply-form-container here - let individual referral logic handle it
                 // Show attachment input for other initial statuses
                 $('#attachmentInput').show();
                 // Make form editable if initial status is not 4 or 5
@@ -634,7 +662,7 @@ function addStatusChangeListeners() {
 
 function loadStatusOptions(selectedStatus, shouldDisableRadios = false) {
     $.ajax({
-        url: 'api.php',
+        url: 'api-jwt.php',
         type: 'POST',
         data: { action: 'referral-status' },
         success: function (response) {
@@ -818,13 +846,12 @@ function getStaffDetails(staffId, locationId, businessUnitId, callback) {
 
 function displayContent(businessUnitId, targetSelector) {
     $.ajax({
-        url: 'api.php',
+        url: 'api-jwt.php',
         type: 'POST',
-        dataType: 'json',
-        data: JSON.stringify({
+        data: {
             action: 'form-details',
             business_unit_id: businessUnitId
-        }),
+        },
         success: function (response) {
             const forms = response.data.forms;
 
@@ -832,19 +859,17 @@ function displayContent(businessUnitId, targetSelector) {
             const targetDiv = $(targetSelector);
             targetDiv.show();
             targetDiv.find('[data-required="true"]').prop('required', true);
-            $('.reply-content .form-container').remove();
+            targetDiv.find('.form-container').remove();
 
             const bu_id_reply = $('<input type="text" name="bu_id_reply" hidden value=' + businessUnitId + ' readonly/>');
-            $('.reply-content').append(bu_id_reply);
+            targetDiv.append(bu_id_reply);
 
             forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
                 const formContainer = $('<div class="form-container mb-3"></div>');
-                const normalizedDetails = Array.isArray(form_details)
-                    ? form_details
-                    : Object.values(form_details || {});
 
-                normalizedDetails.forEach(detail => {
-                    const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
+                // Handle new API structure where form_details is an object
+                Object.values(form_details || {}).forEach(detail => {
+                    const { field_name, field_type, is_required, field_value } = detail;
 
                     const errorId = 'error-' + field_name;
                     const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
@@ -924,7 +949,6 @@ function displayContent(businessUnitId, targetSelector) {
                         }
                     });
 
-                    wrapper.append(input);
                     wrapper.append(errorDiv);
                     formContainer.append(wrapper);
 
@@ -941,8 +965,7 @@ function displayContent(businessUnitId, targetSelector) {
             `);
 
             targetDiv.append(remarksWrapper);
-        }
-        ,
+        },
         error: function (xhr, status, error) {
             logError(new Error('Failed to display form details'), { context: 'displayContent', businessUnitId: businessUnitId, status: status, error: error });
         }
