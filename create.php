@@ -227,19 +227,7 @@ include('../common/index_adv.php');
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Priority <span style="color:red;">*</span></p>
-
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="priority" value="1">
-                                <label class="form-check-label r-text">
-                                    High (1 to 2 working days)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input border" type="radio" name="priority" value="2" checked>
-                                <label class="form-check-label r-text">
-                                    Standard (3 to 5 working days)
-                                </label>
-                            </div>
+                            <div class="referral-priority"></div>
                             <div class="error-message" id="error-priority" style="color: red;font-size:12px;">
                             </div>
                         </div>
@@ -331,7 +319,7 @@ include('../common/index_adv.php');
             const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         </script>
         <script src="js/errorLogger.js"></script>
-        <script src="js/app.js"></script>
+        <script src="js/create.js"></script>
 
 
 </body>

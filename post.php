@@ -1,5 +1,5 @@
 <?php
-require 'api.php';
+require 'api-jwt.php';
 header('Content-Type: application/json');
 
 $data = array();
@@ -103,51 +103,8 @@ $data['attachments'] = $uploadedFiles;
 // echo json_encode($data);
 
 $endpoint = 'referral';
-$response = getApiData($endpoint, $data, 'POST');
+$response = getApiDataWithJWT($endpoint, $data, 'POST');
 if (is_array($response) && array_key_exists('ch', $response)) {
     unset($response['ch']);
 }
 echo json_encode($response);
-
-exit;
-
-/*{
-    "business_units": {
-        "assignee": {
-            "staff_id": 2222,
-            "business_unit_id": "6",
-            "location": "317",
-            "referral_reason": "Persistent Balance Issues with Suspected Auditory or Vestibular Involvement",
-            "referral_condition": "Patient has been attending physiotherapy for balance and coordination training following a recent fall. Despite improvements in strength and motor control, the patient reports ongoing dizziness, disorientation, and delayed response to audio cues during sessions. These signs suggest a possible underlying hearing or vestibular issue.",
-            "medical_history": "No history of ear infections or diagnosed hearing loss. No recent head trauma.",
-            "additional_remarks": "Referral to audiology requested to evaluate hearing function and rule out vestibular involvement that may be limiting physiotherapy outcomes."
-        },
-        "recipient": {
-            "organization": 1,
-            "location_organization": "California",
-            "referee": "2"
-        }
-    },
-    "referral": {
-        "customer_id": 10,
-        "priority": 2
-    },
-    "form_data": {
-        "6": {
-            "external_referral": "on",
-            "organization": "1",
-            "location_organization": "California",
-            "referee": "2",
-            "targeted_area": "Lower limbs and core (balance-focused rehab)",
-            "pain_level": "3",
-            "previous_physiotherapy": "29"
-        }
-    },
-    "attachments": [
-        {
-            "name": "img1a.jpg",
-            "type": "image/jpeg",
-            "size": 65409,
-        }
-    ]
-}*/

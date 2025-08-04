@@ -5,20 +5,20 @@ $(document).ready(function () {
     $('#organization, #location_organization, #referee').prop('disabled', true);
     toggleExternalReferralSection();
     handleFilePreview('#attachmentInput', '#attachmentPreview');
+    loadReferralPriorities();
+
+    // Display business unit
     $.ajax({
-        url: 'backend.php',
-        type: 'GET',
-        dataType: 'json',
-        data: {
-            action: 'getBusinessUnits'
-        },
+        url: 'api-jwt.php',
+        type: 'POST',
+        data: { action: 'business-units' },
         success: function (response) {
             var busUnitFrom = $('#business_unit_from');
 
             let isSelected = false;
             let businessUnitId = '';
 
-            $.each(response, function (index, businessUnit) {
+            $.each(response.data, function (index, businessUnit) {
                 const selected = businessUnit.staff_department_id == department ? 'selected' : '';
                 if (selected !== '') isSelected = true;
                 if (selected !== '') businessUnitId = businessUnit.id;
@@ -41,7 +41,7 @@ $(document).ready(function () {
             busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
 
             var busUnitTo = $('#business_unit_to');
-            $.each(response, function (index, businessUnit) {
+            $.each(response.data, function (index, businessUnit) {
                 busUnitTo.append(
                     '<option value="' + businessUnit.staff_department_id + '" data-id="' + businessUnit.id + '" ' + '>' +
                     businessUnit.name + '</option>'
@@ -306,13 +306,13 @@ $(document).ready(function () {
     // Function to display content based on business unit ID
     function displayContent(businessUnitId) {
         $.ajax({
-            url: 'api.php',
+            url: 'api-jwt.php',
             type: 'POST',
             dataType: 'json',
-            data: JSON.stringify({
+            data: {
                 action: 'form-details',
                 business_unit_id: businessUnitId
-            }),
+            },
             success: function (response) {
                 const forms = response.data.forms;
                 $('.content').hide();
@@ -481,7 +481,7 @@ $(document).ready(function () {
                 var externalOrganizations = [];
 
                 $.ajax({
-                    url: 'api.php',
+                    url: 'api-jwt.php',
                     type: 'POST',
                     dataType: 'json',
                     data: {
@@ -532,6 +532,39 @@ $(document).ready(function () {
         });
     }
 
+    // Load referral priorities from API
+    function loadReferralPriorities() {
+        $.ajax({
+            url: 'api-jwt.php',
+            type: 'POST',
+            data: { action: 'referral-priority' },
+            success: function (response) {
+                if (response && response.data) {
+                    const priorityContainer = $('.referral-priority');
+
+                    // Clear existing priority options
+                    priorityContainer.empty();
+
+                    // Add new priority options from API
+                    $.each(response.data, function (id, name) {
+                        const isChecked = id === '2' ? 'checked' : ''; // Default to Medium priority
+                        const priorityOption = `
+                            <div class="form-check">
+                                <input class="form-check-input border" type="radio" name="priority" value="${id}" ${isChecked}>
+                                <label class="form-check-label r-text">
+                                    ${name}
+                                </label>
+                            </div>
+                        `;
+                        priorityContainer.append(priorityOption);
+                    });
+                }
+            },
+            error: function () {
+                console.log('Failed to load referral priorities');
+            }
+        });
+    }
 });
 
 //Function to upload multiple files
@@ -696,32 +729,32 @@ function validateForm(event) {
             }
         }
 
-        // fetch('post.php', {
-        //     method: 'POST',
-        //     body: formData
-        // })
-        //     .then(response => response.text())
-        //     .then(data => {
-        //         const parsed = JSON.parse(data);
-        //         const inner = JSON.parse(parsed.response);
-        //         console.log('ID:', inner.id);
-        //         console.log('HTTP Code:', parsed.httpCode);
+        fetch('post.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text())
+            .then(data => {
+                const parsed = JSON.parse(data);
+                const inner = JSON.parse(parsed.response);
+                console.log('ID:', inner.id);
+                console.log('HTTP Code:', parsed.httpCode);
 
-        //         const successCode = parsed.httpCode;
+                const successCode = parsed.httpCode;
 
-        //         if (successCode === 200 || successCode === 201) {
-        //             sessionStorage.setItem('successMessage', inner.message);
-        //             allUploadedFiles = [];
-        //             $('#attachmentPreview').empty();
-        //             window.location.href = 'qr.php?id=' + inner.id;
-        //         } else {
-        //             console.log('Failed:', inner.message);
-        //         }
+                if (successCode === 200 || successCode === 201) {
+                    sessionStorage.setItem('successMessage', inner.message);
+                    allUploadedFiles = [];
+                    $('#attachmentPreview').empty();
+                    // window.location.href = 'qr.php?id=' + inner.id;
+                } else {
+                    console.log('Failed:', inner.message);
+                }
 
-        //     })
-        //     .catch(error => {
-        //         logError(new Error('Form submission error'), { context: 'validateForm', error: error.message });
-        //     });
+            })
+            .catch(error => {
+                logError(new Error('Form submission error'), { context: 'validateForm', error: error.message });
+            });
 
     }
 }

@@ -346,6 +346,7 @@ function getReferralStatus($staff_id)
 function getReferralPriority($staff_id)
 {
     $result = getApiDataWithJWT('library/priority', null, 'GET', $staff_id);
+
     if (!$result['success']) {
         return array();
     }
