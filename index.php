@@ -20,6 +20,7 @@
 require_once('../lock_adv.php');
 $connect = 1;
 include('../common/index_adv.php');
+
 ?>
 
 <body>
@@ -121,6 +122,21 @@ include('../common/index_adv.php');
                     style="overflow:hidden; background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <span class="fw-bold text-start pt-3 pb-2" style="font-size:14px;">Filter</span>
 
+                    <!-- Referral Type Filter -->
+                    <div class="d-flex gap-2 pb-2 mb-2">
+                        <span class="fw-bold text-start" style="font-size:12px; align-self:center;">View:</span>
+                        <div class="btn-group" role="group" aria-label="Referral type filter">
+                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all" checked>
+                            <label class="btn btn-outline-primary btn-sm" for="type-all">All</label>
+                            
+                            <input type="radio" class="btn-check" name="referral-type" id="type-sent" value="sent">
+                            <label class="btn btn-outline-primary btn-sm" for="type-sent">Sent</label>
+                            
+                            <input type="radio" class="btn-check" name="referral-type" id="type-received" value="received">
+                            <label class="btn btn-outline-primary btn-sm" for="type-received">Received</label>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between pb-3 mb-2">
                         <div class="d-flex gap-2" style="flex: 1; max-width: 70%;">
                             <select name="filter-business-unit" id="filter-business-unit"
@@ -186,7 +202,7 @@ include('../common/index_adv.php');
 
     <script>
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-        const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
     </script>

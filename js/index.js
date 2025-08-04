@@ -4,10 +4,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // window.FORCE_EMPTY_RESPONSE = true;
     let dashboardData = null;
     let statusMapping = null;
-    
+
     // First, fetch status mapping from getReferralStatus API
     $.ajax({
-        url: 'api.php',
+        url: 'api-jwt.php',
         type: 'POST',
         data: { action: 'referral-status' },
         success: function (response) {
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchDashboardData() {
         $.ajax({
-            url: 'api.php',
+            url: 'api-jwt.php',
             type: 'POST',
             data: { action: 'report-dashboard' },
             success: function (response) {
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (typeof response.data === 'object' && response.data !== null) {
                     if (Object.keys(response.data).length != 0) {
                         dashboardData = response.data;
-                        
+
                         // Update total referral count
                         if (response.data.total_referral !== undefined) {
                             $('#total-referral-count').text(response.data.total_referral);
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             $('#referral-referred-count').text(response.data.status_count['3'] || 0);
                             $('#referral-closed-count').text(response.data.status_count['4'] || 0);
                             $('#referral-not-present-count').text(response.data.status_count['5'] || 0);
-                            
+
                             // Make status items clickable
                             makeStatusItemsClickable(response.data.status_count);
                         }
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             $('#referral-low-count').text(response.data.priority_count['1'] || 0);
                             $('#referral-medium-count').text(response.data.priority_count['2'] || 0);
                             $('#referral-high-count').text(response.data.priority_count['3'] || 0);
-                            
+
                             // Make priority items clickable
                             makePriorityItemsClickable(response.data.priority_count);
                         }
@@ -90,23 +90,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to make status items clickable for filtering
     function makeStatusItemsClickable(statusCount) {
         // Add click handlers for each status
-        $('#referral-open-count').parent().css('cursor', 'pointer').off('click').on('click', function() {
+        $('#referral-open-count').parent().css('cursor', 'pointer').off('click').on('click', function () {
             filterTableByStatus('1');
         });
-        
-        $('#referral-progress-count').parent().css('cursor', 'pointer').off('click').on('click', function() {
+
+        $('#referral-progress-count').parent().css('cursor', 'pointer').off('click').on('click', function () {
             filterTableByStatus('2');
         });
-        
-        $('#referral-referred-count').parent().css('cursor', 'pointer').off('click').on('click', function() {
+
+        $('#referral-referred-count').parent().css('cursor', 'pointer').off('click').on('click', function () {
             filterTableByStatus('3');
         });
-        
-        $('#referral-closed-count').parent().css('cursor', 'pointer').off('click').on('click', function() {
+
+        $('#referral-closed-count').parent().css('cursor', 'pointer').off('click').on('click', function () {
             filterTableByStatus('4');
         });
-        
-        $('#referral-not-present-count').parent().css('cursor', 'pointer').off('click').on('click', function() {
+
+        $('#referral-not-present-count').parent().css('cursor', 'pointer').off('click').on('click', function () {
             filterTableByStatus('5');
         });
     }
@@ -114,15 +114,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to make priority items clickable for filtering
     function makePriorityItemsClickable(priorityCount) {
         // Add click handlers for each priority
-        $('#referral-low-count').parent().css('cursor', 'pointer').off('click').on('click', function() {
+        $('#referral-low-count').parent().css('cursor', 'pointer').off('click').on('click', function () {
             filterTableByPriority('1');
         });
-        
-        $('#referral-medium-count').parent().css('cursor', 'pointer').off('click').on('click', function() {
+
+        $('#referral-medium-count').parent().css('cursor', 'pointer').off('click').on('click', function () {
             filterTableByPriority('2');
         });
-        
-        $('#referral-high-count').parent().css('cursor', 'pointer').off('click').on('click', function() {
+
+        $('#referral-high-count').parent().css('cursor', 'pointer').off('click').on('click', function () {
             filterTableByPriority('3');
         });
     }
@@ -135,15 +135,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 globalApplyFilters();
             } else {
                 // If globalApplyFilters is not ready yet, wait for it
-                const checkAndApply = setInterval(function() {
+                const checkAndApply = setInterval(function () {
                     if (typeof globalApplyFilters === 'function') {
                         globalApplyFilters();
                         clearInterval(checkAndApply);
                     }
                 }, 100); // Check every 100ms
-                
+
                 // Clear interval after 5 seconds to prevent infinite loop
-                setTimeout(function() {
+                setTimeout(function () {
                     clearInterval(checkAndApply);
                 }, 5000);
             }
@@ -152,36 +152,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to filter table by priority
     function filterTableByPriority(priorityId) {
-        // Function to apply priority filter
+        // Create a priority filter by directly filtering the data
         function applyPriorityFilter() {
-            if (originalData && originalData.length > 0) {
-                let filteredData = originalData.filter(function(row) {
+            // Get the current referral type data
+            const currentData = window.referralApiData ? window.referralApiData[window.currentReferralType] || [] : originalData;
+            
+            if (currentData && currentData.length > 0) {
+                let filteredData = currentData.filter(function (row) {
                     return String(row.priority) === String(priorityId);
                 });
-                
+
                 // Update the displayed data
                 allData = filteredData;
                 currentPage = 1;
                 if (typeof displayPage === 'function') {
                     displayPage(currentPage);
                 }
+                
+                console.log('Priority filter applied:', priorityId, 'Results:', filteredData.length);
             }
         }
-        
-        // Try to apply filter immediately
-        if (originalData && originalData.length > 0) {
+
+        // Apply filter immediately
+        if (window.referralApiData || (originalData && originalData.length > 0)) {
             applyPriorityFilter();
         } else {
-            // If originalData is not ready yet, wait for it
-            const checkAndApply = setInterval(function() {
-                if (originalData && originalData.length > 0) {
+            // If data is not ready yet, wait for it
+            const checkAndApply = setInterval(function () {
+                if (window.referralApiData || (originalData && originalData.length > 0)) {
                     applyPriorityFilter();
                     clearInterval(checkAndApply);
                 }
             }, 100); // Check every 100ms
-            
+
             // Clear interval after 5 seconds to prevent infinite loop
-            setTimeout(function() {
+            setTimeout(function () {
                 clearInterval(checkAndApply);
             }, 5000);
         }
@@ -251,15 +256,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Get business units from API and display with 0 counts
         $.ajax({
-            url: 'backend.php',
-            type: 'GET',
-            dataType: 'json',
-            data: {
-                action: 'getBusinessUnits'
-            },
+            url: 'api-jwt.php',
+            type: 'POST',
+            data: { action: 'business-units' },
             success: function (response) {
-                if (response && Array.isArray(response)) {
-                    const businessUnitsWithZero = response.map(function (unit) {
+                if (response && response.data && Array.isArray(response.data)) {
+                    const businessUnitsWithZero = response.data.map(function (unit) {
                         return {
                             name: unit.name,
                             count: 0
@@ -303,12 +305,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     //display business unit
     $.ajax({
-        url: 'backend.php',
-        type: 'GET',
-        dataType: 'json',
-        data: {
-            action: 'getBusinessUnits'
-        },
+        url: 'api-jwt.php',
+        type: 'POST',
+        data: { action: 'business-units' },
         success: function (response) {
             var busUnitFrom = $('#filter-business-unit');
 
@@ -318,16 +317,18 @@ document.addEventListener('DOMContentLoaded', function () {
             let isSelected = false;
             let businessUnitId = '';
 
-            $.each(response, function (index, businessUnit) {
-                const selected = businessUnit.staff_department_id == department ? 'selected' : '';
-                if (selected !== '') isSelected = true;
-                if (selected !== '') businessUnitId = businessUnit.id;
+            if (response && response.data && Array.isArray(response.data)) {
+                $.each(response.data, function (index, businessUnit) {
+                    const selected = businessUnit.staff_department_id == department ? 'selected' : '';
+                    if (selected !== '') isSelected = true;
+                    if (selected !== '') businessUnitId = businessUnit.id;
 
-                busUnitFrom.append(
-                    '<option value="' + businessUnit.name + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
-                    businessUnit.name + '</option>'
-                );
-            });
+                    busUnitFrom.append(
+                        '<option value="' + businessUnit.name + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
+                        businessUnit.name + '</option>'
+                    );
+                });
+            }
 
         },
         error: function () {
@@ -475,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Load status options from API
         $.ajax({
-            url: 'api.php',
+            url: 'api-jwt.php',
             type: 'POST',
             data: { action: 'referral-status' },
             success: function (response) {
@@ -500,10 +501,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         $.ajax({
-            url: 'api.php',
+            url: 'api-jwt.php',
             type: 'POST',
             data: { action: 'all-referral' },
             success: function (response) {
+                console.log(response);
                 if (!response || typeof response !== 'object' || !response.data) {
                     logError(new Error('Invalid response format'), { context: 'loadReferralData', response: response });
                     return;
@@ -516,50 +518,54 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('referral-tbl').appendChild(tbody);
                 }
 
-                // Store original data (all referrals)
-                originalData = [...response.data];
+                // Store the full API response structure
+                window.referralApiData = response.data;
                 
+                // Store original data - default to 'all' referrals
+                originalData = response.data.all ? [...response.data.all] : [];
+                
+                // Store current referral type (all, sent, received)
+                window.currentReferralType = 'all';
+
                 // Filter data by current user's department using the department variable
                 if (department && department !== '') {
                     // First, get business units to find the department name
                     $.ajax({
-                        url: 'backend.php',
-                        type: 'GET',
-                        dataType: 'json',
-                        data: {
-                            action: 'getBusinessUnits'
-                        },
-                        success: function (businessUnits) {
+                        url: 'api-jwt.php',
+                        type: 'POST',
+                        data: { action: 'business-units' },
+                        success: function (response) {
                             // Find the business unit name for current department
-                            const userBusinessUnit = businessUnits.find(function(unit) {
+                            const businessUnits = response.data || [];
+                            const userBusinessUnit = businessUnits.find(function (unit) {
                                 return unit.staff_department_id == department;
                             });
-                            
+
                             if (userBusinessUnit) {
                                 // Filter by user's department
-                                allData = response.data.filter(function(row) {
+                                allData = originalData.filter(function (row) {
                                     const fromMatches = row.from_business_unit && row.from_business_unit.toLowerCase() === userBusinessUnit.name.toLowerCase();
                                     const toMatches = row.to_business_unit && row.to_business_unit.toLowerCase() === userBusinessUnit.name.toLowerCase();
                                     return fromMatches || toMatches;
                                 });
                             } else {
                                 // Fallback to all data if department not found
-                                allData = response.data;
+                                allData = originalData;
                             }
-                            
+
                             currentPage = 1;
                             displayPage(currentPage);
                         },
-                        error: function() {
+                        error: function () {
                             // Fallback to all data if business units call fails
-                            allData = response.data;
+                            allData = originalData;
                             currentPage = 1;
                             displayPage(currentPage);
                         }
                     });
                 } else {
                     // No department filter, show all data
-                    allData = response.data;
+                    allData = originalData;
                     currentPage = 1;
                     displayPage(currentPage);
                 }
@@ -588,6 +594,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
 
+                // Add referral type filter functionality
+                const referralTypeFilters = document.querySelectorAll('input[name="referral-type"]');
+                referralTypeFilters.forEach(function(radio) {
+                    radio.addEventListener('change', function() {
+                        if (this.checked) {
+                            window.currentReferralType = this.value;
+                            // Update originalData based on selected type
+                            if (window.referralApiData) {
+                                const selectedData = window.referralApiData[this.value] || [];
+                                originalData = [...selectedData];
+                                // Reset to page 1 and apply current filters
+                                currentPage = 1;
+                                applyFilters();
+                            }
+                        }
+                    });
+                });
+
                 // Add reset filters functionality
                 const resetFiltersBtn = document.getElementById('resetFiltersBtn');
                 if (resetFiltersBtn) {
@@ -596,7 +620,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         // Clear all filter inputs
                         document.getElementById('filter-referral-id').value = '';
-                        
+
+                        // Reset referral type to 'all'
+                        document.getElementById('type-all').checked = true;
+                        window.currentReferralType = 'all';
+                        if (window.referralApiData) {
+                            originalData = [...window.referralApiData.all];
+                        }
+
                         // Reset business unit to user's department (session-based)
                         const businessUnitSelect = document.getElementById('filter-business-unit');
                         const userDepartmentOption = businessUnitSelect.querySelector('option[selected]');
@@ -605,7 +636,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else {
                             businessUnitSelect.value = 'all';
                         }
-                        
+
                         document.getElementById('filter-status').value = '';
                         document.getElementById('filter-date-range').value = '';
 
@@ -616,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Reset to original data and apply business unit filter if needed
                         allData = [...originalData];
                         currentPage = 1;
-                        
+
                         // Apply business unit filter if not 'all'
                         if (businessUnitSelect.value !== 'all') {
                             applyFilters();
@@ -648,20 +679,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Use department-filtered data by getting current user's business unit
                         if (department && department !== '') {
                             $.ajax({
-                                url: 'backend.php',
-                                type: 'GET',
-                                dataType: 'json',
+                                url: 'api-jwt.php',
+                                type: 'POST',
                                 async: false, // Make synchronous to get data immediately
-                                data: {
-                                    action: 'getBusinessUnits'
-                                },
-                                success: function (businessUnits) {
-                                    const userBusinessUnit = businessUnits.find(function(unit) {
+                                data: { action: 'business-units' },
+                                success: function (response) {
+                                    const businessUnits = response.data || [];
+                                    const userBusinessUnit = businessUnits.find(function (unit) {
                                         return unit.staff_department_id == department;
                                     });
-                                    
+
                                     if (userBusinessUnit) {
-                                        startingData = originalData.filter(function(row) {
+                                        startingData = originalData.filter(function (row) {
                                             const fromMatches = row.from_business_unit && row.from_business_unit.toLowerCase() === userBusinessUnit.name.toLowerCase();
                                             const toMatches = row.to_business_unit && row.to_business_unit.toLowerCase() === userBusinessUnit.name.toLowerCase();
                                             return fromMatches || toMatches;
@@ -670,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         startingData = [...originalData];
                                     }
                                 },
-                                error: function() {
+                                error: function () {
                                     startingData = [...originalData];
                                 }
                             });
@@ -681,7 +710,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Business unit is explicitly selected, start from all data
                         startingData = [...originalData];
                     }
-                    
+
                     let filteredData = startingData || [...originalData];
                     console.log('Starting data count:', filteredData.length);
 

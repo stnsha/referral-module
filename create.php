@@ -49,7 +49,7 @@ include('../common/index_adv.php');
                                 <div class="error-message" id="error-location-from" style="color: red;font-size:12px;">
                                 </div>
                             </div>
-                            <div class="col">
+                            <div class="col" style="display: none;">
                                 <select name="assignee_from" id="assignee_from"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Assignee</option>
