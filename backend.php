@@ -170,6 +170,7 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
         $sql = "SELECT 
             r.name,
             s.nama_staff, 
+            s.department,
             CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
             o.code
         FROM staff s
@@ -180,6 +181,7 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
         $sql = "SELECT 
         r.name,
         s.nama_staff, 
+        s.department,
         CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
         o.code
     FROM staff s
@@ -199,7 +201,8 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
             'business_unit' => $row['name'],
             'staff' => $row['nama_staff'],
             'contact' => $row['contact'],
-            'outlet' => $row['code']
+            'outlet' => $row['code'],
+            'department_id' => $row['department']
         );
     }
 

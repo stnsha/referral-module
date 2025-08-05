@@ -53,13 +53,15 @@ $(document).ready(function () {
                 if (rd.external_referral.length < 1) {
                     $('#external-referral-text').hide();
                     //change for production
-                    // rd.staff_id ??= staffId; 
+                    if (rd.staff_id == null) {
+                        $('input[name="updated_recipient_to"]').val(staffId);
+                        rd.staff_id ??= staffId;
+
+                    }
 
                     //testing purposes only
                     // const fakeStaffId = 3333;
                     // rd.staff_id ??= fakeStaffId;
-
-                    // $('input[name="updated_recipient_to"]').val(fakeStaffId);
 
                     //run through staff details
                     getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
@@ -67,6 +69,7 @@ $(document).ready(function () {
                         const businessUnit = sd[0].business_unit;
                         const outlet = sd[0].outlet;
                         const contact = sd[0].contact;
+                        const staff_department_id = sd[0].department_id;
                         const createdAt = rd.created_at;
 
                         //referral history accordion
@@ -149,7 +152,9 @@ $(document).ready(function () {
                                 displayAttachments(rd.attachments, staff, createdAt);
                             }
 
-                        } else {
+                        }
+
+                        if (rd.is_filled != 1 && staff_department_id == department) {
                             //display reply form for next pic
                             displayContent(rd.business_unit_id, '.reply-form');
                             $('.reply-form-container').css('display', 'block');
@@ -190,7 +195,6 @@ $(document).ready(function () {
 
                     var externalReferral = rd.external_referral;
                     $.each(externalReferral, function (index, er) {
-                        console.log(er);
                         organization.val(er.organization);
                         location_organization.val(er.state);
                         referee.val(er.name);

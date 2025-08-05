@@ -1,5 +1,5 @@
 <?php
-require 'api.php';
+require 'api-jwt.php';
 header('Content-Type: application/json');
 
 $data = array();
@@ -102,7 +102,7 @@ $data['attachments'] = $uploadedFiles;
 // exit;
 
 $endpoint = 'referral';
-$response = getApiData($endpoint, $data, 'PUT');
+$response = getApiDataWithJWT($endpoint, $data, 'PUT');
 if (is_array($response) && array_key_exists('ch', $response)) {
     unset($response['ch']);
 }

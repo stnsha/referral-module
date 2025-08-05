@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         },
         error: function (xhr, status, error) {
-            console.log('Error loading status mapping:', error);
+            // console.log('Error loading status mapping:', error);
             // Fallback - still try to load dashboard data
             fetchDashboardData();
         }
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
             type: 'POST',
             data: { action: 'report-dashboard' },
             success: function (response) {
-                console.log(response.data);
+                // console.log(response.data);
                 if (typeof response.data === 'object' && response.data !== null) {
                     if (Object.keys(response.data).length != 0) {
                         dashboardData = response.data;
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             error: function (xhr, status, error) {
-                console.log('Dashboard report error:', error);
+                // console.log('Dashboard report error:', error);
             }
         });
     }
@@ -129,14 +129,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to filter table by status
     function filterTableByStatus(statusId) {
+        // console.log('DEBUG filterTableByStatus: Called with statusId:', statusId);
         if (document.getElementById('filter-status')) {
+            // Set the status filter
             document.getElementById('filter-status').value = statusId;
+
+            // Reset other filters to show all data for this status
+            document.getElementById('filter-referral-id').value = '';
+            document.getElementById('filter-business-unit').value = 'all';
+
+            // Switch to "All" view and use all data
+            document.getElementById('type-all').checked = true;
+            window.currentReferralType = 'all';
+
+            // Use ALL data from API response
+            if (window.referralApiData && window.referralApiData.all) {
+                originalData = [...window.referralApiData.all];
+                allData = [...originalData];
+                // console.log('DEBUG filterTableByStatus: Switched to All view, data length:', originalData.length);
+            }
+
+            // console.log('DEBUG filterTableByStatus: About to apply filters');
             if (typeof globalApplyFilters === 'function') {
                 globalApplyFilters();
             } else {
+                // console.log('DEBUG filterTableByStatus: globalApplyFilters not ready, waiting...');
                 // If globalApplyFilters is not ready yet, wait for it
                 const checkAndApply = setInterval(function () {
                     if (typeof globalApplyFilters === 'function') {
+                        // console.log('DEBUG filterTableByStatus: globalApplyFilters now ready, applying...');
                         globalApplyFilters();
                         clearInterval(checkAndApply);
                     }
@@ -152,43 +173,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to filter table by priority
     function filterTableByPriority(priorityId) {
-        // Create a priority filter by directly filtering the data
-        function applyPriorityFilter() {
-            // Get the current referral type data
-            const currentData = window.referralApiData ? window.referralApiData[window.currentReferralType] || [] : originalData;
-            
-            if (currentData && currentData.length > 0) {
-                let filteredData = currentData.filter(function (row) {
-                    return String(row.priority) === String(priorityId);
-                });
+        // console.log('DEBUG filterTableByPriority: Called with priorityId:', priorityId);
 
-                // Update the displayed data
-                allData = filteredData;
-                currentPage = 1;
-                if (typeof displayPage === 'function') {
-                    displayPage(currentPage);
-                }
-                
-                console.log('Priority filter applied:', priorityId, 'Results:', filteredData.length);
-            }
+        // Reset other filters and switch to All view - same pattern as filterTableByStatus
+        if (document.getElementById('filter-referral-id')) {
+            document.getElementById('filter-referral-id').value = '';
+        }
+        if (document.getElementById('filter-business-unit')) {
+            document.getElementById('filter-business-unit').value = 'all';
+        }
+        if (document.getElementById('filter-status')) {
+            document.getElementById('filter-status').value = '';
         }
 
-        // Apply filter immediately
-        if (window.referralApiData || (originalData && originalData.length > 0)) {
-            applyPriorityFilter();
-        } else {
-            // If data is not ready yet, wait for it
-            const checkAndApply = setInterval(function () {
-                if (window.referralApiData || (originalData && originalData.length > 0)) {
-                    applyPriorityFilter();
-                    clearInterval(checkAndApply);
-                }
-            }, 100); // Check every 100ms
+        // Switch to "All" view and use all data
+        document.getElementById('type-all').checked = true;
+        window.currentReferralType = 'all';
 
-            // Clear interval after 5 seconds to prevent infinite loop
-            setTimeout(function () {
-                clearInterval(checkAndApply);
-            }, 5000);
+        // Use ALL data from API response
+        if (window.referralApiData && window.referralApiData.all) {
+            originalData = [...window.referralApiData.all];
+            // console.log('DEBUG filterTableByPriority: Switched to All view, data length:', originalData.length);
+
+            // Filter by priority
+            let filteredData = originalData.filter(function (row) {
+                return String(row.priority) === String(priorityId);
+            });
+
+            // Update the displayed data
+            allData = filteredData;
+            currentPage = 1;
+            if (typeof displayPage === 'function') {
+                displayPage(currentPage);
+            }
+
+            // console.log('DEBUG filterTableByPriority: Priority filter applied:', priorityId, 'Results:', filteredData.length);
         }
     }
 
@@ -252,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Helper function to handle empty data condition
     function handleEmptyData() {
-        console.log("Handling empty data - displaying zeros");
+        // console.log("Handling empty data - displaying zeros");
 
         // Get business units from API and display with 0 counts
         $.ajax({
@@ -271,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             error: function () {
-                console.log('Error fetching business units for empty data display');
+                // console.log('Error fetching business units for empty data display');
                 // If API fails, show at least 4 empty rows to maintain height
                 $('#business-units-list').empty();
                 for (let i = 0; i < 4; i++) {
@@ -312,19 +331,20 @@ document.addEventListener('DOMContentLoaded', function () {
             var busUnitFrom = $('#filter-business-unit');
 
             // Add default "All" option
-            busUnitFrom.append('<option value="all">All Business Units</option>');
+            busUnitFrom.append('<option value="all">Business Units</option>');
 
             let isSelected = false;
             let businessUnitId = '';
 
             if (response && response.data && Array.isArray(response.data)) {
                 $.each(response.data, function (index, businessUnit) {
-                    const selected = businessUnit.staff_department_id == department ? 'selected' : '';
-                    if (selected !== '') isSelected = true;
-                    if (selected !== '') businessUnitId = businessUnit.id;
+                    // Remove default selection
+                    if (department && businessUnit.staff_department_id == department) {
+                        businessUnitId = businessUnit.id;
+                    }
 
                     busUnitFrom.append(
-                        '<option value="' + businessUnit.name + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
+                        '<option value="' + businessUnit.name + '" data-id="' + businessUnit.id + '">' +
                         businessUnit.name + '</option>'
                     );
                 });
@@ -391,12 +411,23 @@ document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('referral-tbl')) {
 
         function displayPage(page) {
+            // console.log('DEBUG displayPage: Called with page', page);
+            // console.log('DEBUG displayPage: allData length', allData.length);
+            // console.log('DEBUG displayPage: allData content', allData);
+
             const startIndex = (page - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const pageData = allData.slice(startIndex, endIndex);
 
+            // console.log('DEBUG displayPage: pageData length', pageData.length);
+            // console.log('DEBUG displayPage: pageData content', pageData);
+
             // Clear existing rows
-            document.querySelector('#referral-tbl tbody').innerHTML = '';
+            const tbody = document.querySelector('#referral-tbl tbody');
+            // console.log('DEBUG displayPage: tbody element', tbody);
+            if (tbody) {
+                tbody.innerHTML = '';
+            }
 
             // Check if there's no data to display
             if (allData.length === 0) {
@@ -410,8 +441,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Populate table with page data
-            pageData.forEach(function (row) {
+            // console.log('DEBUG displayPage: About to create rows, statusMapping:', statusMapping);
+            pageData.forEach(function (row, index) {
+                // console.log('DEBUG displayPage: Creating row', index, 'for:', row);
                 const tr = document.createElement('tr');
+                const statusText = statusMapping && statusMapping[row.status] ? statusMapping[row.status] : 'Unknown';
+                const statusClass = statusMapping && statusMapping[row.status] ? statusMapping[row.status].toLowerCase().replace(/\s+/g, '-') : 'unknown';
+
+                // console.log('DEBUG displayPage: Status mapping for', row.status, ':', statusText, 'class:', statusClass);
+
                 tr.innerHTML = `
                     <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
                     <td style="font-size:14px;width: 40%;text-align:start;">
@@ -423,14 +461,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         <span ${row.is_external ? 'class="ref-external"' : ''}>${row.is_external ? '(External)' : ''}</span>
                     </td>
                     <td style="font-size:14px;width: 10%;text-align:center;">
-                        <span class="bdg-${row.status.toLowerCase().replace(/\s+/g, '-')}">${row.status}</span>
+                        <span class="bdg-${statusClass}">${statusText}</span>
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
                         <a href="view.php?id=${row.id}" target="_blank" class="btn-referral">View</a>
                         <a href="qr.php?id=${row.id}" target="_blank" class="btn-referral">Generate QR</a>
                     </td>
                 `;
-                document.querySelector('#referral-tbl tbody').appendChild(tr);
+                // console.log('DEBUG displayPage: Created tr element:', tr);
+                const tbody = document.querySelector('#referral-tbl tbody');
+                tbody.appendChild(tr);
+                // console.log('DEBUG displayPage: Appended row to tbody, tbody now has', tbody.children.length, 'rows');
             });
 
             updatePagination();
@@ -505,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function () {
             type: 'POST',
             data: { action: 'all-referral' },
             success: function (response) {
-                console.log(response);
+                // console.log(response);
                 if (!response || typeof response !== 'object' || !response.data) {
                     logError(new Error('Invalid response format'), { context: 'loadReferralData', response: response });
                     return;
@@ -520,54 +561,58 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Store the full API response structure
                 window.referralApiData = response.data;
-                
-                // Store original data - default to 'all' referrals
-                originalData = response.data.all ? [...response.data.all] : [];
-                
-                // Store current referral type (all, sent, received)
-                window.currentReferralType = 'all';
 
-                // Filter data by current user's department using the department variable
-                if (department && department !== '') {
-                    // First, get business units to find the department name
+                // Initialize with all data by default
+                const checkedRadio = document.querySelector('input[name="referral-type"]:checked');
+                const filterType = checkedRadio ? checkedRadio.value : 'all';
+                const selectedData = response.data[filterType] || [];
+                originalData = [...selectedData];
+                window.currentReferralType = filterType;
+
+                // console.log('DEBUG: Checked radio:', checkedRadio ? checkedRadio.value : 'none');
+                // console.log('DEBUG: Filter type:', filterType);
+                // console.log('DEBUG: Selected data length:', selectedData.length);
+                // console.log('DEBUG: Original data length:', originalData.length);
+
+                // FORCE DISPLAY - Apply department filtering if needed and display
+                // console.log('DEBUG: Department variable:', department);
+
+                // Force display the data first
+                allData = originalData;
+                currentPage = 1;
+                displayPage(currentPage);
+                // console.log('DEBUG: Forced display with allData length:', allData.length);
+
+                if (false && department && department !== '') { // Temporarily disabled
+                    // Get business units to find the department name
                     $.ajax({
                         url: 'api-jwt.php',
                         type: 'POST',
                         data: { action: 'business-units' },
-                        success: function (response) {
-                            // Find the business unit name for current department
-                            const businessUnits = response.data || [];
+                        success: function (busResponse) {
+                            const businessUnits = busResponse.data || [];
                             const userBusinessUnit = businessUnits.find(function (unit) {
                                 return unit.staff_department_id == department;
                             });
 
                             if (userBusinessUnit) {
-                                // Filter by user's department
                                 allData = originalData.filter(function (row) {
                                     const fromMatches = row.from_business_unit && row.from_business_unit.toLowerCase() === userBusinessUnit.name.toLowerCase();
                                     const toMatches = row.to_business_unit && row.to_business_unit.toLowerCase() === userBusinessUnit.name.toLowerCase();
                                     return fromMatches || toMatches;
                                 });
                             } else {
-                                // Fallback to all data if department not found
                                 allData = originalData;
                             }
-
                             currentPage = 1;
                             displayPage(currentPage);
                         },
                         error: function () {
-                            // Fallback to all data if business units call fails
                             allData = originalData;
                             currentPage = 1;
                             displayPage(currentPage);
                         }
                     });
-                } else {
-                    // No department filter, show all data
-                    allData = originalData;
-                    currentPage = 1;
-                    displayPage(currentPage);
                 }
 
                 // Add filter functionality for referral ID
@@ -596,17 +641,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Add referral type filter functionality
                 const referralTypeFilters = document.querySelectorAll('input[name="referral-type"]');
-                referralTypeFilters.forEach(function(radio) {
-                    radio.addEventListener('change', function() {
+                referralTypeFilters.forEach(function (radio) {
+                    radio.addEventListener('change', function () {
                         if (this.checked) {
                             window.currentReferralType = this.value;
                             // Update originalData based on selected type
                             if (window.referralApiData) {
                                 const selectedData = window.referralApiData[this.value] || [];
                                 originalData = [...selectedData];
-                                // Reset to page 1 and apply current filters
+                                allData = [...originalData];
+                                // Reset to page 1 and clear any active filters when switching views
                                 currentPage = 1;
-                                applyFilters();
+
+                                // Clear filters when switching referral types (unless switching to "all")
+                                if (this.value !== 'all') {
+                                    document.getElementById('filter-referral-id').value = '';
+                                    document.getElementById('filter-business-unit').value = 'all';
+                                    document.getElementById('filter-status').value = '';
+                                    if (document.getElementById('filter-date-range')) {
+                                        document.getElementById('filter-date-range').value = '';
+                                    }
+                                }
+
+                                displayPage(currentPage);
                             }
                         }
                     });
@@ -616,12 +673,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const resetFiltersBtn = document.getElementById('resetFiltersBtn');
                 if (resetFiltersBtn) {
                     resetFiltersBtn.addEventListener('click', function () {
-                        console.log('Resetting all filters');
+                        // console.log('Resetting all filters');
 
                         // Clear all filter inputs
                         document.getElementById('filter-referral-id').value = '';
 
-                        // Reset referral type to 'all'
+                        // Reset referral type to 'all' to maintain consistency with filtering
                         document.getElementById('type-all').checked = true;
                         window.currentReferralType = 'all';
                         if (window.referralApiData) {
@@ -655,7 +712,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             displayPage(currentPage);
                         }
 
-                        console.log('Filters reset, showing data for department:', businessUnitSelect.value, allData.length, 'items');
+                        // console.log('Filters reset, showing data for department:', businessUnitSelect.value, allData.length, 'items');
                     });
                 }
 
@@ -666,16 +723,41 @@ document.addEventListener('DOMContentLoaded', function () {
                     const selectedStatus = document.getElementById('filter-status').value;
                     const dateRange = document.getElementById('filter-date-range').value;
 
-                    console.log('Applying filters:', {
-                        referralId: referralId,
-                        selectedBusinessUnit: selectedBusinessUnit,
-                        selectedStatus: selectedStatus,
-                        dateRange: dateRange
-                    });
+                    // console.log('Applying filters:', {
+                    //     referralId: referralId,
+                    //     selectedBusinessUnit: selectedBusinessUnit,
+                    //     selectedStatus: selectedStatus,
+                    //     dateRange: dateRange
+                    // });
 
-                    // Start from department-filtered data if business unit is not explicitly selected
+                    // Check if any filter is being used (excluding default "all" values)
+                    const hasActiveFilters = referralId !== '' ||
+                        (selectedBusinessUnit !== '' && selectedBusinessUnit !== 'all') ||
+                        selectedStatus !== '' ||
+                        dateRange !== '';
+
+                    // console.log('DEBUG applyFilters: hasActiveFilters:', hasActiveFilters);
+
+                    // If any filter is active, switch to "All" view and use all data
+                    if (hasActiveFilters) {
+                        // console.log('DEBUG applyFilters: Switching to All view for filtering');
+                        document.getElementById('type-all').checked = true;
+                        window.currentReferralType = 'all';
+
+                        // Use ALL data from API response
+                        if (window.referralApiData && window.referralApiData.all) {
+                            originalData = [...window.referralApiData.all];
+                            // console.log('DEBUG applyFilters: Using all data, length:', originalData.length);
+                        }
+                    }
+
+                    // When status filter is active, use ALL data without department filtering
+                    // This ensures status cards show all referrals across departments
                     let startingData;
-                    if (selectedBusinessUnit === '' || selectedBusinessUnit === 'all') {
+                    if (selectedStatus !== '') {
+                        // console.log('DEBUG: Status filter active, using ALL data without department filtering');
+                        startingData = [...originalData];
+                    } else if (selectedBusinessUnit === '' || selectedBusinessUnit === 'all') {
                         // Use department-filtered data by getting current user's business unit
                         if (department && department !== '') {
                             $.ajax({
@@ -712,61 +794,74 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     let filteredData = startingData || [...originalData];
-                    console.log('Starting data count:', filteredData.length);
+                    // console.log('Starting data count:', filteredData.length);
 
                     // Filter by referral ID
                     if (referralId !== '') {
-                        console.log('Filtering by referral ID:', referralId);
+                        // console.log('Filtering by referral ID:', referralId);
                         filteredData = filteredData.filter(function (row) {
                             const matches = row.ref_id && row.ref_id.toLowerCase().includes(referralId);
                             if (matches) {
-                                console.log('Referral ID match:', row.ref_id);
+                                // console.log('Referral ID match:', row.ref_id);
                             }
                             return matches;
                         });
-                        console.log('After referral ID filter:', filteredData.length);
+                        // console.log('After referral ID filter:', filteredData.length);
                     }
 
                     // Filter by business unit
                     if (selectedBusinessUnit !== '' && selectedBusinessUnit !== 'all') {
-                        console.log('Filtering by business unit:', selectedBusinessUnit);
+                        // console.log('Filtering by business unit:', selectedBusinessUnit);
                         filteredData = filteredData.filter(function (row) {
-                            // Check both from_business_unit and to_business_unit
+                            // Check only from_business_unit
                             const fromMatches = row.from_business_unit && row.from_business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
-                            const toMatches = row.to_business_unit && row.to_business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
-                            const matches = fromMatches || toMatches;
 
-                            if (matches) {
-                                console.log('Business unit match:', fromMatches ? `from: ${row.from_business_unit}` : `to: ${row.to_business_unit}`);
+                            if (fromMatches) {
+                                // console.log('From business unit match:', row.from_business_unit);
                             }
-                            return matches;
+                            return fromMatches;
                         });
-                        console.log('After business unit filter:', filteredData.length);
+                        // console.log('After business unit filter:', filteredData.length);
                     }
 
                     // Filter by status
                     if (selectedStatus !== '') {
-                        console.log('Filtering by status:', selectedStatus, 'Type:', typeof selectedStatus);
-                        filteredData = filteredData.filter(function (row) {
-                            console.log('Row status:', row.ori_status, 'Type:', typeof row.ori_status);
-                            const matches = String(row.ori_status) === String(selectedStatus);
+                        // console.log('=== STATUS FILTER DEBUG ===');
+                        // console.log('Filtering by status:', selectedStatus, 'Type:', typeof selectedStatus);
+                        // console.log('Data before status filter:', filteredData.length);
+
+                        filteredData = filteredData.filter(function (row, index) {
+                            // console.log(`Row ${index}:`, {
+                            //     id: row.id,
+                            //     ref_id: row.ref_id,
+                            //     status: row.status,
+                            //     statusType: typeof row.status,
+                            //     selectedStatus: selectedStatus,
+                            //     selectedStatusType: typeof selectedStatus,
+                            //     stringStatus: String(row.status),
+                            //     stringSelected: String(selectedStatus),
+                            //     comparison: String(row.status) === String(selectedStatus)
+                            // });
+
+                            const matches = String(row.status) === String(selectedStatus);
                             if (matches) {
-                                console.log('Status match:', row.ori_status);
+                                // console.log('✅ STATUS MATCH FOUND:', row.ref_id, 'status:', row.status);
                             }
                             return matches;
                         });
-                        console.log('After status filter:', filteredData.length);
+                        // console.log('=== END STATUS FILTER DEBUG ===');
+                        // console.log('After status filter:', filteredData.length);
                     }
 
                     // Filter by date range
                     if (dateRange && dateRange.includes(' - ')) {
-                        console.log('Filtering by date range:', dateRange);
+                        // console.log('Filtering by date range:', dateRange);
                         const dates = dateRange.split(' - ');
                         // Parse YYYY-MM-DD format from date picker
                         const startDate = new Date(dates[0]);
                         const endDate = new Date(dates[1]);
 
-                        console.log('Date range:', startDate, 'to', endDate);
+                        // console.log('Date range:', startDate, 'to', endDate);
 
                         // Function to parse custom date format "8 July 2025, Tuesday"
                         function parseCustomDate(dateStr) {
@@ -798,9 +893,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         filteredData = filteredData.filter(function (row) {
-                            const rowDate = parseCustomDate(row.created_at || row.date || row.timestamp);
+                            // Try ori_created_at first (ISO format), then fall back to created_at
+                            let rowDate;
+                            if (row.ori_created_at) {
+                                rowDate = new Date(row.ori_created_at);
+                            } else {
+                                rowDate = parseCustomDate(row.created_at || row.date || row.timestamp);
+                            }
                             if (!rowDate) {
-                                console.log('Invalid row date:', row.created_at);
+                                // console.log('Invalid row date:', row.created_at);
                                 return false;
                             }
 
@@ -809,27 +910,27 @@ document.addEventListener('DOMContentLoaded', function () {
                             const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
                             const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
 
-                            console.log('Comparing dates:', {
-                                rowDate: rowDateOnly.toDateString(),
-                                startDate: startDateOnly.toDateString(),
-                                endDate: endDateOnly.toDateString(),
-                                originalRowDate: row.created_at
-                            });
+                            // console.log('Comparing dates:', {
+                            //     rowDate: rowDateOnly.toDateString(),
+                            //     startDate: startDateOnly.toDateString(),
+                            //     endDate: endDateOnly.toDateString(),
+                            //     originalRowDate: row.created_at
+                            // });
 
                             const isInRange = rowDateOnly >= startDateOnly && rowDateOnly <= endDateOnly;
                             if (isInRange) {
-                                console.log('Date match:', row.created_at, 'parsed as:', rowDate.toDateString());
+                                // console.log('Date match:', row.created_at, 'parsed as:', rowDate.toDateString());
                             }
                             return isInRange;
                         });
-                        console.log('After date filter:', filteredData.length);
+                        // console.log('After date filter:', filteredData.length);
                     }
 
                     // Update display with filtered data
                     allData = filteredData;
                     currentPage = 1;
                     displayPage(currentPage);
-                    console.log('Final filtered data count:', filteredData.length);
+                    // console.log('Final filtered data count:', filteredData.length);
                 }
 
                 // Assign to global variable so date picker can access it
@@ -1009,28 +1110,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // // Initialize chart with default data if no AJAX call succeeds
     // initChart();
 
-    // Initialize date range picker
-    $('#filter-date-range').daterangepicker({
-        autoUpdateInput: false,
-        locale: {
-            cancelLabel: 'Clear',
-            format: 'DD/MM/YYYY'
-        }
-    });
-
-    $('#filter-date-range').on('apply.daterangepicker', function (ev, picker) {
-        $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format('DD/MM/YYYY'));
-        if (typeof globalApplyFilters === 'function') {
-            globalApplyFilters();
-        }
-    });
-
-    $('#filter-date-range').on('cancel.daterangepicker', function (ev, picker) {
-        $(this).val('');
-        if (typeof globalApplyFilters === 'function') {
-            globalApplyFilters();
-        }
-    });
+    // Date range picker is already initialized above - removed duplicate
 
 });
 
