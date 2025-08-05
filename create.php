@@ -109,19 +109,19 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                             <div class="col">
+                                <select name="referee" id="referee" class="form-select form-select-sm text-capitalize">
+                                    <option value="">Recipient</option>
+                                </select>
+                                <div class="error-message" id="error-referee" style="color: red;font-size:12px;">
+                                </div>
+                            </div>
+                            <div class="col">
                                 <select name="location_organization" id="location_organization"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Location</option>
                                 </select>
                                 <div class="error-message" id="error-location-organization"
                                     style="color: red;font-size:12px;">
-                                </div>
-                            </div>
-                            <div class="col">
-                                <select name="referee" id="referee" class="form-select form-select-sm text-capitalize">
-                                    <option value="">Recipient</option>
-                                </select>
-                                <div class="error-message" id="error-referee" style="color: red;font-size:12px;">
                                 </div>
                             </div>
                         </div>
@@ -317,6 +317,7 @@ include('../common/index_adv.php');
         <script>
             const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
             const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+            const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
         </script>
         <script src="js/errorLogger.js"></script>
         <script src="js/create.js"></script>

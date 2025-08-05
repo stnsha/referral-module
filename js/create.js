@@ -17,14 +17,53 @@ $(document).ready(function () {
 
             let isSelected = false;
             let businessUnitId = '';
+            console.log('DEBUG: API Response:', response.data);
+            console.log('DEBUG: Staff Position:', staffPosition);
+            console.log('DEBUG: Staff Deparment:', department);
+            console.log('DEBUG: Is Audiologist?', staffPosition.toLowerCase().includes('audiologist'));
 
             $.each(response.data, function (index, businessUnit) {
-                const selected = businessUnit.staff_department_id == department ? 'selected' : '';
-                if (selected !== '') isSelected = true;
-                if (selected !== '') businessUnitId = businessUnit.id;
+                let selected = '';
+                console.log('DEBUG: Processing business unit:', businessUnit);
+
+                // Special logic for department 1 only (Audiology/Pharmacy department)
+                if (department == 1) {
+                    console.log('DEBUG: Department 1 detected, using position-based logic');
+                    // Check if staff position contains 'audiologist' (any type)
+                    if (staffPosition.toLowerCase().includes('audiologist')) {
+                        console.log('DEBUG: Audiologist detected, looking for Audiology unit');
+                        // Audiologist -> assign to Alpro Audiology (ID = 1)
+                        if (businessUnit.id === 1) {
+                            console.log('DEBUG: Found Audiology unit, selecting it');
+                            selected = 'selected';
+                            businessUnitId = businessUnit.id;
+                            isSelected = true;
+                        }
+                    } else {
+                        console.log('DEBUG: Non-audiologist detected, looking for Pharmacy unit');
+                        // Not audiologist -> assign to Alpro Pharmacy (ID = 5) 
+                        if (businessUnit.id === 5 && businessUnit.name.toLowerCase().includes('pharmacy')) {
+                            console.log('DEBUG: Found Pharmacy unit, selecting it');
+                            selected = 'selected';
+                            businessUnitId = businessUnit.id;
+                            isSelected = true;
+                        }
+                    }
+                } else {
+                    console.log('DEBUG: Department', department, 'detected, using department-based logic');
+                    // For other departments, match by staff_department_id
+                    if (businessUnit.staff_department_id == department) {
+                        console.log('DEBUG: Found matching department unit:', businessUnit.name);
+                        selected = 'selected';
+                        businessUnitId = businessUnit.id;
+                        isSelected = true;
+                    }
+                }
+
+                console.log('DEBUG: Selected value for', businessUnit.name, ':', selected);
 
                 busUnitFrom.append(
-                    '<option value="' + businessUnit.staff_department_id + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
+                    '<option value="' + businessUnit.id + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
                     businessUnit.name + '</option>'
                 );
             });
@@ -32,12 +71,17 @@ $(document).ready(function () {
             if (isSelected) {
                 busUnitFrom.prop('disabled', true);
                 $('input[name="business_unit_id_from"]').val(businessUnitId);
+                // Set dropdown to the selected business unit ID
+                busUnitFrom.val(businessUnitId);
+                console.log('DEBUG: Setting dropdown value to:', businessUnitId);
+            } else {
+                // Fallback to department if no specific selection made
+                busUnitFrom.val(department);
             }
 
             displayReferredFrom(businessUnitId);
             displayContent(businessUnitId);
 
-            busUnitFrom.val(department);
             busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
 
             var busUnitTo = $('#business_unit_to');
@@ -55,6 +99,7 @@ $(document).ready(function () {
         }
     });
 
+    // For Referred From
     // For Referred From
     function displayReferredFrom(businessUnitId) {
         const selectedOption = $(this).find(':selected');
@@ -147,6 +192,7 @@ $(document).ready(function () {
             $('#location_from').empty().append('<option value="">Location</option>');
         }
     }
+
 
     $('#location_from').change(function () {
         var locationId = $(this).val();

@@ -16,6 +16,9 @@ if ($status == 5) {
     $status_note = isset($_POST['status_note']) ? $_POST['status_note'] : null;
 }
 
+$referral_reason = isset($_POST['referral_reason']) ? $_POST['referral_reason'] : null;
+$referral_condition = isset($_POST['referral_condition']) ? $_POST['referral_condition'] : null;
+$medical_history = isset($_POST['medical_history']) ? $_POST['medical_history'] : null;
 $additional_remarks_reply = isset($_POST['additional_remarks_reply']) ? $_POST['additional_remarks_reply'] : null;
 
 if (isset($_POST['refer_another']) && $_POST['refer_another'] === 'on') {
@@ -23,18 +26,12 @@ if (isset($_POST['refer_another']) && $_POST['refer_another'] === 'on') {
     $refer_business_unit = isset($_POST['refer_business_unit_id']) ? $_POST['refer_business_unit_id'] : null;
     $refer_location = isset($_POST['refer_location']) ? $_POST['refer_location'] : null;
     $refer_to = isset($_POST['refer_to']) ? $_POST['refer_to'] : null;
-    $referral_reason = isset($_POST['referral_reason']) ? $_POST['referral_reason'] : null;
-    $referral_condition = isset($_POST['referral_condition']) ? $_POST['referral_condition'] : null;
-    $medical_history = isset($_POST['medical_history']) ? $_POST['medical_history'] : null;
     $additional_remarks_refer = isset($_POST['additional_remarks_refer']) ? $_POST['additional_remarks_refer'] : null;
 
     $data['refer_another'] = array(
         'refer_business_unit' => $refer_business_unit,
         'refer_location' => $refer_location,
         'refer_to' => $refer_to,
-        'referral_reason' => $referral_reason,
-        'referral_condition' => $referral_condition,
-        'medical_history' => $medical_history,
         'additional_remarks_refer' => $additional_remarks_refer,
     );
 }
@@ -45,6 +42,9 @@ $data['referral'] = array(
     'business_unit_id_reply' => $bu_id_reply,
     'status' => $status,
     'status_note' => $status_note,
+    'referral_reason' => $referral_reason,
+    'referral_condition' => $referral_condition,
+    'medical_history' => $medical_history,
     'additional_remarks' => $additional_remarks_reply
 );
 
