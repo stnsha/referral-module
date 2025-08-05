@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
                     <td style="font-size:14px;width: 40%;text-align:start;">
                         ${row.reason}<br>
-                        <span class="text-muted fst-italic r-text">${row.is_external ? 'External: ${row.to_business_unit}' : ''}</span>
+                        <span class="text-muted fst-italic r-text">${row.is_external ? 'External: ' + row.to_business_unit : ''}</span>
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
                         <span>${row.from_business_unit}</span>

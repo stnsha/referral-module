@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     //load functions
     loadBusinessUnits();
     loadStatus();
+    loadReferralPriorities();
     loadMonths();
     loadYears();
 
@@ -51,25 +52,48 @@ document.addEventListener('DOMContentLoaded', function () {
 function loadBusinessUnits() {
     //display business unit
     $.ajax({
-        url: 'backend.php',
-        type: 'GET',
-        dataType: 'json',
-        data: {
-            action: 'getBusinessUnits'
-        },
+        url: 'api-jwt.php',
+        type: 'POST',
+        data: { action: 'business-units' },
         success: function (response) {
             var busUnitFrom = $('#filter-business-unit');
 
             // Add default "All" option
             busUnitFrom.append('<option value="all">Select Business Unit</option>');
+            busUnitFrom.prop('disabled', true); // disable the dropdown
 
             let isSelected = false;
             let businessUnitId = '';
 
-            $.each(response, function (index, businessUnit) {
-                const selected = businessUnit.staff_department_id == department ? 'selected' : '';
-                if (selected !== '') isSelected = true;
-                if (selected !== '') businessUnitId = businessUnit.id;
+            $.each(response.data, function (index, businessUnit) {
+                let selected = '';
+
+                // Special logic for department 1 only (Audiology/Pharmacy department)
+                if (department == 1) {
+                    // Check if staff position contains 'audiologist' (any type)
+                    if (staffPosition.toLowerCase().includes('audiologist')) {
+                        // Audiologist -> assign to Alpro Audiology (ID = 1)
+                        if (businessUnit.id === 1) {
+                            selected = 'selected';
+                            businessUnitId = businessUnit.id;
+                            isSelected = true;
+                        }
+                    } else {
+                        // Not audiologist -> assign to Alpro Pharmacy (ID = 5) 
+                        if (businessUnit.id === 5 && businessUnit.name.toLowerCase().includes('pharmacy')) {
+                            selected = 'selected';
+                            businessUnitId = businessUnit.id;
+                            isSelected = true;
+                        }
+                    }
+                } else {
+                    // For other departments, match by staff_department_id
+                    if (businessUnit.staff_department_id == department) {
+                        selected = 'selected';
+                        businessUnitId = businessUnit.id;
+                        isSelected = true;
+                    }
+                }
 
                 busUnitFrom.append(
                     '<option value="' + businessUnit.name + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
@@ -125,11 +149,10 @@ function loadLocations(businessUnitId) {
 // Load status options from API
 function loadStatus() {
     $.ajax({
-        url: 'api.php',
+        url: 'api-jwt.php',
         type: 'POST',
         data: { action: 'referral-status' },
         success: function (response) {
-            // console.log(response);
             const statusSelect = $('#filter-status');
             if (statusSelect.length && response && response.data) {
                 // Clear existing options
@@ -144,10 +167,38 @@ function loadStatus() {
             }
         },
         error: function (xhr, status, error) {
-            logError(new Error('Error loading status options'), { context: 'loadStatus', status: status, error: error, responseText: xhr.responseText });
+            logError(new Error('Error loading status options'), { context: 'loadStatusOptions', status: status, error: error, responseText: xhr.responseText });
         }
     });
 }
+
+// Load referral priorities from API
+function loadReferralPriorities() {
+    $.ajax({
+        url: 'api-jwt.php',
+        type: 'POST',
+        data: { action: 'referral-priority' },
+        success: function (response) {
+            const priorityContainer = $('#filter-priority');
+
+            if (priorityContainer.length && response && response.data) {
+                // Clear existing options
+                priorityContainer.html('<option value="">All Priority</option>');
+
+                // Add status options from object format {"1": "Open", "2": "In Progress", etc.}
+                Object.keys(response.data).forEach(function (key) {
+                    priorityContainer.append(
+                        '<option value="' + key + '">' + response.data[key] + '</option>'
+                    );
+                });
+            }
+        },
+        error: function () {
+            console.log('Failed to load referral priorities');
+        }
+    });
+}
+
 // Function to load month options
 function loadMonths() {
     const months = [
@@ -241,9 +292,92 @@ function generateReport() {
         is_referred: false
     };
 
+    // Function to download base64 file (client-side approach - recommended)
+    function downloadBase64File(base64Data, filename, mimeType) {
+        try {
+            // Remove data URL prefix if present (data:application/...;base64,)
+            const base64String = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+
+            // Decode base64 to binary
+            const binaryString = atob(base64String);
+            const bytes = new Uint8Array(binaryString.length);
+
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            // Create blob with proper MIME type
+            const blob = new Blob([bytes], { type: mimeType || 'application/octet-stream' });
+
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+
+            // Cleanup
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            console.log('File download initiated:', filename);
+        } catch (error) {
+            logError(new Error('Client-side download failed'), {
+                context: 'downloadBase64File',
+                filename: filename,
+                error: error.message
+            });
+
+            // Fallback to server-side download
+            console.log('Falling back to server-side download...');
+            downloadBase64FileServerSide(base64Data, filename, mimeType);
+        }
+    }
+
+    // Alternative server-side download function
+    function downloadBase64FileServerSide(base64Data, filename, mimeType) {
+        $.ajax({
+            url: 'download-file.php',
+            type: 'POST',
+            data: JSON.stringify({
+                base64: base64Data,
+                filename: filename,
+                type: mimeType
+            }),
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function (response) {
+                if (response.success && response.download_url) {
+                    // Create download link and trigger download
+                    const link = document.createElement('a');
+                    link.href = response.download_url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    console.log('Server-side download initiated:', filename);
+                } else {
+                    throw new Error(response.error || 'Server-side download failed');
+                }
+            },
+            error: function (xhr, status, error) {
+                logError(new Error('Server-side download failed'), {
+                    context: 'downloadBase64FileServerSide',
+                    filename: filename,
+                    status: status,
+                    error: error
+                });
+                alert('Download failed: ' + error);
+            }
+        });
+    }
+
     // Make API call to fetch report data
     $.ajax({
-        url: 'api.php',
+        url: 'api-jwt.php',
         type: 'POST',
         data: {
             action: 'get-report',
@@ -256,17 +390,16 @@ function generateReport() {
             $('#viewReportbtn').prop('disabled', true);
         },
         success: function (response) {
-            if (response && response.success === true) {
-                const url = response.data.download_url;
-                if (response.data && url) {
-                    console.log('Download URL available:', url);
-                    // Auto-download the report file
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = '';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+            console.log(response.data);
+
+            if (response && response.success === true && response.data) {
+                // Handle base64 file response
+                if (response.data.base64 && response.data.filename) {
+                    console.log('Base64 file data received:', response.data.filename);
+                    downloadBase64File(response.data.base64, response.data.filename, response.data.type);
+                } else {
+                    logError(new Error('Invalid file data received'), { context: 'generateReport', data: response.data });
+                    alert('Invalid file data received from server');
                 }
             } else {
                 // Handle different types of errors
@@ -275,7 +408,7 @@ function generateReport() {
                 // Log user-friendly error message
                 let errorMessage = response.message || 'Unknown error occurred';
 
-                if (response.details.http_code === 404) {
+                if (response.details && response.details.http_code === 404) {
                     alert('No referral report found based on the filter');
                     return;
                 }
@@ -291,6 +424,7 @@ function generateReport() {
 
                 // Log error instead of showing alert
                 logError(new Error('Report Generation Failed'), { context: 'generateReport', errorMessage: errorMessage });
+                alert('Report generation failed: ' + errorMessage);
             }
         },
         error: function (xhr, status, error) {
@@ -325,14 +459,14 @@ function generateReport() {
 // Function to display report data
 function loadSummary(businessUnitId) {
     $.ajax({
-        url: 'api.php',
+        url: 'api-jwt.php',
         type: 'POST',
         data: {
             action: 'get-summary-report',
             business_unit_id: businessUnitId
         },
         success: function (response) {
-            console.log('API Response:', response);
+            // console.log('API Response:', response);
 
             // Handle different response structures
             let data = null;
@@ -353,7 +487,7 @@ function loadSummary(businessUnitId) {
                 console.log('Creating charts with data:', data);
                 createCharts(data);
             } else {
-                logError(new Error('No valid data found in response'), { context: 'loadSummary', response: response });
+                console.log('No valid data found in response', { context: 'loadSummary', response: response });
             }
         },
         error: function (xhr, status, error) {
@@ -402,16 +536,27 @@ function createCharts(data) {
         // Check if Chart.js is loaded
         if (typeof Chart === 'undefined') {
             logError(new Error('Chart.js is not loaded'), { context: 'createCharts' });
+            console.error('Chart.js is not loaded. Please check if the Chart.js script is properly included.');
             return;
         }
+        
+        console.log('Chart.js version:', Chart.version);
+        console.log('Available Chart types:', Chart.registry.plugins._items);
 
         // Status Distribution Chart (Doughnut)
         const statusElement = document.getElementById('statusChart');
-        if (statusElement && data.status) {
+        if (statusElement) {
             console.log('Creating status chart with data:', data.status);
+            // Ensure canvas is visible
+            statusElement.style.display = 'block';
+            statusElement.style.maxWidth = '100%';
+            statusElement.style.height = 'auto';
             const statusCtx = statusElement.getContext('2d');
-            const statusLabels = Object.keys(data.status);
-            const statusValues = Object.values(data.status);
+            
+            // Check if we have valid status data
+            const hasStatusData = data.status && Object.keys(data.status).length > 0;
+            const statusLabels = hasStatusData ? Object.keys(data.status) : ['No Data'];
+            const statusValues = hasStatusData ? Object.values(data.status) : [1];
 
             window.statusChart = new Chart(statusCtx, {
                 type: 'doughnut',
@@ -419,10 +564,10 @@ function createCharts(data) {
                     labels: statusLabels,
                     datasets: [{
                         data: statusValues,
-                        backgroundColor: [
+                        backgroundColor: hasStatusData ? [
                             '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0',
                             '#9966ff', '#ff9f40', '#e83e8c', '#c9cbcf'
-                        ],
+                        ] : ['#e0e0e0'],
                         borderWidth: 2,
                         borderColor: '#fff'
                     }]
@@ -435,22 +580,32 @@ function createCharts(data) {
                     plugins: {
                         legend: {
                             position: 'bottom'
+                        },
+                        tooltip: {
+                            enabled: hasStatusData
                         }
                     }
                 }
             });
             console.log('Status chart created successfully');
         } else {
-            logError(new Error('Status chart element not found or no status data'), { context: 'createCharts', hasElement: !!statusElement, hasData: !!data.status });
+            logError(new Error('Status chart element not found'), { context: 'createCharts', hasElement: !!statusElement });
         }
 
         // Priority Breakdown Chart (Pie)
         const priorityElement = document.getElementById('priorityChart');
-        if (priorityElement && data.priority) {
+        if (priorityElement) {
             console.log('Creating priority chart with data:', data.priority);
+            // Ensure canvas is visible
+            priorityElement.style.display = 'block';
+            priorityElement.style.maxWidth = '100%';
+            priorityElement.style.height = 'auto';
             const priorityCtx = priorityElement.getContext('2d');
-            const priorityLabels = Object.keys(data.priority);
-            const priorityValues = Object.values(data.priority);
+            
+            // Check if we have valid priority data
+            const hasPriorityData = data.priority && Object.keys(data.priority).length > 0;
+            const priorityLabels = hasPriorityData ? Object.keys(data.priority) : ['No Data'];
+            const priorityValues = hasPriorityData ? Object.values(data.priority) : [1];
 
             window.priorityChart = new Chart(priorityCtx, {
                 type: 'pie',
@@ -458,7 +613,9 @@ function createCharts(data) {
                     labels: priorityLabels,
                     datasets: [{
                         data: priorityValues,
-                        backgroundColor: ['#ff6384', '#36a2eb'],
+                        backgroundColor: hasPriorityData ? [
+                            '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0'
+                        ] : ['#e0e0e0'],
                         borderWidth: 2,
                         borderColor: '#fff'
                     }]
@@ -471,20 +628,28 @@ function createCharts(data) {
                     plugins: {
                         legend: {
                             position: 'bottom'
+                        },
+                        tooltip: {
+                            enabled: hasPriorityData
                         }
                     }
                 }
             });
             console.log('Priority chart created successfully');
         } else {
-            logError(new Error('Priority chart element not found or no priority data'), { context: 'createCharts', hasElement: !!priorityElement, hasData: !!data.priority });
+            logError(new Error('Priority chart element not found'), { context: 'createCharts', hasElement: !!priorityElement });
         }
 
         // Sent vs Received Chart (Bar)
         const sentReceivedElement = document.getElementById('sentReceivedChart');
-        if (sentReceivedElement && data.sent_received) {
+        if (sentReceivedElement) {
             console.log('Creating sent/received chart with data:', data.sent_received);
             const sentReceivedCtx = sentReceivedElement.getContext('2d');
+            
+            // Check if we have valid sent/received data
+            const hasSentReceivedData = data.sent_received && (data.sent_received.sent > 0 || data.sent_received.received > 0);
+            const sentValue = data.sent_received ? data.sent_received.sent : 0;
+            const receivedValue = data.sent_received ? data.sent_received.received : 0;
 
             window.sentReceivedChart = new Chart(sentReceivedCtx, {
                 type: 'bar',
@@ -492,9 +657,9 @@ function createCharts(data) {
                     labels: ['Sent', 'Received'],
                     datasets: [{
                         label: 'Referrals',
-                        data: [data.sent_received.sent, data.sent_received.received],
-                        backgroundColor: ['#36a2eb', '#ff6384'],
-                        borderColor: ['#36a2eb', '#ff6384'],
+                        data: hasSentReceivedData ? [sentValue, receivedValue] : [0, 0],
+                        backgroundColor: hasSentReceivedData ? ['#36a2eb', '#ff6384'] : ['#e0e0e0', '#e0e0e0'],
+                        borderColor: hasSentReceivedData ? ['#36a2eb', '#ff6384'] : ['#e0e0e0', '#e0e0e0'],
                         borderWidth: 1
                     }]
                 },
@@ -514,22 +679,28 @@ function createCharts(data) {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            enabled: hasSentReceivedData
                         }
                     }
                 }
             });
             console.log('Sent/Received chart created successfully');
         } else {
-            logError(new Error('Sent/Received chart element not found or no sent_received data'), { context: 'createCharts', hasElement: !!sentReceivedElement, hasData: !!data.sent_received });
+            logError(new Error('Sent/Received chart element not found'), { context: 'createCharts', hasElement: !!sentReceivedElement });
         }
 
         // Location Summary Chart (Bar)
         const locationElement = document.getElementById('locationChart');
-        if (locationElement && data.location_summary) {
+        if (locationElement) {
             console.log('Creating location chart with data:', data.location_summary);
             const locationCtx = locationElement.getContext('2d');
-            const locationLabels = Object.keys(data.location_summary);
-            const locationValues = Object.values(data.location_summary);
+            
+            // Check if we have valid location data
+            const hasLocationData = data.location_summary && Object.keys(data.location_summary).length > 0;
+            const locationLabels = hasLocationData ? Object.keys(data.location_summary) : ['No Data'];
+            const locationValues = hasLocationData ? Object.values(data.location_summary) : [0];
 
             window.locationChart = new Chart(locationCtx, {
                 type: 'bar',
@@ -538,8 +709,8 @@ function createCharts(data) {
                     datasets: [{
                         label: 'Referrals',
                         data: locationValues,
-                        backgroundColor: '#4bc0c0',
-                        borderColor: '#4bc0c0',
+                        backgroundColor: hasLocationData ? '#4bc0c0' : '#e0e0e0',
+                        borderColor: hasLocationData ? '#4bc0c0' : '#e0e0e0',
                         borderWidth: 1
                     }]
                 },
@@ -559,13 +730,16 @@ function createCharts(data) {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            enabled: hasLocationData
                         }
                     }
                 }
             });
             console.log('Location chart created successfully');
         } else {
-            logError(new Error('Location chart element not found or no location_summary data'), { context: 'createCharts', hasElement: !!locationElement, hasData: !!data.location_summary });
+            logError(new Error('Location chart element not found'), { context: 'createCharts', hasElement: !!locationElement });
         }
 
     } catch (error) {

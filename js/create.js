@@ -680,6 +680,48 @@ function handleFilePreview(inputSelector, previewSelector) {
     });
 }
 
+// Function to download PDF from base64 data
+function downloadPdfBase64(base64Data, filename) {
+    try {
+        // Remove data URL prefix if present (data:application/pdf;base64,)
+        const base64String = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+
+        // Decode base64 to binary
+        const binaryString = atob(base64String);
+        const bytes = new Uint8Array(binaryString.length);
+
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        // Create blob with PDF MIME type
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        console.log('PDF download initiated:', filename);
+
+        // Show success message to user
+        alert('External referral submitted successfully! PDF document has been downloaded.');
+
+    } catch (error) {
+        console.error('PDF download failed:', error);
+        alert('Referral submitted successfully, but PDF download failed. Please contact support.');
+    }
+}
+
 //Submission validation
 function validateForm(event) {
     event.preventDefault();
@@ -792,7 +834,20 @@ function validateForm(event) {
                     sessionStorage.setItem('successMessage', inner.message);
                     allUploadedFiles = [];
                     $('#attachmentPreview').empty();
-                    window.location.href = 'qr.php?id=' + inner.id;
+
+                    // Check if external referral with PDF
+                    if (inner.pdf_base64) {
+                        console.log('External referral PDF received, initiating download...');
+                        downloadPdfBase64(inner.pdf_base64, `referral_${inner.id}.pdf`);
+                        setTimeout(function () {
+                            window.location.href = 'index.php';
+                        }, 1000);
+                    } else {
+                        // Internal referral - go to QR page
+                        window.location.href = 'qr.php?id=' + inner.id;
+                    }
+
+
                 } else {
                     console.log('Failed:', inner.message);
                 }

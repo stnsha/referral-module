@@ -1,5 +1,6 @@
 <?php
-ini_set('memory_limit', '1024M');
+// Reduce memory limit since we're optimizing
+ini_set('memory_limit', '512M');
 include 'vendor/phpqrcode/qrlib.php';
 
 $referral_id = $_GET['id'];
@@ -12,57 +13,125 @@ $url = $local_host . $param;
 $filename = 'REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . '.png';
 $filepath = 'img/qr/' . $filename;
 
-$size = 10;
-$margin = 2;
-
-QRcode::png($url, $filepath, QR_ECLEVEL_H, $size, $margin);
-
-// Load QR
-$QR = imagecreatefrompng($filepath);
-
-// Load and resize logo
-$logoPath = 'img/logo.png';
-if (!file_exists($logoPath)) {
-    die('Logo file not found.');
+// Check if QR already exists and is recent (within 1 hour)
+if (file_exists($filepath) && (time() - filemtime($filepath)) < 3600) {
+    // QR code already exists and is recent, skip generation
+} else {
+    // Optimized settings for faster generation
+    $size = 6;  // Reduced from 10 to 6
+    $margin = 1; // Reduced from 2 to 1
+    
+    // Use medium error correction instead of high for better performance
+    QRcode::png($url, $filepath, QR_ECLEVEL_M, $size, $margin);
+    
+    // Check if logo should be added (make it optional for performance)
+    $addLogo = true; // Set to false to skip logo for maximum speed
+    
+    if ($addLogo) {
+        // Load QR
+        $QR = imagecreatefrompng($filepath);
+        
+        // Load and resize logo with optimization
+        $logoPath = 'img/logo.png';
+        if (file_exists($logoPath)) {
+            // Check if we have a cached resized logo
+            $cachedLogoPath = 'img/logo_small.png';
+            
+            if (!file_exists($cachedLogoPath) || (time() - filemtime($cachedLogoPath)) > 86400) {
+                // Check logo file size first to prevent memory issues
+                $logoFileSize = filesize($logoPath);
+                $maxFileSize = 5 * 1024 * 1024; // 5MB limit
+                
+                if ($logoFileSize > $maxFileSize) {
+                    error_log("Logo file too large: " . ($logoFileSize / 1024 / 1024) . "MB. Skipping logo.");
+                } else {
+                    // Get image dimensions without loading the full image
+                    $imageInfo = getimagesize($logoPath);
+                    if ($imageInfo === false) {
+                        error_log("Invalid logo image file: " . $logoPath);
+                    } else {
+                        $logo_width = $imageInfo[0];
+                        $logo_height = $imageInfo[1];
+                        
+                        // Check if dimensions are reasonable
+                        if ($logo_width > 2000 || $logo_height > 2000) {
+                            error_log("Logo dimensions too large: {$logo_width}x{$logo_height}. Skipping logo.");
+                        } else {
+                            // Increase memory limit temporarily for logo processing
+                            ini_set('memory_limit', '1024M');
+                            
+                            $logo = imagecreatefrompng($logoPath);
+                            if ($logo === false) {
+                                error_log("Failed to create image from logo file: " . $logoPath);
+                            } else {
+                                // Create smaller cached logo (max 80px for safety)
+                                $max_logo_size = 80;
+                                $ratio = min($max_logo_size / $logo_width, $max_logo_size / $logo_height);
+                                $new_width = (int)($logo_width * $ratio);
+                                $new_height = (int)($logo_height * $ratio);
+                                
+                                $cached_logo = imagecreatetruecolor($new_width, $new_height);
+                                if ($cached_logo !== false) {
+                                    imagealphablending($cached_logo, false);
+                                    imagesavealpha($cached_logo, true);
+                                    imagecopyresampled($cached_logo, $logo, 0, 0, 0, 0, $new_width, $new_height, $logo_width, $logo_height);
+                                    
+                                    imagepng($cached_logo, $cachedLogoPath, 6); // Lower compression for speed
+                                    imagedestroy($cached_logo);
+                                }
+                                imagedestroy($logo);
+                            }
+                            
+                            // Reset memory limit
+                            ini_set('memory_limit', '512M');
+                        }
+                    }
+                }
+            }
+            
+            // Use cached logo if it exists
+            if (file_exists($cachedLogoPath)) {
+                $logo = imagecreatefrompng($cachedLogoPath);
+                if ($logo !== false) {
+                    $QR_width = imagesx($QR);
+                    $QR_height = imagesy($QR);
+                    $logo_width = imagesx($logo);
+                    $logo_height = imagesy($logo);
+                    
+                    // Smaller logo size for better QR readability
+                    $new_logo_width = min($QR_width * 0.15, $logo_width); // Further reduced to 15%
+                    $new_logo_height = $logo_height * ($new_logo_width / $logo_width);
+                    
+                    // Simplified single-step logo placement
+                    $logo_final = imagecreatetruecolor($new_logo_width, $new_logo_height);
+                    if ($logo_final !== false) {
+                        $white = imagecolorallocate($logo_final, 255, 255, 255);
+                        imagefill($logo_final, 0, 0, $white);
+                        
+                        // Single resample operation
+                        imagecopyresampled($logo_final, $logo, 0, 0, 0, 0, $new_logo_width, $new_logo_height, $logo_width, $logo_height);
+                        
+                        // Center and place logo
+                        $posX = ($QR_width - $new_logo_width) / 2;
+                        $posY = ($QR_height - $new_logo_height) / 2;
+                        imagecopy($QR, $logo_final, $posX, $posY, 0, 0, $new_logo_width, $new_logo_height);
+                        
+                        imagedestroy($logo_final);
+                    }
+                    imagedestroy($logo);
+                }
+            }
+            
+            // Save final image with lower compression for speed
+            imagepng($QR, $filepath, 6); // Reduced from 9 to 6
+            
+            // Cleanup
+            imagedestroy($QR);
+        } else {
+            // Logo not found, just use QR without logo
+        }
+    }
 }
-
-$logo = imagecreatefrompng($logoPath);
-
-$QR_width = imagesx($QR);
-$QR_height = imagesy($QR);
-
-$logo_width = imagesx($logo);
-$logo_height = imagesy($logo);
-
-$new_logo_width = $QR_width * (1 / 3);
-$new_logo_height = $logo_height * ($new_logo_width / $logo_width);
-
-// Step 1: Resize logo with transparency
-$logo_resized_transparent = imagecreatetruecolor($new_logo_width, $new_logo_height);
-imagealphablending($logo_resized_transparent, false);
-imagesavealpha($logo_resized_transparent, true);
-imagecopyresampled($logo_resized_transparent, $logo, 0, 0, 0, 0, $new_logo_width, $new_logo_height, $logo_width, $logo_height);
-
-// Step 2: Create white background behind logo
-$logo_with_white_bg = imagecreatetruecolor($new_logo_width, $new_logo_height);
-$white = imagecolorallocate($logo_with_white_bg, 255, 255, 255);
-imagefill($logo_with_white_bg, 0, 0, $white);
-imagecopy($logo_with_white_bg, $logo_resized_transparent, 0, 0, 0, 0, $new_logo_width, $new_logo_height);
-
-// Step 3: Center the logo
-$posX = ($QR_width - $new_logo_width) / 2;
-$posY = ($QR_height - $new_logo_height) / 2;
-
-imagecopy($QR, $logo_with_white_bg, $posX, $posY, 0, 0, $new_logo_width, $new_logo_height);
-
-// Save final image
-imagepng($QR, $filepath, 9);
-
-// Cleanup
-imagedestroy($QR);
-imagedestroy($logo);
-imagedestroy($logo_resized_transparent);
-imagedestroy($logo_with_white_bg);
 ?>
 <!DOCTYPE html>
 

@@ -51,8 +51,6 @@ include('../common/index_adv.php');
                             <select name="filter-priority" id="filter-priority"
                                 class="form-select form-select-sm text-capitalize">
                                 <option value="">All Priority</option>
-                                <option value="1">High (1 to 2 working days)</option>
-                                <option value="2"> Standard (3 to 5 working days)</option>
                             </select>
                             <select name="filter-month" id="filter-month"
                                 class="form-select form-select-sm text-capitalize">
@@ -156,10 +154,11 @@ include('../common/index_adv.php');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
     <script>
-    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-    const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-    const staff_outlet =
-        <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staff_outlet =
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
     </script>
 
     <script src="js/errorLogger.js"></script>

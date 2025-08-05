@@ -378,6 +378,7 @@ function getReportDashboard($staff_id)
 function getReport($formData, $staff_id)
 {
     $result = getApiDataWithJWT('report', array($formData), 'POST', $staff_id);
+
     $httpCode = $result['httpCode'];
     $decoded = json_decode($result['response'], true);
 
