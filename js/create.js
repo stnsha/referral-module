@@ -763,17 +763,17 @@ function validateForm(event) {
             formData.append('attachments[]', file);
         });
 
-        for (const [key, value] of formData.entries()) {
-            if (value instanceof File) {
-                console.log(`${key}:`, {
-                    name: value.name,
-                    size: value.size + ' bytes',
-                    type: value.type,
-                });
-            } else {
-                console.log(`${key}: ${value}`);
-            }
-        }
+        // for (const [key, value] of formData.entries()) {
+        //     if (value instanceof File) {
+        //         console.log(`${key}:`, {
+        //             name: value.name,
+        //             size: value.size + ' bytes',
+        //             type: value.type,
+        //         });
+        //     } else {
+        //         console.log(`${key}: ${value}`);
+        //     }
+        // }
 
         fetch('post.php', {
             method: 'POST',
@@ -792,7 +792,7 @@ function validateForm(event) {
                     sessionStorage.setItem('successMessage', inner.message);
                     allUploadedFiles = [];
                     $('#attachmentPreview').empty();
-                    // window.location.href = 'qr.php?id=' + inner.id;
+                    window.location.href = 'qr.php?id=' + inner.id;
                 } else {
                     console.log('Failed:', inner.message);
                 }
