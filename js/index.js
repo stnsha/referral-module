@@ -443,6 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Populate table with page data
             // console.log('DEBUG displayPage: About to create rows, statusMapping:', statusMapping);
             pageData.forEach(function (row, index) {
+                console.log(row);
                 // console.log('DEBUG displayPage: Creating row', index, 'for:', row);
                 const tr = document.createElement('tr');
                 const statusText = statusMapping && statusMapping[row.status] ? statusMapping[row.status] : 'Unknown';
@@ -453,15 +454,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 tr.innerHTML = `
                     <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
                     <td style="font-size:14px;width: 40%;text-align:start;">
-                    ${row.reason}<br>
-                    <span class="text-muted fst-italic r-text">From: ${row.from_business_unit}</span> 
+                        ${row.reason}<br>
+                        <span class="text-muted fst-italic r-text">${row.is_external ? 'External: ${row.to_business_unit}' : ''}</span>
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
-                        <span>${row.to_business_unit} </span>
-                        <span ${row.is_external ? 'class="ref-external"' : ''}>${row.is_external ? '(External)' : ''}</span>
+                        <span>${row.from_business_unit}</span>
                     </td>
                     <td style="font-size:14px;width: 10%;text-align:center;">
                         <span class="bdg-${statusClass}">${statusText}</span>
+                        <br><span class="mt-1.5 fw-bold fst-italic r-text">${row.is_external ? '(External)' : ''}</span>
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
                         <a href="view.php?id=${row.id}" target="_blank" class="btn-referral">View</a>

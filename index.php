@@ -182,7 +182,7 @@ include('../common/index_adv.php');
                             <tr>
                                 <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
                                 <th style="font-size:16px;width: 40%;text-align:start;">Referral Reason</th>
-                                <th style="font-size:16px;width: 10%;text-align:start;">Business Unit</th>
+                                <th style="font-size:16px;width: 15%;text-align:start;">Referred Business Unit</th>
                                 <th style="font-size:16px;width: 5%;text-align:center;">Status</th>
                                 <th style="font-size:16px;width: 20%;text-align:start;">Action</th>
                             </tr>

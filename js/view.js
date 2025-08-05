@@ -6,6 +6,68 @@ $(document).ready(function () {
     referAnother();
     $('.refer-form').hide();
 
+    // Function to process accordion content after all async calls complete
+    function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = false) {
+        const { rd, staff, businessUnit, outlet, contact, staff_department_id, createdAt } = queueItem;
+        
+        //display referral info in panel
+        if (rd.referral_reason || rd.referral_condition || rd.medical_history) {
+            panel.append(`
+            <div class="referral-info-section border-bottom pb-3 mb-3">
+                <p class="r-title">Referral Information</p>
+                <div class="mb-2">
+                    <p class="r-text">Reason of Referral</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_reason || 'N/A'}</textarea>
+                </div>
+                <div class="mb-2">
+                    <p class="r-text">Details of Patient's Condition</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_condition || 'N/A'}</textarea>
+                </div>
+                <div class="mb-2">
+                    <p class="r-text">Relevant Medical History</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.medical_history || 'N/A'}</textarea>
+                </div>
+            </div>
+            `);
+        }
+
+        //add title for initial treatment
+        panel.append(`
+            <div class="treatment-section">
+                <p class="r-title">Current/Past Treatment</p>
+            </div>
+        `);
+
+        //display initial treatment
+        initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
+
+        //auto-open only the first (latest) filled accordion
+        const accordionButton = accordion.find('.referral-accordion');
+        const accordionPanel = accordion.find('.referral-panel');
+
+        // Only auto-open the first filled accordion
+        if (shouldAutoOpen) {
+            accordionButton.addClass('active');
+            accordionPanel.css('maxHeight', accordionPanel[0].scrollHeight + 'px');
+        }
+
+        const referralPic = accordion.find('.referral-pic');
+        var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
+        referralPic.html(`
+        <span class="r-title">Submitted by</span><br>
+        <span class="r-text">Name: ${staff} </span><br>
+        <span class="r-text">Contact: ${contact} </span><br>
+        <span class="r-text">Date: ${createdAt} </span><br>
+        <a href="${whatsapp}" target="_blank" style="text-decoration: none;">
+            <img src="img/whatsapp.png" style="width:25px;">
+        </a>
+        `);
+
+        if (rd.attachments.length > 0) {
+            displayAttachments(rd.attachments, staff, createdAt);
+        }
+    }
+
     $.ajax({
         url: 'api-jwt.php',
         type: 'POST',
@@ -42,12 +104,51 @@ $(document).ready(function () {
 
             // Referral Details
             let referralDetails = data.referralDetails;
+            console.log('Raw referralDetails from API:', referralDetails);
+            console.log('Type of referralDetails:', Array.isArray(referralDetails) ? 'Array' : 'Object');
 
-            const sortedDetails = Object.values(referralDetails).sort(function (a, b) {
-                return a.sequence - b.sequence;
+            // Ensure we're working with an array and apply stable sorting
+            const detailsArray = Array.isArray(referralDetails) ? referralDetails : Object.values(referralDetails);
+            
+            const sortedDetails = detailsArray.sort(function (a, b) {
+                // First, sort by is_filled (filled items first)
+                if (a.is_filled !== b.is_filled) {
+                    return b.is_filled - a.is_filled;
+                }
+                // Then by sequence descending for ALL items (latest sequence first)
+                if (a.sequence !== b.sequence) {
+                    return b.sequence - a.sequence;
+                }
+                // If everything else is equal, use staff_id for consistent ordering
+                return a.staff_id - b.staff_id;
             });
+            
+            console.log('Sorted details:', sortedDetails.map(rd => `Sequence: ${rd.sequence}, Filled: ${rd.is_filled}, Staff: ${rd.staff_id}`));
 
             const container = $('#referralHistoryContainer');
+            let firstFilledAccordionOpened = false; // Track if we've opened the first filled accordion
+
+            // Find latest referee (second highest sequence) and latest recipient (highest sequence)
+            // Use all referral details, not just filled ones
+            const allSequences = sortedDetails.map(rd => rd.sequence);
+            const maxSequence = allSequences.length > 0 ? Math.max(...allSequences) : null;
+            const secondMaxSequence = allSequences.length > 1 ?
+                Math.max(...allSequences.filter(seq => seq !== maxSequence)) :
+                maxSequence; // If only one sequence, use it for both from and to
+            console.log('All sequences:', allSequences);
+            console.log('Max sequence (latest recipient):', maxSequence);
+            console.log('Second max sequence (latest referee):', secondMaxSequence);
+            console.log(sortedDetails);
+
+            // Track assignment data for latest referee and recipient
+            let latestRefereeData = null;
+            let latestRecipientData = null;
+            let completedRequests = 0;
+            const totalRequests = sortedDetails.filter(rd => rd.external_referral.length < 1).length;
+            
+            // Store accordion HTML in the correct order
+            const accordionQueue = [];
+            
             $.each(sortedDetails, function (index, rd) {
                 //internal
                 if (rd.external_referral.length < 1) {
@@ -72,6 +173,16 @@ $(document).ready(function () {
                         const staff_department_id = sd[0].department_id;
                         const createdAt = rd.created_at;
 
+                        // Store data for assignment (don't assign immediately)
+                        if (secondMaxSequence && rd.sequence == secondMaxSequence) {
+                            latestRefereeData = { staff, businessUnit, outlet };
+                            console.log('Found latest referee (sequence ' + rd.sequence + '):', staff);
+                        }
+                        if (maxSequence && rd.sequence == maxSequence) {
+                            latestRecipientData = { staff, businessUnit, outlet };
+                            console.log('Found latest recipient (sequence ' + rd.sequence + '):', staff);
+                        }
+
                         //referral history accordion
                         const accordionHTML = `
                         <div class="referral-history">
@@ -91,68 +202,19 @@ $(document).ready(function () {
                         </div>
                         `;
 
-                        if (rd.is_filled == 1) {
-                            //display history if exist
-                            const accordion = $(accordionHTML);
-                            container.append(accordion);
-                            const panel = accordion.find('.referral-panel-item');
+                        // Store accordion data in correct order instead of appending immediately
+                        accordionQueue[index] = {
+                            html: accordionHTML,
+                            rd: rd,
+                            staff: staff,
+                            businessUnit: businessUnit,
+                            outlet: outlet,
+                            contact: contact,
+                            staff_department_id: staff_department_id,
+                            createdAt: createdAt
+                        };
 
-                            //display referral info in panel
-                            if (rd.referral_reason || rd.referral_condition || rd.medical_history) {
-                                panel.append(`
-                                <div class="referral-info-section border-bottom pb-3 mb-3">
-                                    <p class="r-title">Referral Information</p>
-                                    <div class="mb-2">
-                                        <p class="r-text">Reason of Referral</p>
-                                        <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_reason || 'N/A'}</textarea>
-                                    </div>
-                                    <div class="mb-2">
-                                        <p class="r-text">Details of Patient's Condition</p>
-                                        <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_condition || 'N/A'}</textarea>
-                                    </div>
-                                    <div class="mb-2">
-                                        <p class="r-text">Relevant Medical History</p>
-                                        <textarea class="form-control form-control-sm" rows="3" readonly>${rd.medical_history || 'N/A'}</textarea>
-                                    </div>
-                                </div>
-                                `);
-                            }
-
-                            //add title for initial treatment
-                            panel.append(`
-                                <div class="treatment-section">
-                                    <p class="r-title">Current/Past Treatment</p>
-                                </div>
-                            `);
-
-                            //display initial treatment
-                            initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
-
-                            //auto-open accordion
-                            const accordionButton = accordion.find('.referral-accordion');
-                            const accordionPanel = accordion.find('.referral-panel');
-                            accordionButton.addClass('active');
-                            accordionPanel.css('maxHeight', accordionPanel[0].scrollHeight + 'px');
-
-                            const referralPic = accordion.find('.referral-pic');
-                            var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
-                            referralPic.html(`
-                            <span class="r-title">Submitted by</span><br>
-                            <span class="r-text">Name: ${staff} </span><br>
-                            <span class="r-text">
-                                Contact: 
-                                <a href="${whatsapp}" target="_blank">
-                                    <img src="img/whatsapp.png" style="width:25px;">
-                                </a>
-                            </span>
-                        `);
-
-                            //pass object attachments
-                            if (rd.attachments.length > 0) {
-                                displayAttachments(rd.attachments, staff, createdAt);
-                            }
-
-                        }
+                        // All accordion processing moved to processAccordionContent function
 
                         if (rd.is_filled != 1 && staff_department_id == department) {
                             //display reply form for next pic
@@ -160,17 +222,42 @@ $(document).ready(function () {
                             $('.reply-form-container').css('display', 'block');
                         }
 
-                        //assign referred from 
-                        if (rd.sequence == 1) {
-                            assigneeFrom.val(staff);
-                            business_unit_from.val(businessUnit);
-                            location_from.val(outlet);
-                        }
-                        //assign referred to
-                        if (rd.sequence == 2) {
-                            recipientTo.val(staff);
-                            business_unit_to.val(businessUnit);
-                            location_to.val(outlet);
+                        // Increment completed requests counter
+                        completedRequests++;
+                        
+                        // When all requests are complete, assign the form fields and render accordions in order
+                        if (completedRequests === totalRequests) {
+                            // Clear container and add accordions in correct sorted order
+                            container.empty();
+                            
+                            // Process accordions in the correct sorted order
+                            let firstFilledAccordionProcessed = false;
+                            for (let i = 0; i < accordionQueue.length; i++) {
+                                const queueItem = accordionQueue[i];
+                                if (queueItem && queueItem.rd.is_filled == 1) {
+                                    const accordion = $(queueItem.html);
+                                    container.append(accordion);
+                                    const panel = accordion.find('.referral-panel-item');
+                                    
+                                    // Process the accordion content (moved from above)
+                                    processAccordionContent(queueItem, panel, accordion, !firstFilledAccordionProcessed);
+                                    firstFilledAccordionProcessed = true;
+                                }
+                            }
+                            
+                            // Assign form fields
+                            if (latestRefereeData) {
+                                assigneeFrom.val(latestRefereeData.staff);
+                                business_unit_from.val(latestRefereeData.businessUnit);
+                                location_from.val(latestRefereeData.outlet);
+                                console.log('Assigned latest referee:', latestRefereeData.staff);
+                            }
+                            if (latestRecipientData) {
+                                recipientTo.val(latestRecipientData.staff);
+                                business_unit_to.val(latestRecipientData.businessUnit);
+                                location_to.val(latestRecipientData.outlet);
+                                console.log('Assigned latest recipient:', latestRecipientData.staff);
+                            }
                         }
                     });
                 } else {
@@ -211,7 +298,7 @@ $(document).ready(function () {
                 referral_condition_refer.val('');
                 medical_history_refer.val('');
 
-                if (rd.is_filled == 0 && rd.sequence != 2) {
+                if (rd.is_filled == 0 && rd.sequence != maxSequence) {
                     $('.referring-indication-container').show();
                     $('.referring-indication').show();
                     referral_reason_refer.val(rd.referral_reason);
@@ -1133,6 +1220,17 @@ function referralAccordion() {
         const accordion = e.target.closest(".referral-accordion");
 
         if (accordion && !accordion.classList.contains("disabled")) {
+            // Close all other accordions first
+            const allAccordions = document.querySelectorAll(".referral-accordion");
+            allAccordions.forEach(function (otherAccordion) {
+                if (otherAccordion !== accordion) {
+                    otherAccordion.classList.remove("active");
+                    const otherPanel = otherAccordion.nextElementSibling;
+                    otherPanel.style.maxHeight = null;
+                }
+            });
+
+            // Toggle the clicked accordion
             accordion.classList.toggle("active");
 
             const panel = accordion.nextElementSibling;
