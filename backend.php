@@ -161,7 +161,7 @@ function getStaffDetails($staff_id, $location_id, $bu_id)
 {
     global $conn;
 
-    $staff_id = mysqli_real_escape_string($conn, $staff_id);
+    $staff_id = mysqli_real_escape_string($conn, (int)$staff_id);
     $location_id = mysqli_real_escape_string($conn, $location_id);
     $bu_id = mysqli_real_escape_string($conn, $bu_id);
 

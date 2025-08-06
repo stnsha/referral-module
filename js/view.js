@@ -9,7 +9,7 @@ $(document).ready(function () {
     // Function to process accordion content after all async calls complete
     function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = false) {
         const { rd, staff, businessUnit, outlet, contact, staff_department_id, createdAt } = queueItem;
-        
+
         //display referral info in panel
         if (rd.referral_reason || rd.referral_condition || rd.medical_history) {
             panel.append(`
@@ -109,7 +109,7 @@ $(document).ready(function () {
 
             // Ensure we're working with an array and apply stable sorting
             const detailsArray = Array.isArray(referralDetails) ? referralDetails : Object.values(referralDetails);
-            
+
             const sortedDetails = detailsArray.sort(function (a, b) {
                 // First, sort by is_filled (filled items first)
                 if (a.is_filled !== b.is_filled) {
@@ -122,7 +122,7 @@ $(document).ready(function () {
                 // If everything else is equal, use staff_id for consistent ordering
                 return a.staff_id - b.staff_id;
             });
-            
+
             console.log('Sorted details:', sortedDetails.map(rd => `Sequence: ${rd.sequence}, Filled: ${rd.is_filled}, Staff: ${rd.staff_id}`));
 
             const container = $('#referralHistoryContainer');
@@ -144,20 +144,24 @@ $(document).ready(function () {
             let latestRefereeData = null;
             let latestRecipientData = null;
             let completedRequests = 0;
-            const totalRequests = sortedDetails.filter(rd => rd.external_referral.length < 1).length;
-            
+            const totalRequests = sortedDetails.filter(rd => rd.external_referral.length < 1 && !(rd.staff_id == null && rd.is_filled == 0)).length;
+
             // Store accordion HTML in the correct order
             const accordionQueue = [];
-            
+
             $.each(sortedDetails, function (index, rd) {
                 //internal
                 if (rd.external_referral.length < 1) {
                     $('#external-referral-text').hide();
-                    //change for production
-                    if (rd.staff_id == null) {
-                        $('input[name="updated_recipient_to"]').val(staffId);
-                        rd.staff_id ??= staffId;
 
+                    if (rd.staff_id == null && rd.is_filled == 0) {
+                        // Handle unfilled referrals with no assigned staff
+                        // Still need to check if this is the recipient sequence for form population
+                        if (maxSequence && rd.sequence == maxSequence) {
+                            // This is the recipient sequence - show as "To be assigned" or similar
+                            latestRecipientData = { staff: "To be assigned", businessUnit: "", outlet: "" };
+                        }
+                        return true; // Skip accordion creation but continue to next iteration
                     }
 
                     //testing purposes only
@@ -176,11 +180,11 @@ $(document).ready(function () {
                         // Store data for assignment (don't assign immediately)
                         if (secondMaxSequence && rd.sequence == secondMaxSequence) {
                             latestRefereeData = { staff, businessUnit, outlet };
-                            console.log('Found latest referee (sequence ' + rd.sequence + '):', staff);
+                            // console.log('Found latest referee (sequence ' + rd.sequence + '):', staff);
                         }
                         if (maxSequence && rd.sequence == maxSequence) {
                             latestRecipientData = { staff, businessUnit, outlet };
-                            console.log('Found latest recipient (sequence ' + rd.sequence + '):', staff);
+                            // console.log('Found latest recipient (sequence ' + rd.sequence + '):', staff);
                         }
 
                         //referral history accordion
@@ -224,12 +228,12 @@ $(document).ready(function () {
 
                         // Increment completed requests counter
                         completedRequests++;
-                        
+
                         // When all requests are complete, assign the form fields and render accordions in order
                         if (completedRequests === totalRequests) {
                             // Clear container and add accordions in correct sorted order
                             container.empty();
-                            
+
                             // Process accordions in the correct sorted order
                             let firstFilledAccordionProcessed = false;
                             for (let i = 0; i < accordionQueue.length; i++) {
@@ -238,25 +242,25 @@ $(document).ready(function () {
                                     const accordion = $(queueItem.html);
                                     container.append(accordion);
                                     const panel = accordion.find('.referral-panel-item');
-                                    
+
                                     // Process the accordion content (moved from above)
                                     processAccordionContent(queueItem, panel, accordion, !firstFilledAccordionProcessed);
                                     firstFilledAccordionProcessed = true;
                                 }
                             }
-                            
+
                             // Assign form fields
                             if (latestRefereeData) {
                                 assigneeFrom.val(latestRefereeData.staff);
                                 business_unit_from.val(latestRefereeData.businessUnit);
                                 location_from.val(latestRefereeData.outlet);
-                                console.log('Assigned latest referee:', latestRefereeData.staff);
+                                // console.log('Assigned latest referee:', latestRefereeData.staff);
                             }
                             if (latestRecipientData) {
                                 recipientTo.val(latestRecipientData.staff);
                                 business_unit_to.val(latestRecipientData.businessUnit);
                                 location_to.val(latestRecipientData.outlet);
-                                console.log('Assigned latest recipient:', latestRecipientData.staff);
+                                // console.log('Assigned latest recipient:', latestRecipientData.staff);
                             }
                         }
                     });
