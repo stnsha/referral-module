@@ -229,20 +229,39 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
 
     curl_close($ch);
 
-    if ($response === false || ($httpCode !== 200 && $httpCode !== 201 && $httpCode !== 204)) {
+    // Handle HTTP status codes according to API documentation
+    if ($response === false) {
         return array(
             'success' => false,
             'error' => 'API Request Failed',
-            'details' => array(
-                'url' => $url,
-                'http_code' => $httpCode,
-                'curl_error' => $error,
-                'response' => $response
-            ),
-            'response' => $response ?: json_encode(array('error' => 'No response')),
-            'httpCode' => $httpCode
+            'message' => 'cURL error: ' . $error,
+            'response' => json_encode(array('error' => 'No response')),
+            'httpCode' => 0
         );
     }
+
+    // Success codes: 200, 201, 204
+    if ($httpCode === 200 || $httpCode === 201 || $httpCode === 204) {
+        return array(
+            'success' => true,
+            'response' => $response,
+            'httpCode' => $httpCode,
+            'headers' => $headers
+        );
+    }
+
+    // Handle error codes according to API documentation
+    $decodedError = json_decode($response, true);
+    $errorMessage = isset($decodedError['message']) ? $decodedError['message'] : 'API Request Failed';
+
+    return array(
+        'success' => false,
+        'error' => $errorMessage,
+        'message' => $errorMessage,
+        'response' => $response,
+        'httpCode' => $httpCode,
+        'details' => $decodedError
+    );
 
     return array(
         'success' => true,
@@ -250,6 +269,65 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
         'httpCode' => $httpCode,
         'headers' => $headers
     );
+}
+
+/**
+ * Verify JWT token
+ * @param string $token JWT token to verify
+ * @return array Verification result
+ */
+function verifyToken($token)
+{
+    $host = 'http://mytotalhealth.com.my/referral-api/api/';
+    $url = $host . 'auth/verify';
+
+    $data = array(
+        'token' => $token
+    );
+
+    $headers = array(
+        'Accept: application/json',
+        'Content-Type: application/json'
+    );
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        return array(
+            'success' => false,
+            'message' => 'cURL error: ' . $error
+        );
+    }
+
+    $decoded = json_decode($response, true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'valid' => $decoded['valid'],
+            'message' => $decoded['message'],
+            'payload' => isset($decoded['payload']) ? $decoded['payload'] : null
+        );
+    } else {
+        return array(
+            'success' => false,
+            'valid' => false,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Token verification failed'
+        );
+    }
 }
 
 // Wrapper functions for existing API calls
@@ -290,6 +368,21 @@ function createForm($data, $staff_id)
     } else {
         return array('error' => true, 'message' => isset($decoded['message']) ? $decoded['message'] : 'Unknown error');
     }
+}
+
+function getAllForm($recipientBuId, $staff_id)
+{
+    $data = array(
+        'recipientBuId' => (int)$recipientBuId
+    );
+
+    $result = getApiDataWithJWT('form', $data, 'POST', $staff_id);
+
+    if (!$result['success']) {
+        return array();
+    }
+    $decoded = json_decode($result['response'], true);
+    return isset($decoded) ? $decoded : array();
 }
 
 function getFormDetails($business_unit_id, $staff_id)
@@ -427,6 +520,425 @@ function getSummaryReport($business_unit_id, $staff_id)
     return isset($decoded) ? $decoded : array();
 }
 
+/**
+ * Get all external referees
+ * @param int $staff_id Staff ID for authentication
+ * @return array External referees data
+ */
+function getExternalReferees($staff_id)
+{
+    $result = getApiDataWithJWT('external-referees', null, 'GET', $staff_id);
+    if (!$result['success']) {
+        return array();
+    }
+    $decoded = json_decode($result['response'], true);
+    return isset($decoded) ? $decoded : array();
+}
+
+/**
+ * Get single external referee
+ * @param int $referee_id External referee ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array External referee data
+ */
+function getExternalReferee($referee_id, $staff_id)
+{
+    $result = getApiDataWithJWT('external-referees/' . $referee_id, null, 'GET', $staff_id);
+    if (!$result['success']) {
+        return array();
+    }
+    $decoded = json_decode($result['response'], true);
+    return isset($decoded) ? $decoded : array();
+}
+
+/**
+ * Create external referee
+ * @param array $data Referee data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Creation result
+ */
+function createExternalReferee($data, $staff_id)
+{
+    $result = getApiDataWithJWT('external-referees', $data, 'POST', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 201) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'External referee created successfully',
+            'data' => $decoded
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to create external referee'
+        );
+    }
+}
+
+/**
+ * Update external referee
+ * @param int $referee_id External referee ID
+ * @param array $data Updated referee data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Update result
+ */
+function updateExternalReferee($referee_id, $data, $staff_id)
+{
+    $result = getApiDataWithJWT('external-referees/' . $referee_id, $data, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'External referee updated successfully',
+            'data' => $decoded
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update external referee'
+        );
+    }
+}
+
+/**
+ * Delete external referee
+ * @param int $referee_id External referee ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array Deletion result
+ */
+function deleteExternalReferee($referee_id, $staff_id)
+{
+    $result = getApiDataWithJWT('external-referees/' . $referee_id, null, 'DELETE', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 204 || $httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'External referee deleted successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to delete external referee'
+        );
+    }
+}
+
+/**
+ * Create form details
+ * @param array $data Form details data containing form_id and form_details array
+ * @param int $staff_id Staff ID for authentication
+ * @return array Creation result
+ */
+function createFormDetails($data, $staff_id)
+{
+    $result = getApiDataWithJWT('formDetails/create', $data, 'POST', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 201) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Form details created successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to create form details'
+        );
+    }
+}
+
+/**
+ * Get form detail by ID
+ * @param int $detail_id Form detail ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array Form detail data
+ */
+function getFormDetail($detail_id, $staff_id)
+{
+    $result = getApiDataWithJWT('formDetails/' . $detail_id, null, 'GET', $staff_id);
+    if (!$result['success']) {
+        return array();
+    }
+    $decoded = json_decode($result['response'], true);
+    return isset($decoded) ? $decoded : array();
+}
+
+/**
+ * Update form detail
+ * @param int $detail_id Form detail ID
+ * @param array $data Updated form detail data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Update result
+ */
+function updateFormDetail($detail_id, $data, $staff_id)
+{
+    $result = getApiDataWithJWT('formDetails/' . $detail_id, $data, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Form updated successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update form detail'
+        );
+    }
+}
+
+/**
+ * Delete form detail
+ * @param int $detail_id Form detail ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array Deletion result
+ */
+function deleteFormDetail($detail_id, $staff_id)
+{
+    $result = getApiDataWithJWT('formDetails/' . $detail_id, null, 'DELETE', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 204 || $httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Form deleted successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to delete form detail'
+        );
+    }
+}
+
+/**
+ * Get single business unit by ID
+ * @param int $business_unit_id Business unit ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array Business unit data
+ */
+function getSingleBusinessUnit($business_unit_id, $staff_id)
+{
+    $result = getApiDataWithJWT('business-units/' . $business_unit_id, null, 'GET', $staff_id);
+    if (!$result['success']) {
+        return array();
+    }
+    $decoded = json_decode($result['response'], true);
+    return isset($decoded) ? $decoded : array();
+}
+
+/**
+ * Create business unit
+ * @param array $data Business unit data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Creation result
+ */
+function createBusinessUnit($data, $staff_id)
+{
+    $result = getApiDataWithJWT('business-units', $data, 'POST', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 201) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit created successfully',
+            'data' => $decoded
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to create business unit'
+        );
+    }
+}
+
+/**
+ * Update business unit
+ * @param int $business_unit_id Business unit ID
+ * @param array $data Updated business unit data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Update result
+ */
+function updateBusinessUnit($business_unit_id, $data, $staff_id)
+{
+    $result = getApiDataWithJWT('business-units/' . $business_unit_id, $data, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit updated successfully',
+            'data' => $decoded
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update business unit'
+        );
+    }
+}
+
+/**
+ * Delete business unit
+ * @param int $business_unit_id Business unit ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array Deletion result
+ */
+function deleteBusinessUnit($business_unit_id, $staff_id)
+{
+    $result = getApiDataWithJWT('business-units/' . $business_unit_id, null, 'DELETE', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 204) {
+        return array(
+            'success' => true,
+            'message' => 'Business unit deleted successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to delete business unit'
+        );
+    }
+}
+
+/**
+ * Create referral
+ * @param array $data Referral data including business_units, referral, form_data, and attachments
+ * @param int $staff_id Staff ID for authentication
+ * @return array Creation result
+ */
+function createReferral($data, $staff_id)
+{
+    $result = getApiDataWithJWT('referral', $data, 'POST', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 201) {
+        return array(
+            'success' => true,
+            'id' => isset($decoded['id']) ? $decoded['id'] : null,
+            'pdf_base64' => isset($decoded['pdf_base64']) ? $decoded['pdf_base64'] : null,
+            'message' => 'Referral created successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to create referral',
+            'details' => isset($decoded['errors']) ? $decoded['errors'] : null
+        );
+    }
+}
+
+/**
+ * Update referral
+ * @param array $data Referral update data including referral, refer_another, attachments, and form_data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Update result
+ */
+function updateReferral($data, $staff_id)
+{
+    $result = getApiDataWithJWT('referral', $data, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Referral updated successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update referral',
+            'details' => isset($decoded['errors']) ? $decoded['errors'] : null
+        );
+    }
+}
+
+/**
+ * Download attachment and output as file
+ * @param int $attachment_id Attachment ID
+ * @param int $staff_id Staff ID for authentication
+ * @return void Outputs file directly or JSON error
+ */
+function downloadAttachment($attachment_id, $staff_id)
+{
+    $result = getApiDataWithJWT('attachment/' . $attachment_id, null, 'GET', $staff_id);
+
+    if (!$result['success']) {
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Failed to retrieve attachment',
+            'error' => $result['message']
+        ));
+        exit;
+    }
+
+    $decoded = json_decode($result['response'], true);
+
+    if (!$decoded || !isset($decoded['base64'])) {
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Invalid attachment data received'
+        ));
+        exit;
+    }
+
+    // Extract file information
+    $filename = isset($decoded['name']) ? $decoded['name'] : 'download';
+    $contentType = isset($decoded['type']) ? $decoded['type'] : 'application/octet-stream';
+    $fileContent = base64_decode($decoded['base64']);
+
+    if ($fileContent === false) {
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Failed to decode file content'
+        ));
+        exit;
+    }
+
+    // Set headers for file download
+    header('Content-Type: ' . $contentType);
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Transfer-Encoding: binary');
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Pragma: public');
+    header('Expires: 0');
+    header('Content-Length: ' . strlen($fileContent));
+
+    // Output the decoded file content
+    echo $fileContent;
+    exit;
+}
+
 // Check if we have a staff ID for authentication
 if (!$staff_id) {
     echo json_encode(array(
@@ -458,6 +970,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = createForm($jsonData['formData'], $staff_id);
                 }
                 break;
+            case 'get-forms':
+                if (isset($jsonData['recipientBuId'])) {
+                    $response = array('data' => getAllForm($jsonData['recipientBuId'], $staff_id));
+                }
+                break;
             case 'form-details':
                 if (isset($jsonData['business_unit_id'])) {
                     $response = array('data' => getFormDetails($jsonData['business_unit_id'], $staff_id));
@@ -471,6 +988,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'get-report':
                 if (isset($jsonData['formData'])) {
                     $response = getReport($jsonData['formData'], $staff_id);
+                }
+                break;
+            case 'verify-token':
+                if (isset($jsonData['token'])) {
+                    $response = verifyToken($jsonData['token']);
+                }
+                break;
+            case 'verify-session':
+                // Get current JWT token from session and verify it
+                if (isset($_SESSION['jwt_token'])) {
+                    $response = verifyToken($_SESSION['jwt_token']);
+                } else {
+                    $response = array(
+                        'success' => false,
+                        'valid' => false,
+                        'message' => 'No JWT token found in session'
+                    );
+                }
+                break;
+            case 'get-auth-token':
+                // Test the getAuthToken function
+                $token = getAuthToken($staff_id);
+                if ($token) {
+                    $response = array(
+                        'success' => true,
+                        'message' => 'JWT token retrieved successfully',
+                        'token' => $token,
+                        'staff_id' => $staff_id,
+                        'expires_at' => isset($_SESSION['jwt_expires']) ? date('Y-m-d H:i:s', $_SESSION['jwt_expires']) : 'Unknown'
+                    );
+                } else {
+                    $response = array(
+                        'success' => false,
+                        'message' => 'Failed to get JWT token',
+                        'staff_id' => $staff_id
+                    );
+                }
+                break;
+            case 'create-referral':
+                if (isset($jsonData['referralData'])) {
+                    $response = createReferral($jsonData['referralData'], $staff_id);
+                }
+                break;
+            case 'update-referral':
+                if (isset($jsonData['referralData'])) {
+                    $response = updateReferral($jsonData['referralData'], $staff_id);
+                }
+                break;
+            case 'download-attachment':
+                $attachment_id = isset($jsonData['attachment_id']) ? $jsonData['attachment_id'] : null;
+                if ($attachment_id) {
+                    downloadAttachment($attachment_id, $staff_id);
+                    return;
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing attachment_id');
                 }
                 break;
         }
@@ -498,6 +1070,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'form-details':
                 if (isset($_POST['business_unit_id'])) {
                     $response = array('data' => getFormDetails($_POST['business_unit_id'], $staff_id));
+                }
+                break;
+            case 'get-forms':
+                if (isset($_POST['recipientBuId'])) {
+                    $response = array('data' => getAllForm($_POST['recipientBuId'], $staff_id));
                 }
                 break;
             case 'all-referral':

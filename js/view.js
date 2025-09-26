@@ -5,68 +5,7 @@ $(document).ready(function () {
     referralAccordion();
     referAnother();
     $('.refer-form').hide();
-
-    // Function to process accordion content after all async calls complete
-    function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = false) {
-        const { rd, staff, businessUnit, outlet, contact, staff_department_id, createdAt } = queueItem;
-
-        //display referral info in panel
-        if (rd.referral_reason || rd.referral_condition || rd.medical_history) {
-            panel.append(`
-            <div class="referral-info-section border-bottom pb-3 mb-3">
-                <p class="r-title">Referral Information</p>
-                <div class="mb-2">
-                    <p class="r-text">Reason of Referral</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_reason || 'N/A'}</textarea>
-                </div>
-                <div class="mb-2">
-                    <p class="r-text">Details of Patient's Condition</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_condition || 'N/A'}</textarea>
-                </div>
-                <div class="mb-2">
-                    <p class="r-text">Relevant Medical History</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.medical_history || 'N/A'}</textarea>
-                </div>
-            </div>
-            `);
-        }
-
-        //add title for initial treatment
-        panel.append(`
-            <div class="treatment-section">
-                <p class="r-title">Current/Past Treatment</p>
-            </div>
-        `);
-
-        //display initial treatment
-        initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
-
-        //auto-open only the first (latest) filled accordion
-        const accordionButton = accordion.find('.referral-accordion');
-        const accordionPanel = accordion.find('.referral-panel');
-
-        // Only auto-open the first filled accordion
-        if (shouldAutoOpen) {
-            accordionButton.addClass('active');
-            accordionPanel.css('maxHeight', accordionPanel[0].scrollHeight + 'px');
-        }
-
-        const referralPic = accordion.find('.referral-pic');
-        var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
-        referralPic.html(`
-        <span class="r-title">Submitted by</span><br>
-        <span class="r-text">Name: ${staff} </span><br>
-        <span class="r-text">Contact: ${contact} </span><br>
-        <span class="r-text">Date: ${createdAt} </span><br>
-        <a href="${whatsapp}" target="_blank" style="text-decoration: none;">
-            <img src="img/whatsapp.png" style="width:25px;">
-        </a>
-        `);
-
-        if (rd.attachments.length > 0) {
-            displayAttachments(rd.attachments, staff, createdAt);
-        }
-    }
+    $('.external-referral-text').hide();
 
     $.ajax({
         url: 'api-jwt.php',
@@ -78,6 +17,10 @@ $(document).ready(function () {
         }),
         success: function (response) {
             var data = response.data;
+
+            // Referral Details
+            let referralDetails = data.referralDetails;
+
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -94,6 +37,62 @@ $(document).ready(function () {
             business_unit_to.val('');
             location_to.val('');
 
+            // Get last two sequences for form population
+            const lastTwoSequences = referralDetails.slice(-2); // Get last 2 items
+
+            if (lastTwoSequences.length >= 2) {
+                // Second to last sequence (From)
+                const fromReferral = lastTwoSequences[0];
+                // Last sequence (To)
+                const toReferral = lastTwoSequences[1];
+
+                // Populate FROM section with second to last sequence
+                if (fromReferral.staff_id) {
+                    getStaffDetails(fromReferral.staff_id, fromReferral.location, fromReferral.business_unit_id, department, function (staffResponse) {
+                        if (staffResponse && staffResponse.length > 0) {
+                            assigneeFrom.val(staffResponse[0].staff || '');
+                            business_unit_from.val(staffResponse[0].business_unit || '');
+                            location_from.val(staffResponse[0].outlet || '');
+                        }
+                    });
+                }
+
+                // Populate TO section with last sequence
+                if (toReferral.staff_id) {
+                    // Use existing staff_id for TO section
+                    getStaffDetails(toReferral.staff_id, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
+                        if (staffResponse && staffResponse.length > 0) {
+                            recipientTo.val(staffResponse[0].staff || '');
+                            business_unit_to.val(staffResponse[0].business_unit || '');
+                            location_to.val(staffResponse[0].outlet || '');
+                        }
+                    });
+                } else {
+                    // When staff_id is null, check if current session user's department matches
+                    getStaffDetails(staffId, toReferral.location, null, department, function (staffResponse) {
+                        if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
+                            // Department matches - use current session user
+                            getStaffDetails(staffId, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
+                                if (staffResponse && staffResponse.length > 0) {
+                                    recipientTo.val(staffResponse[0].staff || '');
+                                    business_unit_to.val(staffResponse[0].business_unit || '');
+                                    location_to.val(staffResponse[0].outlet || '');
+                                }
+                            });
+                        } else {
+                            // Department doesn't match - only populate location and business unit
+                            getRecipientDetails(toReferral.location, toReferral.business_unit_id, function (recipientResponse) {
+                                if (recipientResponse) {
+                                    location_to.val(recipientResponse.outlet_name || '');
+                                    business_unit_to.val(recipientResponse.business_unit_name || '');
+                                    recipientTo.val(''); // Leave staff field empty
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+
             var organization = $('#organization');
             var location_organization = $('#location_organization');
             var referee = $('#referee');
@@ -102,215 +101,105 @@ $(document).ready(function () {
             location_organization.hide();
             referee.hide();
 
-            // Referral Details
-            let referralDetails = data.referralDetails;
-            console.log('Raw referralDetails from API:', referralDetails);
-            console.log('Type of referralDetails:', Array.isArray(referralDetails) ? 'Array' : 'Object');
+            // Sort asc by sequence
+            const sortedReferrals = referralDetails.sort((a, b) => a.sequence - b.sequence);
+            // console.log(sortedReferrals);
 
-            // Ensure we're working with an array and apply stable sorting
-            const detailsArray = Array.isArray(referralDetails) ? referralDetails : Object.values(referralDetails);
+            const referralHistoryContainer = $('#referralHistoryContainer');
 
-            const sortedDetails = detailsArray.sort(function (a, b) {
-                // First, sort by is_filled (filled items first)
-                if (a.is_filled !== b.is_filled) {
-                    return b.is_filled - a.is_filled;
-                }
-                // Then by sequence descending for ALL items (latest sequence first)
-                if (a.sequence !== b.sequence) {
-                    return b.sequence - a.sequence;
-                }
-                // If everything else is equal, use staff_id for consistent ordering
-                return a.staff_id - b.staff_id;
-            });
+            // Process referral history (exclude the last sequence which always has empty staff_id)
+            const referralHistoryItems = sortedReferrals.slice(0, -1); // Remove last item
+            let processedCount = 0;
+            const totalItems = referralHistoryItems.length;
 
-            console.log('Sorted details:', sortedDetails.map(rd => `Sequence: ${rd.sequence}, Filled: ${rd.is_filled}, Staff: ${rd.staff_id}`));
+            if (totalItems > 0) {
+                referralHistoryItems.forEach((rd, index) => {
+                    // Get staff details first to populate accordion header
+                    getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, department, function (staffResponse) {
+                        const staff = staffResponse && staffResponse.length > 0 ? staffResponse[0].staff : 'Unknown';
+                        const contact = staffResponse && staffResponse.length > 0 ? staffResponse[0].contact : '';
+                        const businessUnit = staffResponse && staffResponse.length > 0 ? staffResponse[0].business_unit : '';
+                        const outlet = staffResponse && staffResponse.length > 0 ? staffResponse[0].outlet : '';
 
-            const container = $('#referralHistoryContainer');
-            let firstFilledAccordionOpened = false; // Track if we've opened the first filled accordion
-
-            // Find latest referee (second highest sequence) and latest recipient (highest sequence)
-            // Use all referral details, not just filled ones
-            const allSequences = sortedDetails.map(rd => rd.sequence);
-            const maxSequence = allSequences.length > 0 ? Math.max(...allSequences) : null;
-            const secondMaxSequence = allSequences.length > 1 ?
-                Math.max(...allSequences.filter(seq => seq !== maxSequence)) :
-                maxSequence; // If only one sequence, use it for both from and to
-            console.log('All sequences:', allSequences);
-            console.log('Max sequence (latest recipient):', maxSequence);
-            console.log('Second max sequence (latest referee):', secondMaxSequence);
-            console.log(sortedDetails);
-
-            // Track assignment data for latest referee and recipient
-            let latestRefereeData = null;
-            let latestRecipientData = null;
-            let completedRequests = 0;
-            const totalRequests = sortedDetails.filter(rd => rd.external_referral.length < 1 && !(rd.staff_id == null && rd.is_filled == 0)).length;
-
-            // Store accordion HTML in the correct order
-            const accordionQueue = [];
-
-            $.each(sortedDetails, function (index, rd) {
-                //internal
-                if (rd.external_referral.length < 1) {
-                    $('#external-referral-text').hide();
-
-                    if (rd.staff_id == null && rd.is_filled == 0) {
-                        // Handle unfilled referrals with no assigned staff
-                        // Still need to check if this is the recipient sequence for form population
-                        if (maxSequence && rd.sequence == maxSequence) {
-                            // This is the recipient sequence - show as "To be assigned" or similar
-                            latestRecipientData = { staff: "To be assigned", businessUnit: "", outlet: "" };
-                        }
-                        return true; // Skip accordion creation but continue to next iteration
-                    }
-
-                    //testing purposes only
-                    // const fakeStaffId = 3333;
-                    // rd.staff_id ??= fakeStaffId;
-
-                    //run through staff details
-                    getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, function (sd) {
-                        const staff = sd[0].staff;
-                        const businessUnit = sd[0].business_unit;
-                        const outlet = sd[0].outlet;
-                        const contact = sd[0].contact;
-                        const staff_department_id = sd[0].department_id;
-                        const createdAt = rd.created_at;
-
-                        // Store data for assignment (don't assign immediately)
-                        if (secondMaxSequence && rd.sequence == secondMaxSequence) {
-                            latestRefereeData = { staff, businessUnit, outlet };
-                            // console.log('Found latest referee (sequence ' + rd.sequence + '):', staff);
-                        }
-                        if (maxSequence && rd.sequence == maxSequence) {
-                            latestRecipientData = { staff, businessUnit, outlet };
-                            // console.log('Found latest recipient (sequence ' + rd.sequence + '):', staff);
-                        }
-
-                        //referral history accordion
-                        const accordionHTML = `
-                        <div class="referral-history">
-                            <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
-                                <div class="referral-accordion-content">
-                                    <div class="referral-text">
-                                        <span class="referral-title">
-                                            ${businessUnit}, ${staff}, ${outlet}</span>
-                                        <span class="referral-date">${createdAt}</span>
+                        // Create accordion structure for each referral
+                        const accordionHtml = `
+                            <div class="referral-history" data-sequence="${rd.sequence}">
+                                <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
+                                    <div class="referral-accordion-content">
+                                        <div class="referral-text">
+                                            <span class="referral-title">
+                                                ${businessUnit}, ${staff}, ${outlet}</span>
+                                            <span class="referral-date">${rd.created_at}</span>
+                                        </div>
                                     </div>
+                                </button>
+                                <div class="referral-panel">
+                                    <div class="referral-panel-item" data-bu="${rd.business_unit_id}"></div>
+                                    <div class="referral-pic"></div>
                                 </div>
-                            </button>
-                            <div class="referral-panel">
-                                <div class="referral-panel-item" data-bu="${rd.business_unit_id}"></div>
-                                <div class="referral-pic"></div>
                             </div>
-                        </div>
                         `;
 
-                        // Store accordion data in correct order instead of appending immediately
-                        accordionQueue[index] = {
-                            html: accordionHTML,
+                        referralHistoryContainer.append(accordionHtml);
+
+                        // Prepare data for processAccordionContent function
+                        const queueItem = {
                             rd: rd,
                             staff: staff,
                             businessUnit: businessUnit,
                             outlet: outlet,
                             contact: contact,
-                            staff_department_id: staff_department_id,
-                            createdAt: createdAt
+                            staff_department_id: rd.business_unit_id,
+                            createdAt: rd.created_at
                         };
 
-                        // All accordion processing moved to processAccordionContent function
+                        const panel = $(`[data-sequence="${rd.sequence}"] .referral-panel-item`);
+                        const accordion = $(`[data-sequence="${rd.sequence}"]`);
+                        const shouldAutoOpen = (index === 0); // Auto-open first accordion
 
-                        if (rd.is_filled != 1 && staff_department_id == department) {
-                            //display reply form for next pic
-                            displayContent(rd.business_unit_id, '.reply-form');
-                            $('.reply-form-container').css('display', 'block');
-                        }
+                        processAccordionContent(queueItem, panel, accordion, shouldAutoOpen);
 
-                        // Increment completed requests counter
-                        completedRequests++;
+                        processedCount++;
+                        // if (processedCount === totalItems) {
+                        //     console.log('All referral history accordions processed');
+                        // }
+                    });
+                });
+            }
 
-                        // When all requests are complete, assign the form fields and render accordions in order
-                        if (completedRequests === totalRequests) {
-                            // Clear container and add accordions in correct sorted order
-                            container.empty();
+            // Global flag to control reply-form-container visibility based on referral_details
+            window.hasReplyForms = false;
 
-                            // Process accordions in the correct sorted order
-                            let firstFilledAccordionProcessed = false;
-                            for (let i = 0; i < accordionQueue.length; i++) {
-                                const queueItem = accordionQueue[i];
-                                if (queueItem && queueItem.rd.is_filled == 1) {
-                                    const accordion = $(queueItem.html);
-                                    container.append(accordion);
-                                    const panel = accordion.find('.referral-panel-item');
+            if (referralDetails && referralDetails.length > 0) {
+                const lastSequence = referralDetails[referralDetails.length - 1];
 
-                                    // Process the accordion content (moved from above)
-                                    processAccordionContent(queueItem, panel, accordion, !firstFilledAccordionProcessed);
-                                    firstFilledAccordionProcessed = true;
-                                }
-                            }
-
-                            // Assign form fields
-                            if (latestRefereeData) {
-                                assigneeFrom.val(latestRefereeData.staff);
-                                business_unit_from.val(latestRefereeData.businessUnit);
-                                location_from.val(latestRefereeData.outlet);
-                                // console.log('Assigned latest referee:', latestRefereeData.staff);
-                            }
-                            if (latestRecipientData) {
-                                recipientTo.val(latestRecipientData.staff);
-                                business_unit_to.val(latestRecipientData.businessUnit);
-                                location_to.val(latestRecipientData.outlet);
-                                // console.log('Assigned latest recipient:', latestRecipientData.staff);
-                            }
+                if (lastSequence.referral_details && lastSequence.referral_details.length > 0) {
+                    window.hasReplyForms = true;
+                    displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                } else if (!lastSequence.staff_id) {
+                    // When staff_id is null, check if current session user's department matches
+                    getStaffDetails(staffId, lastSequence.location, null, department, function (staffResponse) {
+                        if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
+                            // Department matches - show reply form and populate forms
+                            window.hasReplyForms = true;
+                            $('.reply-form-container').show();
+                            displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                        } else {
+                            // Department doesn't match - hide reply form
+                            window.hasReplyForms = false;
+                            $('.reply-form-container').hide();
                         }
                     });
-                } else {
-                    //external
-                    $('#referring-to').hide();
-                    $('#external-referral-text').show();
-                    recipientTo.hide();
-                    business_unit_to.hide();
-                    location_to.hide();
-                    // Show reply form if not filled, hide if filled
-                    if (rd.is_filled == 0) {
-                        displayContent(rd.business_unit_id, '.reply-form');
-                        $('.reply-form-container').css('display', 'block');
-                    } else {
-                        $('.reply-form-container').css('display', 'none');
-                    }
-                    $('.refer-another-container').css('display', 'none');
-
-                    organization.show();
-                    location_organization.show();
-                    referee.show();
-
-                    var externalReferral = rd.external_referral;
-                    $.each(externalReferral, function (index, er) {
-                        organization.val(er.organization);
-                        location_organization.val(er.state);
-                        referee.val(er.name);
-                    });
+                    return; // Exit early since we're handling visibility in the callback
                 }
+            }
 
-                $('.referring-indication-container').hide();
-                $('.referring-indication').hide();
-                var referral_reason_refer = $('#referral_reason_refer');
-                var referral_condition_refer = $('#referral_condition_refer');
-                var medical_history_refer = $('#medical_history_refer');
-
-                referral_reason_refer.val('');
-                referral_condition_refer.val('');
-                medical_history_refer.val('');
-
-                if (rd.is_filled == 0 && rd.sequence != maxSequence) {
-                    $('.referring-indication-container').show();
-                    $('.referring-indication').show();
-                    referral_reason_refer.val(rd.referral_reason);
-                    referral_condition_refer.val(rd.referral_condition);
-                    medical_history_refer.val(rd.medical_history);
-
-                }
-            });
+            // Control container visibility for other cases
+            if (window.hasReplyForms) {
+                $('.reply-form-container').show();
+            } else {
+                $('.reply-form-container').hide();
+            }
 
             $('input[name="priority"]').on('click', function (e) {
                 e.preventDefault();
@@ -374,192 +263,10 @@ $(document).ready(function () {
 
             // Hide submit button if initial status is 4 or 5
             const submitButton = document.querySelector('.form-btn-submit');
-            if (status == 4 || status == 5) {
-                $('.reply-form-container').hide();
-                // Hide attachment input for initial status 4 or 5
-                $('#attachmentInput').hide();
-                if (submitButton) {
-                    submitButton.style.display = 'none';
-                }
-                // Make entire form read-only if initial status is 4 or 5
-                toggleFormReadOnly(true);
-                // Disable priority radio buttons when initial status is 4 or 5
-                $('input[name="priority"]').prop('disabled', true);
-            } else {
-                if (submitButton) {
-                    submitButton.style.display = 'inline-block';
-                }
-                // Don't hide reply-form-container here - let individual referral logic handle it
-                // Show attachment input for other initial statuses
-                $('#attachmentInput').show();
-                // Make form editable if initial status is not 4 or 5
-                toggleFormReadOnly(false);
-                // Enable priority radio buttons when initial status is not 4 or 5
-                $('input[name="priority"]').prop('disabled', false);
-            }
 
             // Referral Attachments
             const attachmentContainer = $('#attachmentDisplay');
             attachmentContainer.empty(); // Clear existing attachments
-
-            function displayAttachments(attachments, staff, created_at) {
-
-                attachments.forEach(function (attachment) {
-                    let isDownloadableClientSide = false;
-
-                    const downloadButtonHtml = isDownloadableClientSide ?
-                        `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-encoded="${attachment.encoded}">
-                    <img src="img/download.png" style="width:25px;"/>
-                </button>` :
-                        `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.attachment_id}"> <img src="img/download.png" style="width:25px;"/>
-                </button>`;
-
-                    const attachmentItem = `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div class="d-flex flex-column align-items-start flex-grow-1">
-                        <span class="fw-bold">${attachment.name}</span>
-                        <small class="d-block r-text text-muted">Uploaded by ${staff} on ${created_at}.</small>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        ${downloadButtonHtml}
-                    </div>
-                </li>
-            `;
-                    attachmentContainer.append(attachmentItem);
-                });
-
-                $('.download-btn').on('click', function () {
-                    const fileName = $(this).data('filename');
-                    const encodedData = $(this).data('encoded');
-                    const attachmentId = $(this).data('attachment-id');
-
-                    if (encodedData) {
-                        // Client-side download using Base64
-                        try {
-                            // Decode base64 data
-                            const base64Data = encodedData.replace(/^data:[^;]+;base64,/, '');
-                            const binaryString = atob(base64Data);
-                            const bytes = new Uint8Array(binaryString.length);
-
-                            for (let i = 0; i < binaryString.length; i++) {
-                                bytes[i] = binaryString.charCodeAt(i);
-                            }
-
-                            // Use content type from API response or fallback to detected MIME type
-                            const contentType = response.data.content_type || getMimeTypeFromFileName(fileName);
-                            const blob = new Blob([bytes], { type: contentType });
-
-                            // Create temporary URL and download
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = fileName;
-                            a.style.display = 'none';
-
-                            document.body.appendChild(a);
-                            a.click();
-
-                            // Clean up
-                            setTimeout(() => {
-                                window.URL.revokeObjectURL(url);
-                                document.body.removeChild(a);
-                            }, 100);
-
-                        } catch (error) {
-                            logError(new Error('Error decoding base64 data'), { context: 'downloadAttachment', fileName: fileName, error: error.message });
-                            alert('Failed to download file. Invalid file data.');
-                        }
-                    } else if (attachmentId) {
-                        // Server-side download
-                        console.log(`Downloading attachment: ${fileName} (ID: ${attachmentId})`);
-
-                        // Make AJAX request for download
-                        $.ajax({
-                            url: 'api.php',
-                            method: 'POST',
-                            data: JSON.stringify({
-                                action: 'download-attachment',
-                                attachment_id: attachmentId
-                            }),
-                            contentType: 'application/json',
-                            xhrFields: {
-                                responseType: 'blob'
-                            },
-                            success: function (response) {
-                                try {
-                                    // Try to read the response as text first
-                                    const reader = new FileReader();
-                                    reader.onload = function () {
-                                        try {
-                                            // Check if response is JSON
-                                            const jsonResponse = JSON.parse(reader.result);
-                                            if (!jsonResponse.success) {
-                                                logError(new Error('Download failed'), { context: 'downloadAttachment', fileName: fileName, message: jsonResponse.message });
-                                                alert(jsonResponse.message || 'Failed to download file. Please try again.');
-                                                return;
-                                            }
-                                        } catch (e) {
-                                            // Not JSON, treat as binary data
-                                            const blob = new Blob([response], { type: response.type || getMimeTypeFromFileName(fileName) });
-                                            const url = window.URL.createObjectURL(blob);
-                                            const a = document.createElement('a');
-                                            a.href = url;
-                                            a.download = fileName;
-                                            a.style.display = 'none';
-
-                                            document.body.appendChild(a);
-                                            a.click();
-
-                                            setTimeout(() => {
-                                                window.URL.revokeObjectURL(url);
-                                                document.body.removeChild(a);
-                                            }, 100);
-                                        }
-                                    };
-                                    reader.readAsText(response);
-                                } catch (error) {
-                                    logError(new Error('Error processing file data'), { context: 'downloadAttachment', fileName: fileName, error: error.message });
-                                    alert('Failed to process file data. Please try again.');
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                logError(new Error('Download failed'), { context: 'downloadAttachment', fileName: fileName, status: status, error: error, responseText: xhr.responseText });
-                                alert('Failed to download file. Please try again.');
-                            }
-                        });
-                    } else {
-                        console.warn('No download method available for this attachment.');
-                        alert('Download method not available for this file.');
-                    }
-
-                });
-
-                // Helper function to determine MIME type from file extension
-                function getMimeTypeFromFileName(fileName) {
-                    const extension = fileName.split('.').pop().toLowerCase();
-                    const mimeTypes = {
-                        'pdf': 'application/pdf',
-                        'doc': 'application/msword',
-                        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                        'xls': 'application/vnd.ms-excel',
-                        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        'ppt': 'application/vnd.ms-powerpoint',
-                        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                        'txt': 'text/plain',
-                        'jpg': 'image/jpeg',
-                        'jpeg': 'image/jpeg',
-                        'png': 'image/png',
-                        'gif': 'image/gif',
-                        'bmp': 'image/bmp',
-                        'tiff': 'image/tiff',
-                        'zip': 'application/zip',
-                        'rar': 'application/x-rar-compressed',
-                        '7z': 'application/x-7z-compressed'
-                    };
-
-                    return mimeTypes[extension] || 'application/octet-stream';
-                }
-            }
         },
         error: function (xhr, status, error) {
             logError(new Error('Failed to fetch referral details'), { context: 'fetchReferralDetails', referralId: referral_id, status: status, error: error });
@@ -649,6 +356,229 @@ $(document).ready(function () {
 
 });
 
+// Function to process accordion content after all async calls complete
+function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = false) {
+    const { rd, staff, businessUnit, outlet, contact, staff_department_id, createdAt } = queueItem;
+
+    //display referral info in panel
+    if (rd.referral_reason || rd.referral_condition || rd.medical_history) {
+        panel.append(`
+            <div class="referral-info-section border-bottom pb-3 mb-3">
+                <p class="r-title">Referral Information</p>
+                <div class="mb-2">
+                    <p class="r-text">Reason of Referral</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_reason || 'N/A'}</textarea>
+                </div>
+                <div class="mb-2">
+                    <p class="r-text">Details of Patient's Condition</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_condition || 'N/A'}</textarea>
+                </div>
+                <div class="mb-2">
+                    <p class="r-text">Relevant Medical History</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.medical_history || 'N/A'}</textarea>
+                </div>
+            </div>
+            `);
+    }
+
+    //add title for initial treatment only if referral_details exists and is not empty
+    if (rd.referral_details && rd.referral_details.length > 0) {
+        panel.append(`
+                <div class="treatment-section">
+                    <p class="r-title">Current/Past Treatment</p>
+                </div>
+            `);
+
+        //display initial treatment
+        initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
+    }
+
+    //auto-open only the first (latest) filled accordion
+    const accordionButton = accordion.find('.referral-accordion');
+    const accordionPanel = accordion.find('.referral-panel');
+
+    // Only auto-open the first filled accordion
+    if (shouldAutoOpen) {
+        accordionButton.addClass('active');
+        accordionPanel.css('maxHeight', accordionPanel[0].scrollHeight + 'px');
+    }
+
+    const referralPic = accordion.find('.referral-pic');
+    var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
+    referralPic.html(`
+        <span class="r-title">Submitted by</span><br>
+        <span class="r-text">Name: ${staff} </span><br>
+        <span class="r-text">Contact: ${contact} </span><br>
+        <span class="r-text">Date: ${createdAt} </span><br>
+        <a href="${whatsapp}" target="_blank" style="text-decoration: none;">
+            <img src="img/whatsapp.png" style="width:25px;">
+        </a>
+        `);
+
+    if (rd.attachments.length > 0) {
+        displayAttachments(rd.attachments, staff, createdAt);
+    }
+}
+
+function displayAttachments(attachments, staff, created_at) {
+
+    attachments.forEach(function (attachment) {
+        let isDownloadableClientSide = false;
+
+        const downloadButtonHtml = isDownloadableClientSide ?
+            `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-encoded="${attachment.encoded}">
+                    <img src="img/download.png" style="width:25px;"/>
+                </button>` :
+            `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.attachment_id}"> <img src="img/download.png" style="width:25px;"/>
+                </button>`;
+
+        const attachmentItem = `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex flex-column align-items-start flex-grow-1">
+                        <span class="fw-bold">${attachment.name}</span>
+                        <small class="d-block r-text text-muted">Uploaded by ${staff} on ${created_at}.</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        ${downloadButtonHtml}
+                    </div>
+                </li>
+            `;
+        attachmentContainer.append(attachmentItem);
+    });
+
+    $('.download-btn').on('click', function () {
+        const fileName = $(this).data('filename');
+        const encodedData = $(this).data('encoded');
+        const attachmentId = $(this).data('attachment-id');
+
+        if (encodedData) {
+            // Client-side download using Base64
+            try {
+                // Decode base64 data
+                const base64Data = encodedData.replace(/^data:[^;]+;base64,/, '');
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // Use content type from API response or fallback to detected MIME type
+                const contentType = response.data.content_type || getMimeTypeFromFileName(fileName);
+                const blob = new Blob([bytes], { type: contentType });
+
+                // Create temporary URL and download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+
+                document.body.appendChild(a);
+                a.click();
+
+                // Clean up
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }, 100);
+
+            } catch (error) {
+                logError(new Error('Error decoding base64 data'), { context: 'downloadAttachment', fileName: fileName, error: error.message });
+                alert('Failed to download file. Invalid file data.');
+            }
+        } else if (attachmentId) {
+            // Server-side download
+            // console.log(`Downloading attachment: ${fileName} (ID: ${attachmentId})`);
+
+            // Make AJAX request for download
+            $.ajax({
+                url: 'api.php',
+                method: 'POST',
+                data: JSON.stringify({
+                    action: 'download-attachment',
+                    attachment_id: attachmentId
+                }),
+                contentType: 'application/json',
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function (response) {
+                    try {
+                        // Try to read the response as text first
+                        const reader = new FileReader();
+                        reader.onload = function () {
+                            try {
+                                // Check if response is JSON
+                                const jsonResponse = JSON.parse(reader.result);
+                                if (!jsonResponse.success) {
+                                    logError(new Error('Download failed'), { context: 'downloadAttachment', fileName: fileName, message: jsonResponse.message });
+                                    alert(jsonResponse.message || 'Failed to download file. Please try again.');
+                                    return;
+                                }
+                            } catch (e) {
+                                // Not JSON, treat as binary data
+                                const blob = new Blob([response], { type: response.type || getMimeTypeFromFileName(fileName) });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                a.style.display = 'none';
+
+                                document.body.appendChild(a);
+                                a.click();
+
+                                setTimeout(() => {
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                }, 100);
+                            }
+                        };
+                        reader.readAsText(response);
+                    } catch (error) {
+                        logError(new Error('Error processing file data'), { context: 'downloadAttachment', fileName: fileName, error: error.message });
+                        alert('Failed to process file data. Please try again.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    logError(new Error('Download failed'), { context: 'downloadAttachment', fileName: fileName, status: status, error: error, responseText: xhr.responseText });
+                    alert('Failed to download file. Please try again.');
+                }
+            });
+        } else {
+            console.warn('No download method available for this attachment.');
+            alert('Download method not available for this file.');
+        }
+
+    });
+
+    // Helper function to determine MIME type from file extension
+    function getMimeTypeFromFileName(fileName) {
+        const extension = fileName.split('.').pop().toLowerCase();
+        const mimeTypes = {
+            'pdf': 'application/pdf',
+            'doc': 'application/msword',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls': 'application/vnd.ms-excel',
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'ppt': 'application/vnd.ms-powerpoint',
+            'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'txt': 'text/plain',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'bmp': 'image/bmp',
+            'tiff': 'image/tiff',
+            'zip': 'application/zip',
+            'rar': 'application/x-rar-compressed',
+            '7z': 'application/x-7z-compressed'
+        };
+
+        return mimeTypes[extension] || 'application/octet-stream';
+    }
+}
+
 // Toggle read-only state for the entire form
 function toggleFormReadOnly(isReadOnly) {
     // Get all form inputs, selects, and textareas
@@ -716,8 +646,10 @@ function addStatusChangeListeners() {
                     if (statusNoteError) {
                         statusNoteError.textContent = '';
                     }
-                    // Show reply form when status 4 is selected
-                    $('.reply-form-container').show();
+                    // Show reply form when status 4 is selected (only if forms exist)
+                    if (window.hasReplyForms) {
+                        $('.reply-form-container').show();
+                    }
                     // Hide attachment input for status 4
                     $('#attachmentInput').hide();
                     // Restore reply-content form-container fields as required
@@ -736,8 +668,10 @@ function addStatusChangeListeners() {
                     if (statusNoteError) {
                         statusNoteError.textContent = '';
                     }
-                    // Show reply form when other statuses are selected
-                    $('.reply-form-container').show();
+                    // Show reply form when other statuses are selected (only if forms exist)
+                    if (window.hasReplyForms) {
+                        $('.reply-form-container').show();
+                    }
                     // Show attachment input for other statuses
                     $('#attachmentInput').show();
                     // Restore reply-content form-container fields as required
@@ -869,8 +803,10 @@ function addStatusChangeListeners() {
                     if (statusNoteError) {
                         statusNoteError.textContent = '';
                     }
-                    // Show reply form when other statuses are selected
-                    $('.reply-form-container').show();
+                    // Show reply form when other statuses are selected (only if forms exist)
+                    if (window.hasReplyForms) {
+                        $('.reply-form-container').show();
+                    }
                     // Restore reply-content form-container fields as required
                     toggleReplyFormRequirement(true);
                 }
@@ -917,8 +853,7 @@ function toggleReplyFormRequirement(isRequired) {
     });
 }
 
-
-function getStaffDetails(staffId, locationId, businessUnitId, callback) {
+function getStaffDetails(staffId, locationId, businessUnitId, deptId, callback) {
     $.ajax({
         url: 'backend.php',
         method: 'GET',
@@ -926,6 +861,7 @@ function getStaffDetails(staffId, locationId, businessUnitId, callback) {
             staff_id: staffId,
             location_id: locationId,
             bu_id: businessUnitId,
+            deptId: deptId,
             action: 'getStaffDetails'
         },
         dataType: 'json',
@@ -939,7 +875,27 @@ function getStaffDetails(staffId, locationId, businessUnitId, callback) {
     });
 }
 
-function displayContent(businessUnitId, targetSelector) {
+function getRecipientDetails(location, businessUnit, callback) {
+    $.ajax({
+        url: 'backend.php',
+        method: 'GET',
+        data: {
+            location: location,
+            business_unit: businessUnit,
+            action: 'getRecipientDetails'
+        },
+        dataType: 'json',
+        success: function (response) {
+            callback(response);
+        },
+        error: function (xhr, status, error) {
+            logError(new Error('Error fetching recipient details'), { context: 'getRecipientDetails', location: location, businessUnit: businessUnit, status: status, error: error });
+            callback(null);
+        }
+    });
+}
+
+function displayContent(businessUnitId, targetSelector, referralDetails = null) {
     $.ajax({
         url: 'api-jwt.php',
         type: 'POST',
@@ -948,7 +904,16 @@ function displayContent(businessUnitId, targetSelector) {
             business_unit_id: businessUnitId
         },
         success: function (response) {
-            const forms = response.data.forms;
+            let forms = response.data.forms;
+
+            // Filter forms based on referralDetails if provided
+            if (referralDetails && referralDetails.length > 0) {
+                const lastSequence = referralDetails[referralDetails.length - 1];
+                if (lastSequence.referral_details && lastSequence.referral_details.length > 0) {
+                    const allowedFormIds = lastSequence.referral_details.map(rd => rd.form_id);
+                    forms = forms.filter(form => allowedFormIds.includes(form.form_id));
+                }
+            }
 
             $('.reply-content').hide();
             const targetDiv = $(targetSelector);
@@ -1272,6 +1237,26 @@ function referAnother() {
     });
 }
 
+function getBusinessUnit(departmentId, callback) {
+    $.ajax({
+        url: 'backend.php',
+        type: 'GET',
+        dataType: 'json',
+        data: {
+            action: 'getBusinessUnit',
+            staffDeptId: departmentId
+        },
+        success: function (response) {
+            callback(response);
+        },
+        error: function (xhr, status, error) {
+            console.log(status, error);
+            logError(new Error('Error fetching business unit'), { context: 'getBusinessUnit', businessUnitId: businessUnitId, status: status, error: error });
+            callback("Unknown");
+        }
+    });
+}
+
 function getBusinessUnits() {
     $.ajax({
         url: 'backend.php',
@@ -1378,7 +1363,6 @@ function handleFilePreview(inputSelector, previewSelector) {
         $('#' + fileId).remove();
     });
 }
-
 
 function validateForm(event) {
     event.preventDefault();

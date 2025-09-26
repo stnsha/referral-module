@@ -17,21 +17,14 @@ $(document).ready(function () {
 
             let isSelected = false;
             let businessUnitId = '';
-            console.log('DEBUG: API Response:', response.data);
-            console.log('DEBUG: Staff Position:', staffPosition);
-            console.log('DEBUG: Staff Deparment:', department);
-            console.log('DEBUG: Is Audiologist?', staffPosition.toLowerCase().includes('audiologist'));
 
             $.each(response.data, function (index, businessUnit) {
                 let selected = '';
-                console.log('DEBUG: Processing business unit:', businessUnit);
 
                 // Special logic for department 1 only (Audiology/Pharmacy department)
                 if (department == 1) {
-                    console.log('DEBUG: Department 1 detected, using position-based logic');
                     // Check if staff position contains 'audiologist' (any type)
                     if (staffPosition.toLowerCase().includes('audiologist')) {
-                        console.log('DEBUG: Audiologist detected, looking for Audiology unit');
                         // Audiologist -> assign to Alpro Audiology (ID = 1)
                         if (businessUnit.id === 1) {
                             console.log('DEBUG: Found Audiology unit, selecting it');
@@ -40,27 +33,21 @@ $(document).ready(function () {
                             isSelected = true;
                         }
                     } else {
-                        console.log('DEBUG: Non-audiologist detected, looking for Pharmacy unit');
                         // Not audiologist -> assign to Alpro Pharmacy (ID = 5) 
                         if (businessUnit.id === 5 && businessUnit.name.toLowerCase().includes('pharmacy')) {
-                            console.log('DEBUG: Found Pharmacy unit, selecting it');
                             selected = 'selected';
                             businessUnitId = businessUnit.id;
                             isSelected = true;
                         }
                     }
                 } else {
-                    console.log('DEBUG: Department', department, 'detected, using department-based logic');
                     // For other departments, match by staff_department_id
                     if (businessUnit.staff_department_id == department) {
-                        console.log('DEBUG: Found matching department unit:', businessUnit.name);
                         selected = 'selected';
                         businessUnitId = businessUnit.id;
                         isSelected = true;
                     }
                 }
-
-                console.log('DEBUG: Selected value for', businessUnit.name, ':', selected);
 
                 busUnitFrom.append(
                     '<option value="' + businessUnit.id + '" data-id="' + businessUnit.id + '" ' + selected + '>' +
@@ -73,14 +60,12 @@ $(document).ready(function () {
                 $('input[name="business_unit_id_from"]').val(businessUnitId);
                 // Set dropdown to the selected business unit ID
                 busUnitFrom.val(businessUnitId);
-                console.log('DEBUG: Setting dropdown value to:', businessUnitId);
             } else {
                 // Fallback to department if no specific selection made
                 busUnitFrom.val(department);
             }
 
             displayReferredFrom(businessUnitId);
-            displayContent(businessUnitId);
 
             busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
 
@@ -100,11 +85,9 @@ $(document).ready(function () {
     });
 
     // For Referred From
-    // For Referred From
     function displayReferredFrom(businessUnitId) {
         const selectedOption = $(this).find(':selected');
         var refBusId = selectedOption.data('id');
-        // var businessUnitId = $(this).val();
 
         if (businessUnitId) {
             getStaffLocation(staffId, function (staffLocs) {
@@ -151,36 +134,6 @@ $(document).ready(function () {
                                 $('input[name="location_id_from"]').val(locationId);
 
                             }
-                            getAssignee(locationId, function (assignees) {
-                                var assigneeFrom = $('#assignee_from');
-                                assigneeFrom.empty();
-                                assigneeFrom.append('<option value="">Recipient (Optional)</option>');
-
-                                let isSelected = false;
-                                let assigneeId = '';
-
-                                $.each(assignees, function (index, assignee) {
-                                    let selected = '';
-                                    if (String(assignee.id) === String(staffId)) {
-                                        selected = 'selected';
-                                        if (selected !== '') isSelected = true;
-                                        if (selected !== '') assigneeId = assignee.id;
-                                    }
-
-                                    assigneeFrom.append(
-                                        '<option value="' + assignee.id + '" ' + selected + '>' +
-                                        assignee.nama_staff + '</option>'
-                                    );
-
-
-                                });
-
-                                if (isSelected) {
-                                    assigneeFrom.prop('disabled', true);
-                                    $('input[name="assignee_id_from"]').val(assigneeId);
-                                }
-                            });
-
                         },
                         error: function () {
                             alert('Error loading locations');
@@ -193,67 +146,11 @@ $(document).ready(function () {
         }
     }
 
-
     $('#location_from').change(function () {
         var locationId = $(this).val();
-        // console.log(locationId);
-        if (locationId) {
-            getAssignee(locationId, function (assignees) {
-                var assigneeFrom = $('#assignee_from');
-                assigneeFrom.empty();
-                assigneeFrom.append('<option value="">Recipient (Optional)</option>');
-
-                let isSelected = false;
-                let assigneeId = '';
-
-                $.each(assignees, function (index, assignee) {
-                    let selected = '';
-                    if (String(assignee.id) === String(staffId)) {
-                        selected = 'selected';
-                        if (selected !== '') isSelected = true;
-                        if (selected !== '') assigneeId = assignee.id;
-                    }
-
-                    assigneeFrom.append(
-                        '<option value="' + assignee.id + '" ' + selected + '>' +
-                        assignee.nama_staff + '</option>'
-                    );
-                });
-
-
-                if (isSelected) {
-                    assigneeFrom.prop('disabled', true);
-                    $('input[name="location_id_from"]').val(locationId);
-                    $('input[name="assignee_id_from"]').val(assigneeId);
-                }
-            });
-        } else {
-            $('#assignee_from').empty().append('<option value="">Recipient (Optional)</option>');
-        }
+        $('input[name="location_id_from"]').val(locationId);
     });
 
-    function getAssignee(locationId, callback) {
-        $.ajax({
-            url: 'backend.php',
-            method: 'GET',
-            data: {
-                location_id: locationId,
-                action: 'getAssignees'
-            },
-            dataType: 'json',
-            success: function (response) {
-                try {
-                    callback(response);
-                } catch (e) {
-                    logError(new Error('Callback failed'), { context: 'getAssignee', callbackError: e.message });
-                }
-            },
-            error: function (xhr, status, error) {
-                logError(new Error('Error fetching assignees'), { context: 'getAssignee', locationId: locationId, status: status, error: error });
-                callback("Unknown");
-            }
-        });
-    }
     // For Referred From
     function getStaffLocation(staffId, callback) {
         $.ajax({
@@ -285,6 +182,7 @@ $(document).ready(function () {
 
             $('input[name="business_unit_id_to"]').val(refBusId);
 
+            // Get locations for the selected business unit
             $.ajax({
                 url: 'backend.php?action=getLocations',
                 type: 'POST',
@@ -310,164 +208,86 @@ $(document).ready(function () {
                     alert('Error loading locations');
                 }
             });
+
+            //Get forms for required treatment selection
+            $.ajax({
+                url: 'api-jwt.php',
+                type: 'POST',
+                data: { 
+                    action: 'get-forms',
+                    recipientBuId: refBusId
+                },
+                success: function (response) {
+                    const requiredTreatmentDiv = $('#required-treatment');
+                    requiredTreatmentDiv.empty();
+
+                    $.each(response.data, function (index, form) {
+                        const checkbox = `
+                            <div class="form-check">
+                                <input class="form-check-input border" type="checkbox" name="required_treatment[]" value="${form.form_id}" id="form_${form.form_id}">
+                                <label class="form-check-label r-text" for="form_${form.form_id}">
+                                    ${form.label_name}
+                                </label>
+                            </div>
+                        `;
+                        requiredTreatmentDiv.append(checkbox);
+                    });
+
+                },
+                error: function () {
+                    alert('Error loading business units');
+                }
+            });
         } else {
             $('#location_to').empty().append('<option value="">Location</option>');
         }
     });
 
-    // For Refer To
-    $('#location_to').change(function () {
-        var locationId = $(this).val();
+    function formatIC(ic) {
+        // Remove dashes and any non-numeric characters, keep only digits
+        return ic.replace(/[^0-9]/g, '');
+    }
 
-        if (locationId) {
-            $.ajax({
-                url: 'backend.php',
-                method: 'GET',
-                data: {
-                    location_id: locationId,
-                    action: 'getAssignees'
-                },
-                dataType: 'json',
-                success: function (response) {
+    function extractAgeGenderFromIC(ic) {
+        var icno = formatIC(ic);
 
-                    var assigneeTo = $('#recipient_to');
-                    assigneeTo.empty();
-                    assigneeTo.append('<option value="">Recipient (Optional)</option>');
-
-                    $.each(response, function (index, assignee) {
-                        assigneeTo.append(
-                            '<option value="' + assignee.id + '" ' + '>' +
-                            assignee.nama_staff + '</option>'
-                        );
-                    });
-
-                },
-                error: function () {
-                    alert('Error loading assignees')
-                }
-            });
+        if (icno.length !== 12) {
+            return; // Invalid IC format
         }
-    })
 
-    // Function to display content based on business unit ID
-    function displayContent(businessUnitId) {
-        $.ajax({
-            url: 'api-jwt.php',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                action: 'form-details',
-                business_unit_id: businessUnitId
-            },
-            success: function (response) {
-                const forms = response.data.forms;
-                $('.content').hide();
-                const targetDiv = $('.business-unit-' + businessUnitId);
-                targetDiv.show();
-                targetDiv.find('[data-required="true"]').prop('required', true);
-                $('.content .form-container').remove();
+        var year = parseInt(icno.substring(0, 2));
+        var month = parseInt(icno.substring(2, 4));
+        var day = parseInt(icno.substring(4, 6));
+        var lastDigit = parseInt(icno.substring(11, 12));
 
-                forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
-                    const formContainer = $('<div class="form-container mb-3"></div>');
-                    const normalizedDetails = Array.isArray(form_details)
-                        ? form_details
-                        : Object.values(form_details || {});
+        var currentYear = new Date().getFullYear();
+        var fullYear = year > (currentYear % 100) ? 1900 + year : 2000 + year;
 
-                    normalizedDetails.forEach(detail => {
-                        const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
+        // Validate date
+        var date = new Date(fullYear, month - 1, day);
+        if (date.getFullYear() === fullYear && date.getMonth() === (month - 1) && date.getDate() === day) {
+            // Extract gender (odd = Male, even = Female)
+            var gender = (lastDigit % 2 === 0) ? 'Female' : 'Male';
 
-                        const errorId = 'error-' + field_name;
-                        const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
-
-                        let wrapper;
-                        let input;
-
-                        wrapper = $('<div class="mb-2"></div>');
-
-                        if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
-                            wrapper = $('<div class="mb-2"></div>');
-                            const label = $('<p class="r-text"></p>').html(labelText);
-                            input = $('<div></div>');
-
-                            field_value.forEach(option => {
-                                const optionWrapper = $('<div class="form-check"></div>');
-                                const inputField = $('<input>', {
-                                    type: field_type,
-                                    class: 'form-check-input border',
-                                    name: field_name + (field_type === 'checkbox' ? '[]' : ''),
-                                    value: option.form_detail_id,
-                                    'data-required': is_required
-                                });
-                                const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
-                                optionWrapper.append(inputField, inputLabel);
-                                input.append(optionWrapper);
-                            });
-
-                            wrapper.append(label, input);
-
-                        } else if (field_type === 'select' && Array.isArray(field_value)) {
-                            wrapper = $('<div class="col mb-2"></div>');
-                            input = $('<select>', {
-                                name: field_name,
-                                id: field_name,
-                                class: 'form-select form-select-sm text-capitalize',
-                                'data-required': is_required
-                            });
-
-                            input.append($('<option>', {
-                                value: '',
-                                text: label_name
-                            }));
-
-                            field_value.forEach(option => {
-                                input.append($('<option>', {
-                                    value: option.form_detail_id,
-                                    text: option.field_value
-                                }));
-                            });
-
-                            wrapper.append(input);
-
-                        } else {
-                            wrapper = $('<div class="mb-2"></div>');
-                            const label = $('<p class="r-text"></p>').html(labelText);
-                            input = $('<input>', {
-                                type: field_type,
-                                name: field_name,
-                                class: 'form-control form-control-sm',
-                                value: field_value || '',
-                                'data-required': is_required
-                            });
-                            wrapper.append(label, input);
-                        }
-
-                        const errorDiv = $('<div>', {
-                            id: errorId,
-                            class: 'error-message',
-                            css: {
-                                color: 'red',
-                                fontSize: '12px'
-                            }
-                        });
-
-                        wrapper.append(input);
-                        wrapper.append(errorDiv);
-                        formContainer.append(wrapper);
-
-                    });
-                    targetDiv.append(formContainer);
-                });
+            // Calculate age
+            var today = new Date();
+            var age = today.getFullYear() - fullYear;
+            if (today.getMonth() < (month - 1) || (today.getMonth() === (month - 1) && today.getDate() < day)) {
+                age--;
             }
-            ,
-            error: function () {
-                console.log('Failed to display form details');
-            }
-        });
+
+            // Update age and gender fields
+            $('input[name="customer_age"]').val(age);
+            $('input[name="customer_gender"]').val(gender);
+        }
     }
 
     $('input[name="customer_ic"]').on('change', function () {
-        var icno = $(this).val().trim();
+        var icno = formatIC($(this).val().trim());
         if (icno === '') return;
+
+        // Update the field with formatted IC (without dashes)
+        $(this).val(icno);
 
         $.ajax({
             type: 'POST',
@@ -478,7 +298,8 @@ $(document).ready(function () {
             dataType: 'json',
             success: function (response) {
                 if (response.length === 0) {
-                    // alert('Customer not found');
+                    // Customer not found - show create customer dialog
+                    showCreateCustomerDialog(icno);
                     return;
                 }
 
@@ -516,6 +337,325 @@ $(document).ready(function () {
             }
         });
     });
+
+    // Inline edit functionality for customer fields
+    function setupCustomerInlineEdit() {
+        const customerFields = [
+            'customer_ic',
+            'customer_name',
+            'customer_phone',
+            'customer_email',
+            'customer_age',
+            'customer_gender',
+            'customer_address'
+        ];
+
+        customerFields.forEach(function (fieldName) {
+            const fieldSelector = fieldName === 'customer_address' ?
+                'textarea[name="' + fieldName + '"]' :
+                'input[name="' + fieldName + '"]';
+
+            $(fieldSelector).on('blur', function () {
+                const customerId = $('input[name="customer_id"]').val();
+                const newValue = $(this).val().trim();
+                const originalValue = $(this).data('original-value') || '';
+
+                // Skip if no customer ID or no change
+                if (!customerId || newValue === originalValue) {
+                    return;
+                }
+
+                // Store original value if not already stored
+                if ($(this).data('original-value') === undefined) {
+                    $(this).data('original-value', originalValue);
+                }
+
+                // Show confirmation dialog
+                const fieldLabel = getFieldLabel(fieldName);
+                const confirmMessage = `Update ${fieldLabel} to "${newValue}"?`;
+
+                if (!confirm(confirmMessage)) {
+                    // User cancelled, revert to original value
+                    $(this).val(originalValue);
+                    return;
+                }
+
+                // Show loading state
+                const $field = $(this);
+                const originalBg = $field.css('background-color');
+                $field.css('background-color', '#f8f9fa').prop('disabled', true);
+
+                // Clear any existing error messages
+                $('#error-' + fieldName.replace('_', '-')).text('');
+
+                // Format IC if updating customer_ic field
+                const valueToSend = fieldName === 'customer_ic' ? formatIC(newValue) : newValue;
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'backend.php?action=updateCustomer',
+                    data: {
+                        customer_id: customerId,
+                        field: fieldName,
+                        value: valueToSend
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.success) {
+                            // Update successful - store new original value
+                            $field.data('original-value', newValue);
+                            $field.css('background-color', '#d4edda'); // Green success
+
+                            // Reset background after 1 second
+                            setTimeout(function () {
+                                $field.css('background-color', originalBg);
+                            }, 1000);
+
+                            // Show success message briefly
+                            showFieldMessage(fieldName, response.message, 'success');
+                        } else {
+                            // Update failed - show error and revert
+                            $field.val(originalValue);
+                            showFieldMessage(fieldName, response.message, 'error');
+                            $field.css('background-color', '#f8d7da'); // Red error
+
+                            setTimeout(function () {
+                                $field.css('background-color', originalBg);
+                            }, 2000);
+                        }
+                    },
+                    error: function () {
+                        // Network error - revert value
+                        $field.val(originalValue);
+                        showFieldMessage(fieldName, 'Network error. Please try again.', 'error');
+                        $field.css('background-color', '#f8d7da'); // Red error
+
+                        setTimeout(function () {
+                            $field.css('background-color', originalBg);
+                        }, 2000);
+                    },
+                    complete: function () {
+                        // Re-enable field
+                        $field.prop('disabled', false);
+                    }
+                });
+            });
+
+            // Store original value when field receives focus
+            $(fieldSelector).on('focus', function () {
+                if ($(this).data('original-value') === undefined) {
+                    $(this).data('original-value', $(this).val());
+                }
+            });
+        });
+    }
+
+    function getFieldLabel(fieldName) {
+        const labels = {
+            'customer_ic': 'I/C No.',
+            'customer_name': 'Name',
+            'customer_phone': 'Phone No.',
+            'customer_email': 'Email',
+            'customer_age': 'Age',
+            'customer_gender': 'Gender',
+            'customer_address': 'Address'
+        };
+        return labels[fieldName] || fieldName;
+    }
+
+
+    // Initialize inline edit functionality
+    setupCustomerInlineEdit();
+
+    function showCreateCustomerDialog(icno) {
+        const message = `Customer with I/C "${icno}" not found.\nWould you like to create a new customer?`;
+
+        if (confirm(message)) {
+            // Clear existing customer data
+            $('input[name="customer_id"]').val('');
+            $('input[name="customer_name"]').val('');
+            $('input[name="customer_phone"]').val('');
+            $('input[name="customer_email"]').val('');
+            $('input[name="customer_age"]').val('');
+            $('input[name="customer_gender"]').val('');
+            $('textarea[name="customer_address"]').val('');
+
+            // Pre-populate IC field
+            $('input[name="customer_ic"]').val(icno);
+
+            // Auto-extract and populate age and gender from IC
+            extractAgeGenderFromIC(icno);
+
+            // Clear any error messages
+            $('.error-message').text('');
+
+            // Show instruction message below I/C field
+            showFieldMessage('customer-ic', 'Please fill in the customer details below', 'info');
+
+            // Enable inline customer creation mode
+            enableInlineCustomerCreation(icno);
+        } else {
+            // User cancelled - clear IC field
+            $('input[name="customer_ic"]').val('');
+        }
+    }
+
+    function enableInlineCustomerCreation(icno) {
+        // Mark fields as being in creation mode
+        const customerFields = ['customer_name', 'customer_phone', 'customer_email', 'customer_age', 'customer_gender', 'customer_address'];
+
+        customerFields.forEach(function (fieldName) {
+            const fieldSelector = fieldName === 'customer_address' ?
+                'textarea[name="' + fieldName + '"]' :
+                'input[name="' + fieldName + '"]';
+
+            $(fieldSelector).data('creation-mode', true);
+        });
+
+        // Set up blur handler for customer creation
+        $('.form-control, textarea').off('blur.customerCreation').on('blur.customerCreation', function () {
+            if ($(this).data('creation-mode') && checkAllRequiredFieldsFilled(icno)) {
+                $(this).off('blur.customerCreation');
+                createCustomerInline(icno);
+            }
+        });
+    }
+
+    function checkAllRequiredFieldsFilled(icno) {
+        const name = $('input[name="customer_name"]').val().trim();
+        const phone = $('input[name="customer_phone"]').val().trim();
+        const address = $('textarea[name="customer_address"]').val().trim();
+
+        return icno && name && phone && address;
+    }
+
+    function createCustomerInline(icno) {
+        const customerData = {
+            ic: formatIC(icno),
+            name: $('input[name="customer_name"]').val().trim(),
+            phone: $('input[name="customer_phone"]').val().trim(),
+            email: $('input[name="customer_email"]').val().trim(),
+            age: $('input[name="customer_age"]').val().trim(),
+            gender: $('input[name="customer_gender"]').val().trim(),
+            address: $('textarea[name="customer_address"]').val().trim()
+        };
+
+        // Validation
+        if (!customerData.name) {
+            showFieldMessage('customer-name', 'Name is required', 'error');
+            return;
+        }
+        if (!customerData.phone) {
+            showFieldMessage('customer-phone', 'Phone is required', 'error');
+            return;
+        }
+        if (!customerData.address) {
+            showFieldMessage('customer-address', 'Address is required', 'error');
+            return;
+        }
+
+        // Show loading state
+        $('input[name="customer_name"]').css('background-color', '#f8f9fa').prop('disabled', true);
+        showFieldMessage('customer-name', 'Creating customer...', 'info');
+
+        $.ajax({
+            type: 'POST',
+            url: 'backend.php?action=createCustomer',
+            data: customerData,
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    // Customer created successfully
+                    $('input[name="customer_id"]').val(response.customer_id);
+
+                    // Clear creation mode flags
+                    const customerFields = ['customer_name', 'customer_phone', 'customer_email', 'customer_age', 'customer_gender', 'customer_address'];
+                    customerFields.forEach(function (fieldName) {
+                        const fieldSelector = fieldName === 'customer_address' ?
+                            'textarea[name="' + fieldName + '"]' :
+                            'input[name="' + fieldName + '"]';
+                        $(fieldSelector).removeData('creation-mode');
+                        $(fieldSelector).css('background-color', '#d4edda'); // Green success
+
+                        // Reset background after 2 seconds
+                        setTimeout(function () {
+                            $(fieldSelector).css('background-color', '');
+                        }, 2000);
+                    });
+
+                    // Show success message
+                    showFieldMessage('customer-name', 'Customer created successfully!', 'success');
+
+                    // Re-enable inline edit for the newly created customer
+                    setupCustomerInlineEdit();
+
+                } else {
+                    // Creation failed
+                    showFieldMessage('customer-name', response.message, 'error');
+                    $('input[name="customer_name"]').css('background-color', '#f8d7da'); // Red error
+
+                    setTimeout(function () {
+                        $('input[name="customer_name"]').css('background-color', '');
+                    }, 2000);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log('Create customer error:', {
+                    xhr: xhr,
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText
+                });
+
+                let errorMessage = 'Network error. Please try again.';
+
+                if (xhr.status === 500) {
+                    errorMessage = 'Server error: ' + (xhr.responseText || 'Internal server error');
+                } else if (xhr.status === 404) {
+                    errorMessage = 'Backend endpoint not found';
+                } else if (xhr.status === 0) {
+                    errorMessage = 'Connection failed - check network';
+                } else if (xhr.responseText) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        errorMessage = response.message || errorMessage;
+                    } catch (e) {
+                        errorMessage = 'Server response: ' + xhr.responseText.substring(0, 100);
+                    }
+                }
+
+                showFieldMessage('customer-name', errorMessage, 'error');
+                $('input[name="customer_name"]').css('background-color', '#f8d7da'); // Red error
+
+                setTimeout(function () {
+                    $('input[name="customer_name"]').css('background-color', '');
+                }, 2000);
+            },
+            complete: function () {
+                $('input[name="customer_name"]').prop('disabled', false);
+            }
+        });
+    }
+
+    // Enhanced showFieldMessage function to handle info messages
+    function showFieldMessage(fieldName, message, type) {
+        const errorId = '#error-' + fieldName.replace('_', '-');
+        const $errorElement = $(errorId);
+
+        if (type === 'success') {
+            $errorElement.css('color', 'green').text(message);
+        } else if (type === 'info') {
+            $errorElement.css('color', '#007bff').text(message);
+        } else {
+            $errorElement.css('color', 'red').text(message);
+        }
+
+        // Clear message after 5 seconds for info, 3 seconds for others
+        const clearTime = type === 'info' ? 5000 : 3000;
+        setTimeout(function () {
+            $errorElement.text('');
+        }, clearTime);
+    }
 
     function toggleExternalReferralSection() {
         $('#external_referral').on('change', function () {
@@ -770,7 +910,6 @@ function validateForm(event) {
     }
 
     markError("business-unit-from", !isInteger(form["business_unit_id_from"].value), "Select one business unit.");
-    markError("assignee-from", !isInteger(form["assignee_id_from"].value), "Select one assignee.");
     markError("location-from", !isInteger(form["location_id_from"].value), "Select one location.");
 
     //change to optional if true
@@ -781,7 +920,6 @@ function validateForm(event) {
     //add validation if external referral = true
     markError("organization", isExternalReferral && isEmpty(form["organization"].value), "This field cannot be left blank.");
     markError("location-organization", isExternalReferral && isEmpty(form["location_organization"].value), "This field cannot be left blank.");
-    markError("referee", isExternalReferral && isEmpty(form["referee"].value), "This field cannot be left blank.");
 
     markError("referral-reason", isEmpty(form["referral_reason"].value), "This field cannot be left blank.");
     markError("referral-condition", isEmpty(form["referral_condition"].value), "This field cannot be left blank.");
@@ -801,6 +939,21 @@ function validateForm(event) {
         });
 
         const formData = new FormData(form);
+
+        // Group required_treatment checkboxes into a single array
+        const requiredTreatmentValues = [];
+        $('input[name="required_treatment[]"]:checked').each(function() {
+            requiredTreatmentValues.push($(this).val());
+        });
+
+        // Remove individual required_treatment[] entries
+        formData.delete('required_treatment[]');
+
+        // Add the grouped array as required_treatment
+        if (requiredTreatmentValues.length > 0) {
+            formData.append('required_treatment', JSON.stringify(requiredTreatmentValues));
+        }
+
         allUploadedFiles.forEach(file => {
             formData.append('attachments[]', file);
         });
@@ -846,7 +999,6 @@ function validateForm(event) {
                         // Internal referral - go to QR page
                         window.location.href = 'qr.php?id=' + inner.id;
                     }
-
 
                 } else {
                     console.log('Failed:', inner.message);

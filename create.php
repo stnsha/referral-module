@@ -28,7 +28,7 @@ include('../common/index_adv.php');
                         <p class="r-title">Referral Details</p>
                         <p class="r-text">Referred From<span style="color:red;">*</span></p>
                         <div class="row mb-2">
-                            <div class="col">
+                            <div class="col" style="display:none;">
                                 <select name="business_unit_from" id="business_unit_from"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Business Unit</option>
@@ -45,11 +45,11 @@ include('../common/index_adv.php');
                                     <option value="">Location</option>
                                 </select>
                                 <input type="hidden" name="location_id_from">
-
                                 <div class="error-message" id="error-location-from" style="color: red;font-size:12px;">
                                 </div>
                             </div>
                             <div class="col" style="display: none;">
+                                <!---->
                                 <select name="assignee_from" id="assignee_from"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Assignee</option>
@@ -57,7 +57,8 @@ include('../common/index_adv.php');
                                         style="color: red;font-size:12px;">
                                     </div>
                                 </select>
-                                <input type="hidden" name="assignee_id_from">
+                                <input type="hidden" name="assignee_id_from"
+                                    value="<?php echo isset($id_user) ? $id_user : ''; ?>">
                             </div>
                         </div>
                         <p class="r-text">Referring To<span style="color:red;">*</span></p>
@@ -81,7 +82,7 @@ include('../common/index_adv.php');
                                 <div class="error-message" id="error-location-to" style="color: red;font-size:12px;">
                                 </div>
                             </div>
-                            <div class="col">
+                            <div class="col" style="display:none;">
                                 <select name="recipient_to" id="recipient_to"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Recipient (Optional)</option>
@@ -101,6 +102,15 @@ include('../common/index_adv.php');
                         </div>
                         <div class="row mb-2 external-referral-content">
                             <div class="col">
+                                <select name="location_organization" id="location_organization"
+                                    class="form-select form-select-sm text-capitalize">
+                                    <option value="">Location</option>
+                                </select>
+                                <div class="error-message" id="error-location-organization"
+                                    style="color: red;font-size:12px;">
+                                </div>
+                            </div>
+                            <div class="col">
                                 <select name="organization" id="organization"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Organization</option>
@@ -110,18 +120,9 @@ include('../common/index_adv.php');
                             </div>
                             <div class="col">
                                 <select name="referee" id="referee" class="form-select form-select-sm text-capitalize">
-                                    <option value="">Recipient</option>
+                                    <option value="">Recipient (Optional)</option>
                                 </select>
                                 <div class="error-message" id="error-referee" style="color: red;font-size:12px;">
-                                </div>
-                            </div>
-                            <div class="col">
-                                <select name="location_organization" id="location_organization"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="">Location</option>
-                                </select>
-                                <div class="error-message" id="error-location-organization"
-                                    style="color: red;font-size:12px;">
                                 </div>
                             </div>
                         </div>
@@ -233,75 +234,10 @@ include('../common/index_adv.php');
                         </div>
                     </div>
                     <div class="border-bottom pb-3 mb-3">
-                        <p class="r-title">Current/Past Treatments</p>
-
-                        <div class="business-unit-1 content">
-                            <!-- style="display:none;"-->
-                            <p class="r-title">Alpro Audiology</p>
-                        </div>
-                        <div class="business-unit-2 content">
-                            <!-- style="display:none;"-->
-                            <p class="r-title">Alpro Baby</p>
-                        </div>
-                        <div class="business-unit-3 content">
-                            <!-- style="display:none;"-->
-                            <p class="r-title">Alpro Clinic</p>
-                        </div>
-                        <div class="business-unit-4 content">
-                            <!-- style="display:none;"-->
-                            <p class="r-title">Alpro Optisaver</p>
-                        </div>
-                        <div class="business-unit-5 content">
-                            <!-- style="display:none;"-->
-                            <p class="r-title">Alpro Pharmacy</p>
-                        </div>
-                        <div class="business-unit-6 content">
-                            <!-- style="display:none;"-->
-                            <p class="r-title">Alpro Physio</p>
-                        </div>
-                        <div class="business-unit-7 content">
-                            <!-- style="display:none;"-->
-                            <p class="r-title">Alpro Sugi</p>
-                        </div>
-                        <div class="mb-2">
-                            <p class="r-text">Additional Remarks</p>
-                            <textarea name="additional_remarks" id="additional_remarks"
-                                class="form-control form-control-sm" rows="5"></textarea>
-                        </div>
+                        <p class="r-title">Required Treatment</p>
+                        <div class="mb-2" id="required-treatment"></div>
                     </div>
                 </div>
-            </div>
-            <div class="row align-items-start text-start py-2 px-4">
-                <!-- <div class="col h-auto border rounded me-2 p-2">
-                    <p class="r-title">Current/Past Treatments</p>
-
-                    <div class="business-unit-1 content">
-                        <p class="r-title">Alpro Audiology</p>
-                    </div>
-                    <div class="business-unit-2 content">
-                        <p class="r-title">Alpro Baby</p>
-                    </div>
-                    <div class="business-unit-3 content">
-                        <p class="r-title">Alpro Clinic</p>
-                    </div>
-                    <div class="business-unit-4 content">
-                        <p class="r-title">Alpro Optisaver</p>
-                    </div>
-                    <div class="business-unit-5 content">
-                        <p class="r-title">Alpro Pharmacy</p>
-                    </div>
-                    <div class="business-unit-6 content">
-                        <p class="r-title">Alpro Physio</p>
-                    </div>
-                    <div class="business-unit-7 content">
-                        <p class="r-title">Alpro Sugi</p>
-                    </div>
-                    <div class="mb-2">
-                        <p class="r-text">Additional Remarks</p>
-                        <textarea name="additional_remarks" id="additional_remarks" class="form-control form-control-sm"
-                            rows="5"></textarea>
-                    </div>
-                </div> -->
             </div>
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="d-flex justify-content-center align-items-center">
