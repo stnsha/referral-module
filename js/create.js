@@ -224,9 +224,9 @@ $(document).ready(function () {
                     $.each(response.data, function (index, form) {
                         const checkbox = `
                             <div class="form-check">
-                                <input class="form-check-input border" type="checkbox" name="required_treatment[]" value="${form.form_id}" id="form_${form.form_id}">
+                                <input class="form-check-input border" type="checkbox" name="required_treatment[]" value="${form.form_id}" id="form_${form.form_id}" required="${form.is_required}">
                                 <label class="form-check-label r-text" for="form_${form.form_id}">
-                                    ${form.label_name}
+                                    ${form.label_name} ${form.is_required ? '<span class="text-danger">*</span>' : ''}
                                 </label>
                             </div>
                         `;

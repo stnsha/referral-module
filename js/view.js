@@ -20,7 +20,7 @@ $(document).ready(function () {
 
             // Referral Details
             let referralDetails = data.referralDetails;
-
+            console.log(referralDetails);
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -36,6 +36,8 @@ $(document).ready(function () {
             recipientTo.val('');
             business_unit_to.val('');
             location_to.val('');
+
+            var updated_recipient_to = $('#updated_recipient_to');
 
             // Get last two sequences for form population
             const lastTwoSequences = referralDetails.slice(-2); // Get last 2 items
@@ -107,8 +109,8 @@ $(document).ready(function () {
 
             const referralHistoryContainer = $('#referralHistoryContainer');
 
-            // Process referral history (exclude the last sequence which always has empty staff_id)
-            const referralHistoryItems = sortedReferrals.slice(0, -1); // Remove last item
+            // Process referral history (only include filled sequences)
+            const referralHistoryItems = sortedReferrals.filter(rd => rd.is_filled === true);
             let processedCount = 0;
             const totalItems = referralHistoryItems.length;
 
@@ -155,7 +157,7 @@ $(document).ready(function () {
 
                         const panel = $(`[data-sequence="${rd.sequence}"] .referral-panel-item`);
                         const accordion = $(`[data-sequence="${rd.sequence}"]`);
-                        const shouldAutoOpen = (index === 0); // Auto-open first accordion
+                        const shouldAutoOpen = (index === totalItems - 1); // Auto-open last accordion
 
                         processAccordionContent(queueItem, panel, accordion, shouldAutoOpen);
 
@@ -173,10 +175,31 @@ $(document).ready(function () {
             if (referralDetails && referralDetails.length > 0) {
                 const lastSequence = referralDetails[referralDetails.length - 1];
 
-                if (lastSequence.referral_details && lastSequence.referral_details.length > 0) {
+                // Special case: staff_id is null AND referral_details is empty array - show all forms from business_unit_id
+                if (lastSequence.staff_id === null && lastSequence.referral_details && lastSequence.referral_details.length === 0) {
+                    window.hasReplyForms = true;
+                    // Assign current user as recipient
+                    updated_recipient_to.val(staffId);
+                    $('.reply-form-container').show();
+                    // Display all forms from business_unit_id (pass null as referralDetails to show all forms)
+                    displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                }
+                // Check if referral_details exist but not empty (safety check)
+                else if (!lastSequence.referral_details || (lastSequence.referral_details.length === 0 && lastSequence.staff_id !== null)) {
+                    window.hasReplyForms = false;
+                }
+                // Check is_filled status - if true, hide reply form regardless of other conditions
+                else if (lastSequence.is_filled === true) {
+                    window.hasReplyForms = false;
+                }
+                // Original permission logic for unfilled sequences
+                else if (lastSequence.staff_id) {
                     window.hasReplyForms = true;
                     displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
                 } else if (!lastSequence.staff_id) {
+                    // Assign recipient if staff_id is null
+                    updated_recipient_to.val(staffId);
+
                     // When staff_id is null, check if current session user's department matches
                     getStaffDetails(staffId, lastSequence.location, null, department, function (staffResponse) {
                         if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
@@ -190,7 +213,6 @@ $(document).ready(function () {
                             $('.reply-form-container').hide();
                         }
                     });
-                    return; // Exit early since we're handling visibility in the callback
                 }
             }
 
@@ -316,39 +338,6 @@ $(document).ready(function () {
         }
     });
 
-    // For Refer To
-    $('#refer_location').change(function () {
-        var locationId = $(this).val();
-
-        if (locationId) {
-            $.ajax({
-                url: 'backend.php',
-                method: 'GET',
-                data: {
-                    location_id: locationId,
-                    action: 'getAssignees'
-                },
-                dataType: 'json',
-                success: function (response) {
-
-                    var assigneeTo = $('#refer_to');
-                    assigneeTo.empty();
-                    assigneeTo.append('<option value="">Assignee</option>');
-
-                    $.each(response, function (index, assignee) {
-                        assigneeTo.append(
-                            '<option value="' + assignee.id + '" ' + '>' +
-                            assignee.nama_staff + '</option>'
-                        );
-                    });
-
-                },
-                error: function () {
-                    alert('Error loading assignees')
-                }
-            });
-        }
-    });
 
     $('#refer_another').change(function () {
         toggleReferForm();
@@ -393,16 +382,6 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
         initialTreatment(rd.referral_details, rd.business_unit_id, panel, rd.additional_remarks);
     }
 
-    //auto-open only the first (latest) filled accordion
-    const accordionButton = accordion.find('.referral-accordion');
-    const accordionPanel = accordion.find('.referral-panel');
-
-    // Only auto-open the first filled accordion
-    if (shouldAutoOpen) {
-        accordionButton.addClass('active');
-        accordionPanel.css('maxHeight', accordionPanel[0].scrollHeight + 'px');
-    }
-
     const referralPic = accordion.find('.referral-pic');
     var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
     referralPic.html(`
@@ -416,11 +395,28 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
         `);
 
     if (rd.attachments.length > 0) {
-        displayAttachments(rd.attachments, staff, createdAt);
+        displayAttachments(rd.attachments, staff, createdAt, accordion);
+    }
+
+    //auto-open only the first (latest) filled accordion - moved to end after all content is added
+    const accordionButton = accordion.find('.referral-accordion');
+    const accordionPanel = accordion.find('.referral-panel');
+
+    // Only auto-open the first filled accordion
+    if (shouldAutoOpen) {
+        accordionButton.addClass('active');
+        accordionPanel.css('maxHeight', accordionPanel[0].scrollHeight + 'px');
     }
 }
 
-function displayAttachments(attachments, staff, created_at) {
+function displayAttachments(attachments, staff, created_at, accordion) {
+    // Create attachment container within this accordion
+    let attachmentContainer = accordion.find('.attachment-container');
+    if (attachmentContainer.length === 0) {
+        attachmentContainer = $('<div class="attachment-container mt-3"><h6 class="r-title">Attachments</h6><ul class="list-group"></ul></div>');
+        accordion.find('.referral-panel').append(attachmentContainer);
+    }
+    const attachmentList = attachmentContainer.find('.list-group');
 
     attachments.forEach(function (attachment) {
         let isDownloadableClientSide = false;
@@ -443,7 +439,7 @@ function displayAttachments(attachments, staff, created_at) {
                     </div>
                 </li>
             `;
-        attachmentContainer.append(attachmentItem);
+        attachmentList.append(attachmentItem);
     });
 
     $('.download-btn').on('click', function () {
@@ -493,7 +489,7 @@ function displayAttachments(attachments, staff, created_at) {
 
             // Make AJAX request for download
             $.ajax({
-                url: 'api.php',
+                url: 'api-jwt.php',
                 method: 'POST',
                 data: JSON.stringify({
                     action: 'download-attachment',
@@ -1216,19 +1212,16 @@ function referAnother() {
     const checkbox = document.getElementById('refer_another');
     const referBusinessUnit = document.getElementById('refer_business_unit');
     const referLocation = document.getElementById('refer_location');
-    const referTo = document.getElementById('refer_to');
 
     checkbox.addEventListener('change', function () {
         const isChecked = this.checked;
 
         referBusinessUnit.disabled = !isChecked;
         referLocation.disabled = !isChecked;
-        referTo.disabled = !isChecked;
 
         if (!isChecked) {
             referBusinessUnit.innerHTML = '<option value="">Business Unit</option>';
             referLocation.innerHTML = '<option value="">Location</option>';
-            referTo.innerHTML = '<option value="">Assignees</option>';
             $('.refer-form').hide().find('input[type="text"], textarea').val('');
             $('.refer-form').find('select').prop('selectedIndex', 0);
         } else {
@@ -1438,17 +1431,19 @@ function validateForm(event) {
         allUploadedFiles.forEach(file => {
             formData.append('attachments[]', file);
         });
-        for (const [key, value] of formData.entries()) {
-            if (value instanceof File) {
-                console.log(`${key}:`, {
-                    name: value.name,
-                    size: value.size + ' bytes',
-                    type: value.type,
-                });
-            } else {
-                console.log(`${key}: ${value}`);
-            }
-        }
+
+        // for (const [key, value] of formData.entries()) {
+        //     if (value instanceof File) {
+        //         console.log(`${key}:`, {
+        //             name: value.name,
+        //             size: value.size + ' bytes',
+        //             type: value.type,
+        //         });
+        //     } else {
+        //         console.log(`${key}: ${value}`);
+        //     }
+        // }
+
         fetch('update.php', {
             method: 'POST',
             body: formData

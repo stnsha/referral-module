@@ -280,7 +280,7 @@ include('../common/index_adv.php');
 
             <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
                 onsubmit="validateForm(event)" enctype="multipart/form-data">
-                <input type="hidden" name="updated_recipient_to">
+                <input type="hidden" name="updated_recipient_to" id="updated_recipient_to">
                 <input type="hidden" name="referral_id" value="<?php echo $_GET['id']  ?>" readonly>
                 <div class="row align-items-start text-start py-2 px-4 reply-form-container">
                     <div class="col h-auto border rounded me-2 p-2">
@@ -322,13 +322,6 @@ include('../common/index_adv.php');
                                     <div class="error-message text-danger small" id="error-refer-location"></div>
                                 </div>
 
-                                <div class="col">
-                                    <select name="refer_to" id="refer_to"
-                                        class="form-select form-select-sm text-capitalize" disabled>
-                                        <option value="">Assignee</option>
-                                    </select>
-                                    <div class="error-message text-danger small" id="error-refer-to"></div>
-                                </div>
                             </div>
 
                             <div class="refer-form">
