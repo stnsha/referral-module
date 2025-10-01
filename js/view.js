@@ -39,6 +39,14 @@ $(document).ready(function () {
 
             var updated_recipient_to = $('#updated_recipient_to');
 
+            var organization = $('#organization');
+            var location_organization = $('#location_organization');
+            var referee = $('#referee');
+
+            organization.val('');
+            location_organization.val('');
+            referee.val('');
+
             // Get last two sequences for form population
             const lastTwoSequences = referralDetails.slice(-2); // Get last 2 items
 
@@ -59,49 +67,80 @@ $(document).ready(function () {
                     });
                 }
 
-                // Populate TO section with last sequence
-                if (toReferral.staff_id) {
-                    // Use existing staff_id for TO section
-                    getStaffDetails(toReferral.staff_id, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
-                        if (staffResponse && staffResponse.length > 0) {
-                            recipientTo.val(staffResponse[0].staff || '');
-                            business_unit_to.val(staffResponse[0].business_unit || '');
-                            location_to.val(staffResponse[0].outlet || '');
-                        }
-                    });
+                // Check if TO section has external referral
+                if (toReferral.external_referral && toReferral.external_referral.length > 0) {
+                    // External referral - show external fields and hide regular fields
+                    const externalRef = toReferral.external_referral[0];
+
+                    // Populate external referral fields
+                    organization.val(externalRef.organization || '');
+                    location_organization.val(externalRef.state || '');
+                    referee.val(externalRef.name || '');
+
+                    // Show external referral fields
+                    organization.show();
+                    location_organization.show();
+                    referee.show();
+
+                    // Hide regular referral fields
+                    recipientTo.hide();
+                    business_unit_to.hide();
+                    location_to.hide();
+
+                    // Toggle labels
+                    $('.referring-to').hide();
+                    $('.external-referral-text').show();
                 } else {
-                    // When staff_id is null, check if current session user's department matches
-                    getStaffDetails(staffId, toReferral.location, null, department, function (staffResponse) {
-                        if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
-                            // Department matches - use current session user
-                            getStaffDetails(staffId, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
-                                if (staffResponse && staffResponse.length > 0) {
-                                    recipientTo.val(staffResponse[0].staff || '');
-                                    business_unit_to.val(staffResponse[0].business_unit || '');
-                                    location_to.val(staffResponse[0].outlet || '');
-                                }
-                            });
-                        } else {
-                            // Department doesn't match - only populate location and business unit
-                            getRecipientDetails(toReferral.location, toReferral.business_unit_id, function (recipientResponse) {
-                                if (recipientResponse) {
-                                    location_to.val(recipientResponse.outlet_name || '');
-                                    business_unit_to.val(recipientResponse.business_unit_name || '');
-                                    recipientTo.val(''); // Leave staff field empty
-                                }
-                            });
-                        }
-                    });
+                    // Regular referral - show regular fields and hide external fields
+                    organization.hide();
+                    location_organization.hide();
+                    referee.hide();
+
+                    // Show regular referral fields
+                    recipientTo.show();
+                    business_unit_to.show();
+                    location_to.show();
+
+                    // Toggle labels
+                    $('.referring-to').show();
+                    $('.external-referral-text').hide();
+
+                    // Populate TO section with last sequence
+                    if (toReferral.staff_id) {
+                        // Use existing staff_id for TO section
+                        getStaffDetails(toReferral.staff_id, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
+                            if (staffResponse && staffResponse.length > 0) {
+                                recipientTo.val(staffResponse[0].staff || '');
+                                business_unit_to.val(staffResponse[0].business_unit || '');
+                                location_to.val(staffResponse[0].outlet || '');
+                            }
+                        });
+                    } else {
+                        // When staff_id is null, check if current session user's department matches
+                        getStaffDetails(staffId, toReferral.location, null, department, function (staffResponse) {
+                            if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
+                                // Department matches - use current session user
+                                getStaffDetails(staffId, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
+                                    if (staffResponse && staffResponse.length > 0) {
+                                        recipientTo.val(staffResponse[0].staff || '');
+                                        business_unit_to.val(staffResponse[0].business_unit || '');
+                                        location_to.val(staffResponse[0].outlet || '');
+                                    }
+                                });
+                            } else {
+                                // Department doesn't match - only populate location and business unit
+                                getRecipientDetails(toReferral.location, toReferral.business_unit_id, function (recipientResponse) {
+                                    if (recipientResponse) {
+                                        location_to.val(recipientResponse.outlet_name || '');
+                                        business_unit_to.val(recipientResponse.business_unit_name || '');
+                                        recipientTo.val(''); // Leave staff field empty
+                                    }
+                                });
+                            }
+                        });
+                    }
                 }
             }
-
-            var organization = $('#organization');
-            var location_organization = $('#location_organization');
-            var referee = $('#referee');
-
-            organization.hide();
-            location_organization.hide();
-            referee.hide();
 
             // Sort asc by sequence
             const sortedReferrals = referralDetails.sort((a, b) => a.sequence - b.sequence);
@@ -115,6 +154,8 @@ $(document).ready(function () {
             const totalItems = referralHistoryItems.length;
 
             if (totalItems > 0) {
+                const accordionQueue = [];
+
                 referralHistoryItems.forEach((rd, index) => {
                     // Get staff details first to populate accordion header
                     getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, department, function (staffResponse) {
@@ -123,48 +164,69 @@ $(document).ready(function () {
                         const businessUnit = staffResponse && staffResponse.length > 0 ? staffResponse[0].business_unit : '';
                         const outlet = staffResponse && staffResponse.length > 0 ? staffResponse[0].outlet : '';
 
-                        // Create accordion structure for each referral
-                        const accordionHtml = `
-                            <div class="referral-history" data-sequence="${rd.sequence}">
-                                <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
-                                    <div class="referral-accordion-content">
-                                        <div class="referral-text">
-                                            <span class="referral-title">
-                                                ${businessUnit}, ${staff}, ${outlet}</span>
-                                            <span class="referral-date">${rd.created_at}</span>
-                                        </div>
-                                    </div>
-                                </button>
-                                <div class="referral-panel">
-                                    <div class="referral-panel-item" data-bu="${rd.business_unit_id}"></div>
-                                    <div class="referral-pic"></div>
-                                </div>
-                            </div>
-                        `;
-
-                        referralHistoryContainer.append(accordionHtml);
-
-                        // Prepare data for processAccordionContent function
-                        const queueItem = {
+                        // Store accordion data in queue instead of immediately appending
+                        const accordionData = {
+                            sequence: rd.sequence,
                             rd: rd,
                             staff: staff,
                             businessUnit: businessUnit,
                             outlet: outlet,
                             contact: contact,
                             staff_department_id: rd.business_unit_id,
-                            createdAt: rd.created_at
+                            createdAt: rd.created_at,
+                            originalIndex: index
                         };
 
-                        const panel = $(`[data-sequence="${rd.sequence}"] .referral-panel-item`);
-                        const accordion = $(`[data-sequence="${rd.sequence}"]`);
-                        const shouldAutoOpen = (index === totalItems - 1); // Auto-open last accordion
-
-                        processAccordionContent(queueItem, panel, accordion, shouldAutoOpen);
-
+                        accordionQueue.push(accordionData);
                         processedCount++;
-                        // if (processedCount === totalItems) {
-                        //     console.log('All referral history accordions processed');
-                        // }
+
+                        // When all AJAX calls are complete, sort and display accordions
+                        if (processedCount === totalItems) {
+                            // Sort by sequence to maintain order
+                            accordionQueue.sort((a, b) => a.sequence - b.sequence);
+
+                            // Now append accordions in correct sequence order
+                            accordionQueue.forEach((accordionData, sortedIndex) => {
+                                const { rd, staff, businessUnit, outlet, contact } = accordionData;
+
+                                const accordionHtml = `
+                                    <div class="referral-history" data-sequence="${rd.sequence}">
+                                        <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
+                                            <div class="referral-accordion-content">
+                                                <div class="referral-text">
+                                                    <span class="referral-title">
+                                                        ${businessUnit}, ${staff}, ${outlet}</span>
+                                                    <span class="referral-date">${rd.created_at}</span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                        <div class="referral-panel">
+                                            <div class="referral-panel-item" data-bu="${rd.business_unit_id}"></div>
+                                            <div class="referral-pic"></div>
+                                        </div>
+                                    </div>
+                                `;
+
+                                referralHistoryContainer.append(accordionHtml);
+
+                                // Prepare data for processAccordionContent function
+                                const queueItem = {
+                                    rd: rd,
+                                    staff: staff,
+                                    businessUnit: businessUnit,
+                                    outlet: outlet,
+                                    contact: contact,
+                                    staff_department_id: rd.business_unit_id,
+                                    createdAt: rd.created_at
+                                };
+
+                                const panel = $(`[data-sequence="${rd.sequence}"] .referral-panel-item`);
+                                const accordion = $(`[data-sequence="${rd.sequence}"]`);
+                                const shouldAutoOpen = (sortedIndex === accordionQueue.length - 1); // Auto-open last accordion (highest sequence)
+
+                                processAccordionContent(queueItem, panel, accordion, shouldAutoOpen);
+                            });
+                        }
                     });
                 });
             }
@@ -175,8 +237,13 @@ $(document).ready(function () {
             if (referralDetails && referralDetails.length > 0) {
                 const lastSequence = referralDetails[referralDetails.length - 1];
 
+                // Check if external referral - hide reply form
+                if (lastSequence.external_referral && lastSequence.external_referral.length > 0) {
+                    window.hasReplyForms = false;
+                    $('.reply-form-container').hide();
+                }
                 // Special case: staff_id is null AND referral_details is empty array - show all forms from business_unit_id
-                if (lastSequence.staff_id === null && lastSequence.referral_details && lastSequence.referral_details.length === 0) {
+                else if (lastSequence.staff_id === null && lastSequence.referral_details && lastSequence.referral_details.length === 0) {
                     window.hasReplyForms = true;
                     // Assign current user as recipient
                     updated_recipient_to.val(staffId);

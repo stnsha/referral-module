@@ -1,0 +1,115 @@
+ view.js Conditions:
+
+  Data Processing Conditions:
+  1. Lines 14: if (rd.referral_reason || rd.referral_condition || rd.medical_history) - Display referral info if any
+   field exists
+  2. Lines 49: if (shouldAutoOpen) - Auto-open first filled accordion
+  3. Lines 66: if (rd.attachments.length > 0) - Display attachments if they exist
+
+  Referral Type Conditions:
+  4. Lines 114-124: Complex sorting logic with multiple conditions:
+  - if (a.is_filled !== b.is_filled) - Sort by filled status
+  - if (a.sequence !== b.sequence) - Sort by sequence
+  5. Lines 154: if (rd.external_referral.length < 1) - Internal referral check
+  6. Lines 270: else - External referral handling
+
+  Staff Assignment Conditions:
+  7. Lines 184: if (secondMaxSequence && rd.sequence == secondMaxSequence) - Latest referee assignment
+  8. Lines 188: if (maxSequence && rd.sequence == maxSequence) - Latest recipient assignment
+  9. Lines 226: if (rd.is_filled != 1 && staff_department_id == department) - Display reply form condition
+  10. Lines 236: if (completedRequests === totalRequests) - All requests completed check
+
+  Accordion Processing:
+  11. Lines 244: if (queueItem && queueItem.rd.is_filled == 1) - Process filled accordions only
+  12. Lines 256: if (latestRefereeData) - Assign referee data if available
+  13. Lines 262: if (latestRecipientData) - Assign recipient data if available
+
+  External Referral Conditions:
+  14. Lines 278: if (rd.is_filled == 0) - Show reply form for unfilled external referrals
+  15. Lines 281: else - Hide reply form for filled external referrals
+  16. Lines 308: if (rd.is_filled == 0 && rd.sequence != maxSequence) - Show referring indication
+
+  Customer Data Processing:
+  17. Lines 351: if (customer[0].birth_date) - Calculate age if birth date exists
+  18. Lines 359-363: Age calculation logic with month/day checks
+
+  Status Management Conditions:
+  19. Lines 375: const shouldDisableRadios = (status == 4 || status == 5) - Disable radios for closed/not present
+  20. Lines 380: if (status == 4 || status == 5) - Hide elements for final statuses
+  21. Lines 391: else - Show elements for active statuses
+
+  File Download Conditions:
+  22. Lines 411: const isDownloadableClientSide = false - Download method selection
+  23. Lines 413: Ternary condition for download button HTML
+  24. Lines 439: if (encodedData) - Client-side download
+  25. Lines 475: else if (attachmentId) - Server-side download
+  26. Lines 533: else - No download method available
+
+  File Processing Conditions:
+  27. Lines 496-504: Try-catch with JSON parsing check
+  28. Lines 499: if (!jsonResponse.success) - Download failure check
+
+  Form Field Processing:
+  29. Lines 980: if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) -
+  Radio/checkbox fields
+  30. Lines 1005: else if (field_type === 'select' && Array.isArray(field_value)) - Select fields
+  31. Lines 1028: else - Other input types
+
+  Status Change Listeners:
+  32. Lines 697: if (statusNoteContainer && statusNoteTextarea) - Status note handling
+  33. Lines 699: if (this.value === '5') - Not Present status
+  34. Lines 715: else if (this.value === '4') - Closed status35. Lines 735: else - Other statuses
+
+  Form Validation:
+  36. Lines 860: Duplicate status change logic
+  37. Lines 861: if (this.value === '5') - Status 5 handling
+  38. Lines 868: else - Other status handling
+
+  Initial Treatment Processing:
+  39. Lines 1118: if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_data)) -
+  Radio/checkbox in treatment
+  40. Lines 1134: if (option.is_answer) - Check answered options
+  41. Lines 1145: else if (field_type === 'select' && Array.isArray(field_data)) - Select in treatment
+  42. Lines 1167: if (option.is_answer) - Selected option check
+  43. Lines 1176: else - Other field types in treatment
+
+  Accordion Functionality:
+  44. Lines 1229: if (accordion && !accordion.classList.contains("disabled")) - Clickable accordion check
+  45. Lines 1233: if (otherAccordion !== accordion) - Close other accordions
+  46. Lines 1244: if (panel.style.maxHeight) - Toggle panel height
+
+  Refer Another Feature:
+  47. Lines 1260: const isChecked = this.checked - Checkbox state
+  48. Lines 1266: if (!isChecked) - Reset form when unchecked
+  49. Lines 1272: else - Load business units when checked
+
+  File Upload Validation:
+  50. Lines 1337: const isValidType = allowedTypes.includes(file.type) - File type validation
+  51. Lines 1338: const isValidSize = file.size <= maxFileSize - File size validation
+  52. Lines 1340: if (!isValidType) - Invalid type alert
+  53. Lines 1345: if (!isValidSize) - Invalid size alert
+  54. Lines 1350: if (file.name && !uploadedFileNames.has(file.name)) - Duplicate file check
+
+  Form Validation:
+  55. Lines 1394: Checkbox/radio group validation loop
+  56. Lines 1402: if (!isChecked) - Group validation check
+  57. Lines 1409: if (!form.checkValidity()) - HTML5 validation
+  58. Lines 1419: if (selectedStatus && selectedStatus.value === '5') - Status 5 validation
+  59. Lines 1420: if (!statusNoteTextarea || !statusNoteTextarea.value.trim()) - Status note required
+  60. Lines 1436: else - Other status validation
+  61. Lines 1442: if (!field.value.trim()) - Required field validation
+  62. Lines 1454: if (isValid) - Final validation check
+  63. Lines 1484: if (successCode === 200 || successCode === 201) - Success response check
+  64. Lines 1486: else - Failure response handling
+
+  Toggle Functions:
+  65. Lines 1309: if (isChecked && hasBusinessUnit) - Show refer form conditions
+  66. Lines 1311: else - Hide refer form
+
+  Utility Conditions:
+  67. Lines 576: if (refBusId) - Business unit selection
+  68. Lines 609: else - Clear location dropdown
+  69. Lines 619: if (locationId) - Location selection
+  70. Lines 661: if (isReadOnly) - Toggle read-only state
+  71. Lines 673: else - Restore editable state
+  

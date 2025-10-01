@@ -44,7 +44,7 @@ $data['referral'] = array(
     'priority' => isset($_POST['priority']) ? (int)$_POST['priority'] : null
 );
 
-$data['required_treatment'] = $_POST['required_treatment'] ? array_map('intval', json_decode($_POST['required_treatment'], true)) : array();
+$data['required_treatment'] = isset($_POST['required_treatment']) && $_POST['required_treatment'] ? array_map('intval', json_decode($_POST['required_treatment'], true)) : array();
 
 $uploadedFiles = array();
 if (isset($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is_array($_FILES['attachments']['name'])) {
