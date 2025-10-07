@@ -578,7 +578,7 @@ function getReport($formData, $staff_id)
 
 function getSummaryReport($staff_id)
 {
-    $result = getApiDataWithJWT('report/summary/', null, 'GET', $staff_id);
+    $result = getApiDataWithJWT('report/summary', null, 'GET', $staff_id);
 
     if (!$result['success']) {
         return array();

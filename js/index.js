@@ -4,6 +4,61 @@ document.addEventListener('DOMContentLoaded', function () {
     // window.FORCE_EMPTY_RESPONSE = true;
     let dashboardData = null;
     let statusMapping = null;
+    let apisLoaded = {
+        statusMapping: false,
+        referralData: false,
+        businessUnits: false
+    };
+
+    // Show loading state
+    function showLoadingState() {
+        const tbody = document.querySelector('#referral-tbl tbody');
+        if (!tbody) {
+            const newTbody = document.createElement('tbody');
+            document.getElementById('referral-tbl').appendChild(newTbody);
+        }
+        const tableBody = document.querySelector('#referral-tbl tbody');
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><div class="mt-2">Loading referral data...</div></td></tr>';
+    }
+
+    // Check if all APIs are loaded
+    function checkAllApisLoaded() {
+        if (apisLoaded.statusMapping && apisLoaded.referralData && apisLoaded.businessUnits) {
+            // All APIs loaded, now display the data
+            if (window.initialReferralData) {
+                initializeReferralTable(window.initialReferralData);
+            }
+        }
+    }
+
+    // Initialize referral table once all APIs are loaded
+    function initializeReferralTable(response) {
+        // console.log('DEBUG: All APIs loaded, initializing table...');
+
+        // Initialize with all data by default
+        const checkedRadio = document.querySelector('input[name="referral-type"]:checked');
+        const filterType = checkedRadio ? checkedRadio.value : 'all';
+        const selectedData = response.data[filterType] || [];
+        originalData = [...selectedData];
+        window.currentReferralType = filterType;
+
+        // console.log('DEBUG: Checked radio:', checkedRadio ? checkedRadio.value : 'none');
+        // console.log('DEBUG: Filter type:', filterType);
+        // console.log('DEBUG: Selected data length:', selectedData.length);
+        // console.log('DEBUG: Original data length:', originalData.length);
+
+        // FORCE DISPLAY - Apply department filtering if needed and display
+        // console.log('DEBUG: Department variable:', department);
+
+        // Force display the data first
+        allData = originalData;
+        currentPage = 1;
+        displayPage(currentPage);
+        // console.log('DEBUG: Forced display with allData length:', allData.length);
+    }
+
+    // Show loading state immediately
+    showLoadingState();
 
     // First, fetch status mapping from getReferralStatus API
     $.ajax({
@@ -13,12 +68,24 @@ document.addEventListener('DOMContentLoaded', function () {
         success: function (response) {
             if (response && response.data) {
                 statusMapping = response.data;
+                apisLoaded.statusMapping = true;
+                checkAllApisLoaded();
                 // Now fetch dashboard data
                 fetchDashboardData();
             }
         },
         error: function (xhr, status, error) {
             // console.log('Error loading status mapping:', error);
+            // Set a basic fallback mapping
+            statusMapping = {
+                '1': 'Open',
+                '2': 'In Progress',
+                '3': 'Referred',
+                '4': 'Closed',
+                '5': 'Not Present'
+            };
+            apisLoaded.statusMapping = true;
+            checkAllApisLoaded();
             // Fallback - still try to load dashboard data
             fetchDashboardData();
         }
@@ -350,9 +417,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
+            apisLoaded.businessUnits = true;
+            checkAllApisLoaded();
         },
         error: function () {
             alert('Error loading business units');
+            apisLoaded.businessUnits = true;
+            checkAllApisLoaded();
         }
     });
 
@@ -550,6 +621,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 // console.log(response);
                 if (!response || typeof response !== 'object' || !response.data) {
                     logError(new Error('Invalid response format'), { context: 'loadReferralData', response: response });
+                    apisLoaded.referralData = true;
+                    checkAllApisLoaded();
                     return;
                 }
 
@@ -562,27 +635,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Store the full API response structure
                 window.referralApiData = response.data;
+                window.initialReferralData = response;
 
-                // Initialize with all data by default
-                const checkedRadio = document.querySelector('input[name="referral-type"]:checked');
-                const filterType = checkedRadio ? checkedRadio.value : 'all';
-                const selectedData = response.data[filterType] || [];
-                originalData = [...selectedData];
-                window.currentReferralType = filterType;
+                // Mark API as loaded
+                apisLoaded.referralData = true;
+                checkAllApisLoaded();
 
-                // console.log('DEBUG: Checked radio:', checkedRadio ? checkedRadio.value : 'none');
-                // console.log('DEBUG: Filter type:', filterType);
-                // console.log('DEBUG: Selected data length:', selectedData.length);
-                // console.log('DEBUG: Original data length:', originalData.length);
-
-                // FORCE DISPLAY - Apply department filtering if needed and display
-                // console.log('DEBUG: Department variable:', department);
-
-                // Force display the data first
-                allData = originalData;
-                currentPage = 1;
-                displayPage(currentPage);
-                // console.log('DEBUG: Forced display with allData length:', allData.length);
+                // console.log('DEBUG: Referral data loaded, waiting for other APIs...');
 
                 if (false && department && department !== '') { // Temporarily disabled
                     // Get business units to find the department name
@@ -939,6 +998,8 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             error: function (xhr, status, error) {
                 logError(new Error('Error loading referral data'), { context: 'loadReferralData', status: status, error: error, responseText: xhr.responseText });
+                apisLoaded.referralData = true;
+                checkAllApisLoaded();
             }
         });
     } else {
