@@ -233,6 +233,10 @@ $(document).ready(function () {
 
             // Global flag to control reply-form-container visibility based on referral_details
             window.hasReplyForms = false;
+            window.isLastSequence = false;
+
+            // Get status early for use in async callbacks
+            let status = data.status;
 
             if (referralDetails && referralDetails.length > 0) {
                 const lastSequence = referralDetails[referralDetails.length - 1];
@@ -240,31 +244,39 @@ $(document).ready(function () {
                 // Check if external referral - hide reply form
                 if (lastSequence.external_referral && lastSequence.external_referral.length > 0) {
                     window.hasReplyForms = false;
+                    window.isLastSequence = false;
                     $('.reply-form-container').hide();
-                }
-                // Special case: staff_id is null AND referral_details is empty array - show all forms from business_unit_id
-                else if (lastSequence.staff_id === null && lastSequence.referral_details && lastSequence.referral_details.length === 0) {
-                    window.hasReplyForms = true;
-                    // Assign current user as recipient
-                    updated_recipient_to.val(staffId);
-                    $('.reply-form-container').show();
-                    // Display all forms from business_unit_id (pass null as referralDetails to show all forms)
-                    displayContent(lastSequence.business_unit_id, '.reply-content', null);
-                }
-                // Check if referral_details exist but not empty (safety check)
-                else if (!lastSequence.referral_details || (lastSequence.referral_details.length === 0 && lastSequence.staff_id !== null)) {
-                    window.hasReplyForms = false;
                 }
                 // Check is_filled status - if true, hide reply form regardless of other conditions
                 else if (lastSequence.is_filled === true) {
                     window.hasReplyForms = false;
+                    window.isLastSequence = false;
+                    $('.reply-form-container').hide();
                 }
-                // Original permission logic for unfilled sequences
+                // Check if referral_details exist but not empty (safety check)
+                else if (!lastSequence.referral_details || (lastSequence.referral_details.length === 0 && lastSequence.staff_id !== null)) {
+                    window.hasReplyForms = false;
+                    window.isLastSequence = false;
+                    $('.reply-form-container').hide();
+                }
+                // Only show reply form if current user is the staff in last sequence
                 else if (lastSequence.staff_id) {
-                    window.hasReplyForms = true;
-                    displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
-                } else if (!lastSequence.staff_id) {
-                    // Assign recipient if staff_id is null
+                    // Check if current user matches the staff_id in last sequence
+                    if (lastSequence.staff_id === staffId) {
+                        window.hasReplyForms = true;
+                        window.isLastSequence = true;
+                        $('.reply-form-container').show();
+                        displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                    } else {
+                        // Current user is not the staff in last sequence - hide reply form
+                        window.hasReplyForms = false;
+                        window.isLastSequence = false;
+                        $('.reply-form-container').hide();
+                    }
+                }
+                // Special case: staff_id is null - check department match
+                else if (lastSequence.staff_id === null) {
+                    // Assign current user as recipient
                     updated_recipient_to.val(staffId);
 
                     // When staff_id is null, check if current session user's department matches
@@ -272,21 +284,45 @@ $(document).ready(function () {
                         if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
                             // Department matches - show reply form and populate forms
                             window.hasReplyForms = true;
+                            window.isLastSequence = true;
                             $('.reply-form-container').show();
-                            displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+
+                            // Check if referral_details is empty - show all forms
+                            if (lastSequence.referral_details && lastSequence.referral_details.length === 0) {
+                                displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                            } else {
+                                displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                            }
+
+                            // Show "Refer Another" container and submit button when department matches
+                            $('.refer-another-container').show();
+                            if (status != 4 && status != 5) {
+                                $('.form-btn-submit').show();
+                            }
+                            // Reload status options with correct disable state
+                            loadStatusOptions(status, (status == 4 || status == 5));
                         } else {
                             // Department doesn't match - hide reply form
                             window.hasReplyForms = false;
+                            window.isLastSequence = false;
                             $('.reply-form-container').hide();
+
+                            // Hide "Refer Another" container and submit button when department doesn't match
+                            $('.refer-another-container').hide();
+                            $('.form-btn-submit').hide();
+                            // Reload status options with correct disable state
+                            loadStatusOptions(status, true);
                         }
                     });
+                } else {
+                    // Default: hide reply form
+                    window.hasReplyForms = false;
+                    window.isLastSequence = false;
+                    $('.reply-form-container').hide();
                 }
-            }
-
-            // Control container visibility for other cases
-            if (window.hasReplyForms) {
-                $('.reply-form-container').show();
             } else {
+                // No referral details - hide reply form
+                window.isLastSequence = false;
                 $('.reply-form-container').hide();
             }
 
@@ -345,10 +381,24 @@ $(document).ready(function () {
                 customer_address.val(customer[0].address);
             });
 
-            let status = data.status;
-            // Load status options dynamically with disable parameter for status 4 or 5
-            const shouldDisableRadios = (status == 4 || status == 5);
+            // Load status options dynamically with disable parameter for status 4 or 5 OR not last sequence
+            const shouldDisableRadios = (status == 4 || status == 5 || !window.isLastSequence);
             loadStatusOptions(status, shouldDisableRadios);
+
+            // Apply UI changes based on last sequence status - after status options loaded
+            if (!window.isLastSequence) {
+                // Hide entire "Refer Another" container
+                $('.refer-another-container').hide();
+                // Hide submit button
+                $('.form-btn-submit').hide();
+            } else {
+                // Show "Refer Another" container when in last sequence
+                $('.refer-another-container').show();
+                // Ensure submit button is visible (unless status is 4 or 5)
+                if (status != 4 && status != 5) {
+                    $('.form-btn-submit').show();
+                }
+            }
 
             // Hide submit button if initial status is 4 or 5
             const submitButton = document.querySelector('.form-btn-submit');

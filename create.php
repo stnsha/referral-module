@@ -49,7 +49,6 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                             <div class="col" style="display: none;">
-                                <!---->
                                 <select name="assignee_from" id="assignee_from"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Assignee</option>
@@ -225,8 +224,41 @@ include('../common/index_adv.php');
                         </div>
                     </div>
                     <div class="border-bottom pb-3 mb-3">
-                        <p class="r-title">Required Treatment</p>
-                        <div class="mb-2" id="required-treatment"></div>
+                        <p class="r-title">Current/Past Treatments</p>
+
+                        <div class="business-unit-1 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Audiology</p>
+                        </div>
+                        <div class="business-unit-2 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Baby</p>
+                        </div>
+                        <div class="business-unit-3 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Clinic</p>
+                        </div>
+                        <div class="business-unit-4 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Optisaver</p>
+                        </div>
+                        <div class="business-unit-5 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Pharmacy</p>
+                        </div>
+                        <div class="business-unit-6 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Physio</p>
+                        </div>
+                        <div class="business-unit-7 content">
+                            <!-- style="display:none;"-->
+                            <p class="r-title">Alpro Sugi</p>
+                        </div>
+                        <div class="mb-2">
+                            <p class="r-text">Additional Remarks</p>
+                            <textarea name="additional_remarks" id="additional_remarks"
+                                class="form-control form-control-sm" rows="5"></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -242,9 +274,9 @@ include('../common/index_adv.php');
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-            const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-            const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
         </script>
         <script src="js/errorLogger.js"></script>
         <script src="js/create.js"></script>

@@ -66,6 +66,7 @@ $(document).ready(function () {
             }
 
             displayReferredFrom(businessUnitId);
+            displayContent(businessUnitId);
 
             busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
 
@@ -171,6 +172,122 @@ $(document).ready(function () {
         });
     }
 
+    // Function to display content based on business unit ID
+    function displayContent(businessUnitId) {
+        $.ajax({
+            url: 'api-jwt.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'form-details',
+                business_unit_id: businessUnitId
+            },
+            success: function (response) {
+                const forms = response.data.forms;
+                $('.content').hide();
+                const targetDiv = $('.business-unit-' + businessUnitId);
+                targetDiv.show();
+                targetDiv.find('[data-required="true"]').prop('required', true);
+                $('.content .form-container').remove();
+
+                forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
+                    const formContainer = $('<div class="form-container mb-3"></div>');
+                    const normalizedDetails = Array.isArray(form_details)
+                        ? form_details
+                        : Object.values(form_details || {});
+
+                    normalizedDetails.forEach(detail => {
+                        const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
+
+                        const errorId = 'error-' + field_name;
+                        const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
+
+                        let wrapper;
+                        let input;
+
+                        wrapper = $('<div class="mb-2"></div>');
+
+                        if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
+                            wrapper = $('<div class="mb-2"></div>');
+                            const label = $('<p class="r-text"></p>').html(labelText);
+                            input = $('<div></div>');
+
+                            field_value.forEach(option => {
+                                const optionWrapper = $('<div class="form-check"></div>');
+                                const inputField = $('<input>', {
+                                    type: field_type,
+                                    class: 'form-check-input border',
+                                    name: field_name + (field_type === 'checkbox' ? '[]' : ''),
+                                    value: option.form_detail_id,
+                                    'data-required': is_required
+                                });
+                                const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
+                                optionWrapper.append(inputField, inputLabel);
+                                input.append(optionWrapper);
+                            });
+
+                            wrapper.append(label, input);
+
+                        } else if (field_type === 'select' && Array.isArray(field_value)) {
+                            wrapper = $('<div class="col mb-2"></div>');
+                            input = $('<select>', {
+                                name: field_name,
+                                id: field_name,
+                                class: 'form-select form-select-sm text-capitalize',
+                                'data-required': is_required
+                            });
+
+                            input.append($('<option>', {
+                                value: '',
+                                text: label_name
+                            }));
+
+                            field_value.forEach(option => {
+                                input.append($('<option>', {
+                                    value: option.form_detail_id,
+                                    text: option.field_value
+                                }));
+                            });
+
+                            wrapper.append(input);
+
+                        } else {
+                            wrapper = $('<div class="mb-2"></div>');
+                            const label = $('<p class="r-text"></p>').html(labelText);
+                            input = $('<input>', {
+                                type: field_type,
+                                name: field_name,
+                                class: 'form-control form-control-sm',
+                                value: field_value || '',
+                                'data-required': is_required
+                            });
+                            wrapper.append(label, input);
+                        }
+
+                        const errorDiv = $('<div>', {
+                            id: errorId,
+                            class: 'error-message',
+                            css: {
+                                color: 'red',
+                                fontSize: '12px'
+                            }
+                        });
+
+                        wrapper.append(input);
+                        wrapper.append(errorDiv);
+                        formContainer.append(wrapper);
+
+                    });
+                    targetDiv.append(formContainer);
+                });
+            }
+            ,
+            error: function () {
+                console.log('Failed to display form details');
+            }
+        });
+    }
+
     // For Refer To
     $('#business_unit_to').change(function () {
         const selectedOption = $(this).find(':selected');
@@ -206,36 +323,6 @@ $(document).ready(function () {
                 },
                 error: function () {
                     alert('Error loading locations');
-                }
-            });
-
-            //Get forms for required treatment selection
-            $.ajax({
-                url: 'api-jwt.php',
-                type: 'POST',
-                data: { 
-                    action: 'get-forms',
-                    recipientBuId: refBusId
-                },
-                success: function (response) {
-                    const requiredTreatmentDiv = $('#required-treatment');
-                    requiredTreatmentDiv.empty();
-
-                    $.each(response.data, function (index, form) {
-                        const checkbox = `
-                            <div class="form-check">
-                                <input class="form-check-input border" type="checkbox" name="required_treatment[]" value="${form.form_id}" id="form_${form.form_id}" required="${form.is_required}">
-                                <label class="form-check-label r-text" for="form_${form.form_id}">
-                                    ${form.label_name} ${form.is_required ? '<span class="text-danger">*</span>' : ''}
-                                </label>
-                            </div>
-                        `;
-                        requiredTreatmentDiv.append(checkbox);
-                    });
-
-                },
-                error: function () {
-                    alert('Error loading business units');
                 }
             });
         } else {
@@ -370,16 +457,6 @@ $(document).ready(function () {
                     $(this).data('original-value', originalValue);
                 }
 
-                // Show confirmation dialog
-                const fieldLabel = getFieldLabel(fieldName);
-                const confirmMessage = `Update ${fieldLabel} to "${newValue}"?`;
-
-                if (!confirm(confirmMessage)) {
-                    // User cancelled, revert to original value
-                    $(this).val(originalValue);
-                    return;
-                }
-
                 // Show loading state
                 const $field = $(this);
                 const originalBg = $field.css('background-color');
@@ -462,7 +539,6 @@ $(document).ready(function () {
         };
         return labels[fieldName] || fieldName;
     }
-
 
     // Initialize inline edit functionality
     setupCustomerInlineEdit();
@@ -931,20 +1007,6 @@ function validateForm(event) {
         });
 
         const formData = new FormData(form);
-
-        // Group required_treatment checkboxes into a single array
-        const requiredTreatmentValues = [];
-        $('input[name="required_treatment[]"]:checked').each(function() {
-            requiredTreatmentValues.push($(this).val());
-        });
-
-        // Remove individual required_treatment[] entries
-        formData.delete('required_treatment[]');
-
-        // Add the grouped array as required_treatment
-        if (requiredTreatmentValues.length > 0) {
-            formData.append('required_treatment', JSON.stringify(requiredTreatmentValues));
-        }
 
         allUploadedFiles.forEach(file => {
             formData.append('attachments[]', file);

@@ -13,7 +13,7 @@ $recipient = array();
 if (!isset($_POST['external_referral'])) {
     //(internal)
     $recipient = array(
-        'staff_id' => null,
+        'staff_id' => isset($_POST['recipient_to']) ? (int)$_POST['recipient_to'] : null,
         'business_unit_id' => $business_unit_to,
         'location' => isset($_POST['location_to']) ? $_POST['location_to'] : null,
     );
@@ -21,7 +21,8 @@ if (!isset($_POST['external_referral'])) {
     //external
     $recipient = array(
         'organization' => isset($_POST['organization']) ? (int)$_POST['organization'] : null,
-        'referee' => isset($_POST['referee']) && !empty($_POST['referee']) ? $_POST['referee'] : null,
+        'location_organization' => isset($_POST['location_organization']) ? $_POST['location_organization'] : null,
+        'referee' => isset($_POST['referee']) ? $_POST['referee'] : null,
     );
 }
 
@@ -43,7 +44,42 @@ $data['referral'] = array(
     'priority' => isset($_POST['priority']) ? (int)$_POST['priority'] : null
 );
 
-$data['required_treatment'] = isset($_POST['required_treatment']) && $_POST['required_treatment'] ? array_map('intval', json_decode($_POST['required_treatment'], true)) : array();
+$form_data = array();
+foreach ($_POST as $key => $value) {
+    if (!in_array($key, array(
+        'business_unit_from',
+        'assignee_from',
+        'location_from',
+        'business_unit_id_from',
+        'assignee_id_from',
+        'location_id_from',
+        'business_unit_to',
+        'business_unit_id_to',
+        'recipient_to',
+        'location_to',
+        'referral_reason',
+        'referral_condition',
+        'medical_history',
+        'additional_remarks',
+        'priority',
+        'customer_id',
+        'customer_ic',
+        'customer_name',
+        'customer_phone',
+        'customer_email',
+        'customer_age',
+        'customer_gender',
+        'customer_address'
+    ))) {
+        $form_data[$key] = $value;
+    }
+}
+
+if ($business_unit_from !== null) {
+    $data['form_data'] = array(
+        $business_unit_from => $form_data
+    );
+}
 
 $uploadedFiles = array();
 if (isset($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is_array($_FILES['attachments']['name'])) {

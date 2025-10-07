@@ -151,7 +151,8 @@ $(document).ready(function () {
         $row.find('[data-field="specialty"]').text($row.data('original-specialty'));
 
         var refereeId = $row.data('id');
-        $row.find('.btn-update, .btn-cancel').replaceWith(
+        var $actionCell = $row.find('td:last');
+        $actionCell.html(
             '<button class="btn btn-sm btn-primary btn-edit" data-id="' + refereeId + '">Edit</button> ' +
             '<button class="btn btn-sm btn-danger btn-delete" data-id="' + refereeId + '">Delete</button>'
         );
