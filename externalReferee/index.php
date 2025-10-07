@@ -21,6 +21,34 @@ include('../../common/index_adv.php');
 <body>
     <div class="text-center bg-white rounded p-2">
         <p class="r-main-title">External Referees</p>
+
+        <!-- External Referees List Table -->
+        <div class="row align-items-start text-start py-2 px-4 mb-3">
+            <div class="col h-auto border rounded p-3">
+                <p class="r-title mb-3">All External Referees</p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 15%;">Name</th>
+                                <th style="width: 15%;">Email</th>
+                                <th style="width: 10%;">Phone</th>
+                                <th style="width: 20%;">Organization</th>
+                                <th style="width: 15%;">Position</th>
+                                <th style="width: 15%;">Specialty</th>
+                                <th style="width: 10%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="external-referees-tbody">
+                            <tr>
+                                <td colspan="7" class="text-center">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <form action="referral/externalReferee/post.php" method="POST" id="externalRefereeForm"
             name="externalRefereeForm" onsubmit="validateForm(event)">
             <div class="row align-items-start text-start py-2 px-4">
@@ -34,7 +62,7 @@ include('../../common/index_adv.php');
                         </div>
                         <div class="row mb-2">
                             <div class="col">
-                                <p class="r-text">Email<span style="color:red;">*</span></p>
+                                <p class="r-text">Email</p>
                                 <input type="email" name="email" class="form-control form-control-sm">
                                 <div class="error-message" id="error-email" style="color: red;font-size:12px;"></div>
                             </div>
@@ -47,8 +75,13 @@ include('../../common/index_adv.php');
                         <div class="row mb-2">
                             <div class="col">
                                 <p class="r-text">Organization<span style="color:red;">*</span></p>
-                                <input type="text" name="organization" class="form-control form-control-sm">
+                                <select name="external_organization_id" id="organization-select" class="form-control form-control-sm">
+                                    <option value="">Select Organization</option>
+                                </select>
                                 <div class="error-message" id="error-organization" style="color: red;font-size:12px;">
+                                </div>
+                                <div class="mt-2">
+                                    <button type="button" id="add-new-org-btn" class="btn btn-sm btn-outline-primary">+ Add New Organization</button>
                                 </div>
                             </div>
                             <div class="col">
@@ -57,15 +90,61 @@ include('../../common/index_adv.php');
                                 <div class="error-message" id="error-position" style="color: red;font-size:12px;"></div>
                             </div>
                         </div>
+
+                        <!-- New Organization Form (Hidden by default) -->
+                        <div id="new-organization-section" style="display: none;" class="border rounded p-3 mb-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <p class="r-text fw-bold mb-0">New Organization Details</p>
+                                <button type="button" id="cancel-new-org-btn" class="btn btn-sm btn-outline-secondary">Cancel</button>
+                            </div>
+                            <div class="mb-2">
+                                <p class="r-text">Organization Name<span style="color:red;">*</span></p>
+                                <input type="text" name="new_org_name" id="new-org-name" class="form-control form-control-sm">
+                                <div class="error-message" id="error-new-org-name" style="color: red;font-size:12px;"></div>
+                            </div>
+                            <div class="mb-2">
+                                <p class="r-text">Address</p>
+                                <textarea name="new_org_address" id="new-org-address" class="form-control form-control-sm" rows="2"></textarea>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col">
+                                    <p class="r-text">Postcode</p>
+                                    <input type="text" name="new_org_postcode" id="new-org-postcode" class="form-control form-control-sm">
+                                </div>
+                                <div class="col">
+                                    <p class="r-text">State</p>
+                                    <select name="new_org_state" id="new-org-state" class="form-control form-control-sm">
+                                        <option value="">Select State</option>
+                                        <option value="Johor">Johor</option>
+                                        <option value="Kedah">Kedah</option>
+                                        <option value="Kelantan">Kelantan</option>
+                                        <option value="Melaka">Melaka</option>
+                                        <option value="Negeri Sembilan">Negeri Sembilan</option>
+                                        <option value="Pahang">Pahang</option>
+                                        <option value="Perak">Perak</option>
+                                        <option value="Perlis">Perlis</option>
+                                        <option value="Pulau Pinang">Pulau Pinang</option>
+                                        <option value="Sabah">Sabah</option>
+                                        <option value="Sarawak">Sarawak</option>
+                                        <option value="Selangor">Selangor</option>
+                                        <option value="Terengganu">Terengganu</option>
+                                        <option value="Kuala Lumpur">Kuala Lumpur</option>
+                                        <option value="Labuan">Labuan</option>
+                                        <option value="Putrajaya">Putrajaya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <p class="r-text">Country</p>
+                                <select name="new_org_country" id="new-org-country" class="form-control form-control-sm">
+                                    <option value="Malaysia" selected>Malaysia</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="mb-2">
                             <p class="r-text">Specialty<span style="color:red;">*</span></p>
                             <input type="text" name="specialty" class="form-control form-control-sm">
                             <div class="error-message" id="error-specialty" style="color: red;font-size:12px;"></div>
-                        </div>
-                        <div class="mb-2">
-                            <p class="r-text">Address<span style="color:red;">*</span></p>
-                            <textarea name="address" class="form-control form-control-sm" rows="3"></textarea>
-                            <div class="error-message" id="error-address" style="color: red;font-size:12px;"></div>
                         </div>
                     </div>
                 </div>

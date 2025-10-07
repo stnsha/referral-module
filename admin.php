@@ -19,9 +19,13 @@ include('../common/index_adv.php');
 
 <body>
     <div class="bg-white rounded p-4">
-        <p class="r-main-title text-center mb-3">New Referral</p>
+        <p class="r-main-title text-center mb-3">New Form</p>
+        <div class="alert alert-warning" role="alert">
+            <strong>Note:</strong> Once a form is created, it cannot be updated or edited to avoid affecting existing
+            referral records that use this form.
+        </div>
         <form name="admin-form" id="admin-form" onsubmit="validateForm(event)" enctype="multipart/form-data">
-            <div class="row justify-content-start">
+            <div class="row justify-content-center">
                 <div class="col-md-8">
                     <div class="row mb-2 align-items-center">
                         <label class="col-sm-4 col-form-label text-sm-start">Business Unit</label>
@@ -58,8 +62,8 @@ include('../common/index_adv.php');
                     <div class="row mb-2 align-items-center">
                         <label class="col-sm-4 col-form-label text-sm-start">Required?</label>
                         <div class="col-sm-8 d-flex align-items-center">
-                            <input class="form-check-input mt-0 me-2" type="checkbox" value="1" checked
-                                name="is_required" aria-label="Checkbox for following text input"> Yes
+                            <input class="form-check-input mt-0 me-2" type="checkbox" value="1" name="is_required"
+                                aria-label="Checkbox for following text input"> Yes
                         </div>
                     </div>
                     <div class="row mb-2 align-items-center">
@@ -106,24 +110,57 @@ include('../common/index_adv.php');
                         </div>
                     </div>
 
-                    <div class="row mb-2 align-items-center">
-                        <div class="col-sm-4 d-flex justify-content-start">
+                    <div class="row mb-2">
+                        <div class="col-12 d-flex justify-content-center">
                             <input type="submit" value="Submit" class="btn btn-sm btn-primary">
                         </div>
-                        <div class="col-sm-4 d-flex justify-content-start">
-                            <div class="success-message" style="color: green; font-size: 12px; margin-top: 10px;"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 d-flex justify-content-center">
+                            <div class="success-message" style="color: green; font-size: 12px;"></div>
                         </div>
                     </div>
 
                 </div>
             </div>
         </form>
+
+        <!-- All Forms Table -->
+        <div class="mt-4">
+            <p class="r-title text-center mb-3">All Forms</p>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 25%;">Label Name</th>
+                            <th style="width: 10%;">Hidden</th>
+                            <th style="width: 50%;">Form Details</th>
+                            <th style="width: 10%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="forms-tbody">
+                        <tr>
+                            <td colspan="5" class="text-center">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="js/errorLogger.js"></script>
+    <script>
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staff_outlet =
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+    </script>
     <script src="js/admin.js"></script>
+
 </body>
 
 </html>

@@ -28,8 +28,8 @@ function sendEmail($to, $subject, $body, $options = []) {
         $mail->Host = 'sandbox.smtp.mailtrap.io';
         $mail->SMTPAuth = true;
         $mail->Port = 2525;
-        $mail->Username = '';
-        $mail->Password = '';
+        $mail->Username = '0bc922418b86cf';
+        $mail->Password = '32b08e3b27d543';
 
         // Character encoding
         $mail->CharSet = 'UTF-8';

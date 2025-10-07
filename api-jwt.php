@@ -8,7 +8,7 @@ if (session_id() == '') {
 
 // Include database connection
 $connect = 1;
-include('../common/index_adv.php');
+include(__DIR__ . '/../common/index_adv.php');
 
 if (!isset($conn)) {
     die(json_encode(array("status" => 500, "message" => "Database connection error")));
@@ -200,6 +200,10 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    } elseif ($method === 'PATCH') {
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     } elseif ($method === 'DELETE') {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
@@ -376,13 +380,75 @@ function getAllForm($recipientBuId, $staff_id)
         'recipientBuId' => (int)$recipientBuId
     );
 
-    $result = getApiDataWithJWT('form', $data, 'POST', $staff_id);
+    $result = getApiDataWithJWT('form/list', $data, 'POST', $staff_id);
 
     if (!$result['success']) {
         return array();
     }
     $decoded = json_decode($result['response'], true);
     return isset($decoded) ? $decoded : array();
+}
+
+function getAllForms($staff_id)
+{
+    $result = getApiDataWithJWT('form/all', null, 'GET', $staff_id);
+    if (!$result['success']) {
+        return array();
+    }
+    $decoded = json_decode($result['response'], true);
+    return isset($decoded) ? $decoded : array();
+}
+
+/**
+ * Hide form
+ * @param int $form_id Form ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array Result
+ */
+function hideForm($form_id, $staff_id)
+{
+    $result = getApiDataWithJWT('form/hide/' . $form_id, null, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 204 || $httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Form hidden successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to hide form'
+        );
+    }
+}
+
+/**
+ * Unhide form
+ * @param int $form_id Form ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array Result
+ */
+function unhideForm($form_id, $staff_id)
+{
+    $result = getApiDataWithJWT('form/unhide/' . $form_id, null, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 204 || $httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Form unhidden successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to unhide form'
+        );
+    }
 }
 
 function getFormDetails($business_unit_id, $staff_id)
@@ -510,9 +576,9 @@ function getReport($formData, $staff_id)
     }
 }
 
-function getSummaryReport($business_unit_id, $staff_id)
+function getSummaryReport($staff_id)
 {
-    $result = getApiDataWithJWT('report/summary/' . $business_unit_id, null, 'GET', $staff_id);
+    $result = getApiDataWithJWT('report/summary', null, 'GET', $staff_id);
     if (!$result['success']) {
         return array();
     }
@@ -578,30 +644,33 @@ function createExternalReferee($data, $staff_id)
     }
 }
 
-/**
- * Update external referee
- * @param int $referee_id External referee ID
- * @param array $data Updated referee data
- * @param int $staff_id Staff ID for authentication
- * @return array Update result
- */
 function updateExternalReferee($referee_id, $data, $staff_id)
 {
     $result = getApiDataWithJWT('external-referees/' . $referee_id, $data, 'PUT', $staff_id);
     $httpCode = $result['httpCode'];
     $decoded = json_decode($result['response'], true);
 
-    if ($httpCode == 200) {
+    if ($httpCode == 200 || $httpCode == 204) {
         return array(
             'success' => true,
             'message' => isset($decoded['message']) ? $decoded['message'] : 'External referee updated successfully',
             'data' => $decoded
         );
     } else {
+        // Include raw response for debugging
+        $errorMessage = isset($decoded['message']) ? $decoded['message'] : 'Failed to update external referee';
+
+        // Include full error details if available
+        if (isset($decoded['error'])) {
+            $errorMessage .= ' - ' . $decoded['error'];
+        }
+
         return array(
             'success' => false,
             'error' => true,
-            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update external referee'
+            'message' => $errorMessage,
+            'httpCode' => $httpCode,
+            'response' => $result['response']
         );
     }
 }
@@ -958,10 +1027,13 @@ $input = file_get_contents('php://input');
 $jsonData = json_decode($input, true);
 $response = array('success' => false, 'message' => 'Invalid request');
 
+// Check for action in query parameter or JSON body
+$action = isset($_GET['action']) ? $_GET['action'] : (isset($jsonData['action']) ? $jsonData['action'] : null);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($jsonData && isset($jsonData['action'])) {
+    if ($action) {
         // Handle JSON requests
-        switch ($jsonData['action']) {
+        switch ($action) {
             case 'business-units':
                 $response = array('data' => getBusinessUnit($staff_id));
                 break;
@@ -1043,6 +1115,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     return;
                 } else {
                     $response = array('success' => false, 'message' => 'Missing attachment_id');
+                }
+                break;
+            case 'external-organizations':
+                $response = array('data' => getExternalOrganization($staff_id));
+                break;
+            case 'external-referees':
+                $response = array('data' => getExternalReferees($staff_id));
+                break;
+            case 'update-external-referee':
+                // Get referee_id from query parameter
+                $referee_id = isset($_GET['referee_id']) ? $_GET['referee_id'] : null;
+                if ($referee_id && $jsonData) {
+                    $response = updateExternalReferee($referee_id, $jsonData, $staff_id);
+                } else {
+                    $response = array('success' => false, 'error' => true, 'message' => 'Missing referee_id or data');
+                }
+                break;
+            case 'all-forms':
+                $response = array('data' => getAllForms($staff_id));
+                break;
+            case 'hide-form':
+                if (isset($jsonData['form_id'])) {
+                    $response = hideForm($jsonData['form_id'], $staff_id);
+                }
+                break;
+            case 'unhide-form':
+                if (isset($jsonData['form_id'])) {
+                    $response = unhideForm($jsonData['form_id'], $staff_id);
                 }
                 break;
         }

@@ -21,8 +21,7 @@ if (!isset($_POST['external_referral'])) {
     //external
     $recipient = array(
         'organization' => isset($_POST['organization']) ? (int)$_POST['organization'] : null,
-        'location_organization' => isset($_POST['location_organization']) ? $_POST['location_organization'] : null,
-        'referee' => isset($_POST['referee']) ? $_POST['referee'] : null,
+        'referee' => isset($_POST['referee']) && !empty($_POST['referee']) ? $_POST['referee'] : null,
     );
 }
 

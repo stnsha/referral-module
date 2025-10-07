@@ -2,7 +2,7 @@ let firstLoad = true;
 $(document).ready(function () {
     localStorage.clear();
     sessionStorage.clear();
-    $('#organization, #location_organization, #referee').prop('disabled', true);
+    $('#organization, #referee').prop('disabled', true);
     toggleExternalReferralSection();
     handleFilePreview('#attachmentInput', '#attachmentPreview');
     loadReferralPriorities();
@@ -662,7 +662,7 @@ $(document).ready(function () {
             if ($(this).is(':checked')) {
                 $('#external-referral').removeClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', true);
-                $('#organization, #location_organization, #referee').prop('disabled', false);
+                $('#organization, #referee').prop('disabled', false);
 
                 var externalOrganizations = [];
 
@@ -682,28 +682,21 @@ $(document).ready(function () {
                                 $org.append('<option value="' + org.id + '">' + org.name + '</option>');
                             });
                         }
-                        $('#location_organization').empty().append('<option value="">Location</option>');
-                        $('#referee').empty().append('<option value="">Recipient</option>');
-                        $('#organization, #location_organization, #referee').val('');
+                        $('#referee').empty().append('<option value="">Recipient (Optional)</option>');
+                        $('#organization, #referee').val('');
                     }
                 });
 
                 $('#organization').on('change', function () {
                     var orgId = $(this).val();
                     if (!orgId) {
-                        $('#location_organization').empty().append('<option value="">Location</option>');
-                        $('#referee').empty().append('<option value="">Recipient</option>');
+                        $('#referee').empty().append('<option value="">Recipient (Optional)</option>');
                         return;
                     }
                     var org = externalOrganizations.find(function (o) { return o.id == orgId; });
                     if (org) {
-                        var $loc = $('#location_organization');
-                        $loc.empty().append('<option value="">Location</option>');
-                        if (org.state) {
-                            $loc.append('<option value="' + org.state + '">' + org.state + '</option>');
-                        }
                         var $ref = $('#referee');
-                        $ref.empty().append('<option value="">Recipient</option>');
+                        $ref.empty().append('<option value="">Recipient (Optional)</option>');
                         if (org.referees && org.referees.length) {
                             org.referees.forEach(function (r) {
                                 $ref.append('<option value="' + r.id + '">' + r.name + ' (' + r.position + ')</option>');
@@ -919,7 +912,6 @@ function validateForm(event) {
 
     //add validation if external referral = true
     markError("organization", isExternalReferral && isEmpty(form["organization"].value), "This field cannot be left blank.");
-    markError("location-organization", isExternalReferral && isEmpty(form["location_organization"].value), "This field cannot be left blank.");
 
     markError("referral-reason", isEmpty(form["referral_reason"].value), "This field cannot be left blank.");
     markError("referral-condition", isEmpty(form["referral_condition"].value), "This field cannot be left blank.");

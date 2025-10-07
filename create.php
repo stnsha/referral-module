@@ -102,15 +102,6 @@ include('../common/index_adv.php');
                         </div>
                         <div class="row mb-2 external-referral-content">
                             <div class="col">
-                                <select name="location_organization" id="location_organization"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="">Location</option>
-                                </select>
-                                <div class="error-message" id="error-location-organization"
-                                    style="color: red;font-size:12px;">
-                                </div>
-                            </div>
-                            <div class="col">
                                 <select name="organization" id="organization"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Organization</option>

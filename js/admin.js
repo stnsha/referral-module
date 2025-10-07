@@ -1,6 +1,7 @@
 $(document).ready(function () {
+    // Load business units
     $.ajax({
-        url: 'api.php',
+        url: 'api-jwt.php',
         type: 'POST',
         dataType: 'json',
         data: {
@@ -10,15 +11,178 @@ $(document).ready(function () {
             // console.log(data);
             var $select = $('#business-units');
             $select.empty().append('<option value="">Select Business Unit</option>');
+
+            let isSelected = false;
+            let businessUnitId = '';
+
             $.each(data.data, function (i, unit) {
-                $select.append('<option value="' + unit.staff_department_id + '">' + unit.name + '</option>');
+                let selected = '';
+
+                // Special logic for department 1 only (Audiology/Pharmacy department)
+                if (department == 1) {
+                    // Check if staff position contains 'audiologist' (any type)
+                    if (staffPosition.toLowerCase().includes('audiologist')) {
+                        // Audiologist -> assign to Alpro Audiology (ID = 1)
+                        if (unit.id === 1) {
+                            selected = 'selected';
+                            businessUnitId = unit.id;
+                            isSelected = true;
+                        }
+                    } else {
+                        // Not audiologist -> assign to Alpro Pharmacy (ID = 5)
+                        if (unit.id === 5 && unit.name.toLowerCase().includes('pharmacy')) {
+                            selected = 'selected';
+                            businessUnitId = unit.id;
+                            isSelected = true;
+                        }
+                    }
+                } else {
+                    // For other departments, match by staff_department_id
+                    if (unit.staff_department_id == department) {
+                        selected = 'selected';
+                        businessUnitId = unit.id;
+                        isSelected = true;
+                    }
+                }
+
+                $select.append('<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>');
             });
+
+            if (isSelected) {
+                $select.prop('disabled', true);
+                $select.val(businessUnitId);
+            }
         },
         error: function () {
             $('#error-business-unit-from').text('Failed to load business units');
         }
     });
+
+    // Load all forms
+    loadAllForms();
+
+    // Handle hide/unhide form button click
+    $(document).on('click', '.btn-toggle-form', function () {
+        var formId = $(this).data('id');
+        var isHidden = $(this).data('hidden');
+        var action = isHidden ? 'unhide-form' : 'hide-form';
+        var confirmMessage = isHidden ? 'Are you sure you want to unhide this form?' : 'Are you sure you want to hide this form?';
+
+        if (confirm(confirmMessage)) {
+            $.ajax({
+                url: 'api-jwt.php',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: action,
+                    form_id: formId
+                }),
+                success: function (response) {
+                    console.log('Toggle form response:', response);
+                    if (response.success) {
+                        alert(response.message || (isHidden ? 'Form unhidden successfully!' : 'Form hidden successfully!'));
+                        loadAllForms(); // Reload the forms table
+                    } else {
+                        alert('Failed: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error toggling form:', error);
+                    alert('Error. Please try again.');
+                }
+            });
+        }
+    });
 });
+
+// Function to load all forms
+function loadAllForms() {
+    $.ajax({
+        url: 'api-jwt.php',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'all-forms'
+        }),
+        success: function (response) {
+            console.log('All forms loaded:', response);
+            var $tbody = $('#forms-tbody');
+            $tbody.empty();
+
+            if (response && response.data && response.data.forms && Array.isArray(response.data.forms) && response.data.forms.length > 0) {
+                $.each(response.data.forms, function (i, form) {
+                    var isHidden = form.is_hidden ? 'Yes' : 'No';
+                    var rowNumber = i + 1; // Sequential number starting from 1
+
+                    // Build nested table for form details
+                    var detailsHtml = '<table class="table table-sm table-bordered mb-0">';
+                    detailsHtml += '<thead class="table-secondary"><tr><th>Field Name</th><th>Field Type</th><th>Required</th><th>Values</th></tr></thead>';
+                    detailsHtml += '<tbody>';
+
+                    if (Array.isArray(form.form_details)) {
+                        // Array format (form_id 16, 17)
+                        $.each(form.form_details, function (j, detail) {
+                            var isRequired = detail.is_required ? 'Yes' : 'No';
+                            var fieldValue = detail.field_value || '-';
+                            detailsHtml += '<tr>';
+                            detailsHtml += '<td>' + detail.field_name + '</td>';
+                            detailsHtml += '<td>' + detail.field_type + '</td>';
+                            detailsHtml += '<td>' + isRequired + '</td>';
+                            detailsHtml += '<td>' + fieldValue + '</td>';
+                            detailsHtml += '</tr>';
+                        });
+                    } else if (typeof form.form_details === 'object') {
+                        // Object format (form_id 18)
+                        $.each(form.form_details, function (fieldName, detail) {
+                            var isRequired = detail.is_required ? 'Yes' : 'No';
+                            var fieldValue = '-';
+
+                            if (Array.isArray(detail.field_value)) {
+                                fieldValue = detail.field_value.map(function(v) {
+                                    return v.field_value;
+                                }).join(', ');
+                            } else if (detail.field_value) {
+                                fieldValue = detail.field_value;
+                            }
+
+                            detailsHtml += '<tr>';
+                            detailsHtml += '<td>' + detail.field_name + '</td>';
+                            detailsHtml += '<td>' + detail.field_type + '</td>';
+                            detailsHtml += '<td>' + isRequired + '</td>';
+                            detailsHtml += '<td>' + fieldValue + '</td>';
+                            detailsHtml += '</tr>';
+                        });
+                    }
+
+                    detailsHtml += '</tbody></table>';
+
+                    // Determine button text and color based on is_hidden status
+                    var buttonText = form.is_hidden ? 'Unhide' : 'Hide';
+                    var buttonClass = form.is_hidden ? 'btn-primary' : 'btn-warning';
+
+                    var row = '<tr>' +
+                        '<td>' + rowNumber + '</td>' +
+                        '<td>' + form.label_name + '</td>' +
+                        '<td>' + isHidden + '</td>' +
+                        '<td>' + detailsHtml + '</td>' +
+                        '<td>' +
+                        '<button class="btn btn-sm ' + buttonClass + ' btn-toggle-form" data-id="' + form.form_id + '" data-hidden="' + form.is_hidden + '">' + buttonText + '</button>' +
+                        '</td>' +
+                        '</tr>';
+                    $tbody.append(row);
+                });
+            } else {
+                $tbody.append('<tr><td colspan="5" class="text-center">No forms found</td></tr>');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading forms:', error);
+            $('#forms-tbody').html('<tr><td colspan="5" class="text-center text-danger">Error loading forms</td></tr>');
+        }
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     const inputTypeSelect = document.getElementById('input_type');
@@ -135,31 +299,17 @@ function validateForm(e) {
                 .filter(value => value !== '');
         }
 
-        // Convert to FormData (for Laravel compatibility)
-        const formData = new FormData();
-        formData.append('action', 'create-form');
-
-
-        // Append all fields to FormData
-        Object.keys(formDataArray).forEach(key => {
-            if (Array.isArray(formDataArray[key])) {
-                // Handle arrays (e.g., value_fields)
-                formDataArray[key].forEach((val, i) => {
-                    formData.append(`${key}[${i}]`, val);
-                });
-            } else {
-                formData.append(key, formDataArray[key]);
-            }
-        });
-
-        // Send custom data array via AJAX using fetch
+        // Send custom data array via AJAX
         e.preventDefault(); // Prevent traditional form submission
         $.ajax({
-            url: 'api.php',
+            url: 'api-jwt.php',
             type: 'POST',
-            data: formData,
-            processData: false,  // Required for FormData
-            contentType: false,  // Required for FormData
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'create-form',
+                formData: formDataArray
+            }),
             success: function (data) {
                 if (data.success) {
                     // console.log('Success:', data.id);
