@@ -1009,6 +1009,59 @@ function downloadAttachment($attachment_id, $staff_id)
     exit;
 }
 
+function downloadExternalForm($referral_id, $staff_id)
+{
+    $result = getApiDataWithJWT('referral/download/' . $referral_id, null, 'GET', $staff_id);
+
+    if (!$result['success']) {
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Failed to retrieve attachment',
+            'error' => $result['message']
+        ));
+        exit;
+    }
+
+    $decoded = json_decode($result['response'], true);
+
+    if (!$decoded || !isset($decoded['pdfBase64'])) {
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Invalid attachment data received'
+        ));
+        exit;
+    }
+
+    // Extract file information
+    $filename = isset($decoded['name']) ? $decoded['name'] : 'download';
+    $contentType = isset($decoded['type']) ? $decoded['type'] : 'application/octet-stream';
+    $fileContent = base64_decode($decoded['pdfBase64']);
+
+    if ($fileContent === false) {
+        header('Content-Type: application/json');
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Failed to decode file content'
+        ));
+        exit;
+    }
+
+    // Set headers for file download
+    header('Content-Type: ' . $contentType);
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Transfer-Encoding: binary');
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Pragma: public');
+    header('Expires: 0');
+    header('Content-Length: ' . strlen($fileContent));
+
+    // Output the decoded file content
+    echo $fileContent;
+    exit;
+}
+
 // Check if we have a staff ID for authentication
 if (!$staff_id) {
     echo json_encode(array(
@@ -1118,6 +1171,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = array('success' => false, 'message' => 'Missing attachment_id');
                 }
                 break;
+            case 'download-external-form':
+                $referral_id = isset($jsonData['referral_id']) ? $jsonData['referral_id'] : null;
+                if ($referral_id) {
+                    downloadExternalForm($referral_id, $staff_id);
+                    return;
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing referral_id');
+                }
+                break;
+
             case 'external-organizations':
                 $response = array('data' => getExternalOrganization($staff_id));
                 break;

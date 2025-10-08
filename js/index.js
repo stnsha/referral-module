@@ -522,6 +522,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // console.log('DEBUG displayPage: Status mapping for', row.status, ':', statusText, 'class:', statusClass);
 
+                // Conditional button for external vs internal referrals
+                const secondButton = row.is_external
+                    ? `<a href="#" class="btn-referral download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}">Download Form</a>`
+                    : `<a href="qr.php?id=${row.id}" target="_blank" class="btn-referral">Generate QR</a>`;
+
                 tr.innerHTML = `
                     <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
                     <td style="font-size:14px;width: 40%;text-align:start;">
@@ -529,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <span class="text-muted fst-italic r-text">${row.is_external ? 'External: ' + row.to_business_unit : ''}</span>
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
-                        <span>${row.from_business_unit}</span>
+                        <span>${row.to_business_unit}</span>
                     </td>
                     <td style="font-size:14px;width: 10%;text-align:center;">
                         <span class="bdg-${statusClass}">${statusText}</span>
@@ -537,7 +542,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
                         <a href="view.php?id=${row.id}" target="_blank" class="btn-referral">View</a>
-                        <a href="qr.php?id=${row.id}" target="_blank" class="btn-referral">Generate QR</a>
+                        ${secondButton}
                     </td>
                 `;
                 // console.log('DEBUG displayPage: Created tr element:', tr);
@@ -586,6 +591,110 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
+
+        // Helper function to determine MIME type from file extension
+        function getMimeTypeFromFileName(fileName) {
+            const extension = fileName.split('.').pop().toLowerCase();
+            const mimeTypes = {
+                'pdf': 'application/pdf',
+                'doc': 'application/msword',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'xls': 'application/vnd.ms-excel',
+                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'ppt': 'application/vnd.ms-powerpoint',
+                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'txt': 'text/plain',
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'gif': 'image/gif',
+                'bmp': 'image/bmp',
+                'tiff': 'image/tiff',
+                'zip': 'application/zip',
+                'rar': 'application/x-rar-compressed',
+                '7z': 'application/x-7z-compressed'
+            };
+
+            return mimeTypes[extension] || 'application/octet-stream';
+        }
+
+        // Event handler for download form button (external referrals)
+        $(document).on('click', '.download-form-btn', function (e) {
+            e.preventDefault();
+            const referralId = $(this).data('id');
+            const refId = $(this).data('ref-id');
+            const timestamp = $(this).data('timestamp');
+
+            // Generate filename from ref_id and timestamp
+            // Remove # from ref_id and format timestamp
+            const cleanRefId = refId.replace('#', '');
+            const formattedTimestamp = timestamp ? timestamp.replace(/[:.]/g, '-').replace('T', '_').split('.')[0] : '';
+            const fileName = `${cleanRefId}_${formattedTimestamp}.pdf`;
+
+            // Show loading state
+            const btn = $(this);
+            const originalText = btn.text();
+            btn.text('Downloading...').prop('disabled', true);
+
+            $.ajax({
+                url: 'api-jwt.php',
+                type: 'POST',
+                data: JSON.stringify({
+                    action: 'download-external-form',
+                    referral_id: referralId
+                }),
+                contentType: 'application/json',
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function (response) {
+                    try {
+                        // Try to read the response as text first to check for JSON error
+                        const reader = new FileReader();
+                        reader.onload = function () {
+                            try {
+                                // Check if response is JSON (error response)
+                                const jsonResponse = JSON.parse(reader.result);
+                                if (!jsonResponse.success) {
+                                    alert(jsonResponse.message || 'Failed to download form. Please try again.');
+                                    btn.text(originalText).prop('disabled', false);
+                                    return;
+                                }
+                            } catch (e) {
+                                // Not JSON, treat as binary data (PDF)
+                                const blob = new Blob([response], { type: response.type || getMimeTypeFromFileName(fileName) });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                a.style.display = 'none';
+
+                                document.body.appendChild(a);
+                                a.click();
+
+                                setTimeout(() => {
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                }, 100);
+
+                                // Restore button
+                                btn.text(originalText).prop('disabled', false);
+                            }
+                        };
+                        reader.readAsText(response);
+                    } catch (error) {
+                        alert('Failed to process file data. Please try again.');
+                        console.error('Download error:', error);
+                        btn.text(originalText).prop('disabled', false);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Error downloading form. Please try again.');
+                    console.error('Download error:', error);
+                    btn.text(originalText).prop('disabled', false);
+                }
+            });
+        });
 
         // Load status options from API
         $.ajax({

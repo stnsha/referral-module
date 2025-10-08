@@ -126,13 +126,15 @@ include('../common/index_adv.php');
                     <div class="d-flex gap-2 pb-2 mb-2">
                         <span class="fw-bold text-start" style="font-size:12px; align-self:center;">View:</span>
                         <div class="btn-group" role="group" aria-label="Referral type filter">
-                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all" checked>
+                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all"
+                                checked>
                             <label class="btn btn-outline-primary btn-sm" for="type-all">All</label>
-                            
+
                             <input type="radio" class="btn-check" name="referral-type" id="type-sent" value="sent">
                             <label class="btn btn-outline-primary btn-sm" for="type-sent">Sent</label>
-                            
-                            <input type="radio" class="btn-check" name="referral-type" id="type-received" value="received">
+
+                            <input type="radio" class="btn-check" name="referral-type" id="type-received"
+                                value="received">
                             <label class="btn btn-outline-primary btn-sm" for="type-received">Received</label>
                         </div>
                     </div>
@@ -182,7 +184,7 @@ include('../common/index_adv.php');
                             <tr>
                                 <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
                                 <th style="font-size:16px;width: 40%;text-align:start;">Referral Reason</th>
-                                <th style="font-size:16px;width: 15%;text-align:start;">Referred Business Unit</th>
+                                <th style="font-size:16px;width: 15%;text-align:start;">Referring Business Unit</th>
                                 <th style="font-size:16px;width: 5%;text-align:center;">Status</th>
                                 <th style="font-size:16px;width: 20%;text-align:start;">Action</th>
                             </tr>
