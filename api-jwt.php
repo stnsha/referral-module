@@ -1196,6 +1196,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = array('success' => false, 'error' => true, 'message' => 'Missing referee_id or data');
                 }
                 break;
+            case 'delete-external-referee':
+                $referee_id = isset($jsonData['referee_id']) ? $jsonData['referee_id'] : null;
+                if ($referee_id) {
+                    $response = deleteExternalReferee($referee_id, $staff_id);
+                } else {
+                    $response = array('success' => false, 'error' => true, 'message' => 'Missing referee_id');
+                }
+                break;
             case 'all-forms':
                 $response = array('data' => getAllForms($staff_id));
                 break;

@@ -184,6 +184,7 @@ $(document).ready(function () {
             },
             success: function (response) {
                 const forms = response.data.forms;
+                console.log(forms);
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
                 targetDiv.show();
@@ -191,6 +192,10 @@ $(document).ready(function () {
                 $('.content .form-container').remove();
 
                 forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
+                    // Skip hidden forms
+                    if (is_hidden === true) {
+                        return;
+                    }
                     const formContainer = $('<div class="form-container mb-3"></div>');
                     const normalizedDetails = Array.isArray(form_details)
                         ? form_details

@@ -165,13 +165,85 @@ $(document).ready(function () {
 
         console.log('Referee ID:', refereeId);
 
+        // Clear previous error messages
+        $row.find('.error-message').remove();
+
+        // Helper functions for validation
+        function isEmpty(val) {
+            return val === null || val.trim() === "";
+        }
+
+        function isEmail(val) {
+            return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val);
+        }
+
+        function showError($field, message) {
+            var $errorDiv = $('<div class="error-message" style="color: red; font-size: 12px; margin-top: 3px;"></div>');
+            $errorDiv.text(message);
+            $field.after($errorDiv);
+        }
+
+        // Get field values
+        var name = $row.find('[data-field="name"] input').val();
+        var email = $row.find('[data-field="email"] input').val();
+        var phone = $row.find('[data-field="phone"] input').val();
+        var organizationId = $row.find('[data-field="organization"] select').val();
+        var position = $row.find('[data-field="position"] input').val();
+        var specialty = $row.find('[data-field="specialty"] input').val();
+
+        var hasError = false;
+
+        // Validate name
+        if (isEmpty(name)) {
+            showError($row.find('[data-field="name"] input'), 'Name cannot be empty.');
+            hasError = true;
+        }
+
+        // Validate email - optional but must be valid if provided
+        if (!isEmpty(email) && !isEmail(email)) {
+            showError($row.find('[data-field="email"] input'), 'Please enter a valid email address.');
+            hasError = true;
+        }
+
+        // Validate phone
+        if (isEmpty(phone)) {
+            showError($row.find('[data-field="phone"] input'), 'Phone cannot be empty.');
+            hasError = true;
+        } else if (phone.length < 10) {
+            showError($row.find('[data-field="phone"] input'), 'Phone number must be at least 10 digits.');
+            hasError = true;
+        }
+
+        // Validate organization
+        if (isEmpty(organizationId)) {
+            showError($row.find('[data-field="organization"] select'), 'Please select an organization.');
+            hasError = true;
+        }
+
+        // Validate position
+        if (isEmpty(position)) {
+            showError($row.find('[data-field="position"] input'), 'Position cannot be empty.');
+            hasError = true;
+        }
+
+        // Validate specialty
+        if (isEmpty(specialty)) {
+            showError($row.find('[data-field="specialty"] input'), 'Specialty cannot be empty.');
+            hasError = true;
+        }
+
+        // If validation fails, stop here
+        if (hasError) {
+            return;
+        }
+
         var updateData = {
-            name: $row.find('[data-field="name"] input').val(),
-            email: $row.find('[data-field="email"] input').val(),
-            phone: $row.find('[data-field="phone"] input').val(),
-            external_organization_id: parseInt($row.find('[data-field="organization"] select').val()),
-            position: $row.find('[data-field="position"] input').val(),
-            specialty: $row.find('[data-field="specialty"] input').val()
+            name: name,
+            email: email,
+            phone: phone,
+            external_organization_id: parseInt(organizationId),
+            position: position,
+            specialty: specialty
         };
 
         console.log('Update data:', updateData);
@@ -198,6 +270,56 @@ $(document).ready(function () {
                 alert('Error updating referee. Please try again.');
             }
         });
+    });
+
+    // Handle Delete button click
+    $(document).on('click', '.btn-delete', function () {
+        var refereeId = $(this).data('id');
+        var $row = $(this).closest('tr');
+        var refereeName = $row.find('[data-field="name"]').text();
+
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to delete ' + refereeName + '? This action cannot be undone.')) {
+            console.log('Deleting referee ID:', refereeId);
+
+            $.ajax({
+                url: '/odb/referral/api-jwt.php',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'delete-external-referee',
+                    referee_id: refereeId
+                }),
+                success: function (response) {
+                    console.log('Delete response:', response);
+                    if (response.success) {
+                        alert('External referee deleted successfully!');
+                        // Reload the table
+                        location.reload();
+                    } else {
+                        alert('Failed to delete: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error deleting referee:', error);
+                    console.error('Response text:', xhr.responseText);
+
+                    // Try to parse the error response to get the actual message
+                    var errorMessage = 'Error deleting referee. Please try again.';
+                    try {
+                        var errorResponse = JSON.parse(xhr.responseText);
+                        if (errorResponse.message) {
+                            errorMessage = errorResponse.message;
+                        }
+                    } catch (e) {
+                        // If JSON parsing fails, use default message
+                    }
+
+                    alert(errorMessage);
+                }
+            });
+        }
     });
 });
 

@@ -157,6 +157,9 @@ function updateCustomer($customer_id, $field, $value)
             if (empty($trimmed_value)) {
                 return array('success' => false, 'message' => 'Phone is required');
             }
+            if (strlen($trimmed_value) < 10) {
+                return array('success' => false, 'message' => 'Phone number must be at least 10 digits');
+            }
             break;
         case 'customer_email':
             if (!empty($value) && !filter_var($value, FILTER_VALIDATE_EMAIL)) {

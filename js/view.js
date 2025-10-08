@@ -1018,6 +1018,7 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
         },
         success: function (response) {
             let forms = response.data.forms;
+            console.log(forms);
 
             // Filter forms based on referralDetails if provided
             if (referralDetails && referralDetails.length > 0) {
@@ -1038,6 +1039,10 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
             targetDiv.append(bu_id_reply);
 
             forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
+                // Skip hidden forms
+                if (is_hidden === true) {
+                    return;
+                }
                 const formContainer = $('<div class="form-container mb-3"></div>');
 
                 // Handle new API structure where form_details is an object
@@ -1171,6 +1176,10 @@ function initialTreatment(initialTreatment, bu_id, targetPanel, additionalRemark
     $('.content .form-container').remove();
 
     initialTreatment.forEach(function ({ form_id, label_name, is_hidden, form_details, form_answer }) {
+        // Skip hidden forms
+        if (is_hidden === true) {
+            return;
+        }
         const formContainer = $('<div class="form-container mb-3"></div>');
         const normalizedDetails = Array.isArray(form_details)
             ? form_details
