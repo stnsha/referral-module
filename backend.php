@@ -66,8 +66,14 @@ function searchCustomer($icno = null, $customer_id = null)
     $conditions = array();
     if ($icno !== null && $icno !== '') {
         $icno = formatIC($icno); // Remove dashes
+
+        // Validate IC is exactly 12 digits
+        if (strlen($icno) !== 12 || !ctype_digit($icno)) {
+            return array();
+        }
+
         $icno = mysqli_real_escape_string($conn, $icno);
-        $conditions[] = "ic LIKE '%$icno%'";
+        $conditions[] = "ic = '$icno'";
     }
     if ($customer_id > 0) {
         $conditions[] = "id = $customer_id";
@@ -110,6 +116,11 @@ function updateCustomer($customer_id, $field, $value)
         return array('success' => false, 'message' => 'Missing required parameters');
     }
 
+    // Prevent IC number from being updated
+    if ($field === 'customer_ic') {
+        return array('success' => false, 'message' => 'IC number cannot be updated');
+    }
+
     $customer_id = mysqli_real_escape_string($conn, $customer_id);
     $value = mysqli_real_escape_string($conn, $value);
 
@@ -120,8 +131,7 @@ function updateCustomer($customer_id, $field, $value)
         'customer_email' => 'email',
         'customer_age' => 'birth_date', // Special handling needed
         'customer_gender' => 'gender',
-        'customer_address' => 'c_addr',
-        'customer_ic' => 'ic'
+        'customer_address' => 'c_addr'
     );
 
     if (!isset($field_mapping[$field])) {
@@ -129,11 +139,6 @@ function updateCustomer($customer_id, $field, $value)
     }
 
     $db_field = $field_mapping[$field];
-
-    // Special handling for IC - remove dashes
-    if ($field === 'customer_ic') {
-        $value = formatIC($value);
-    }
 
     // Special handling for age - convert to birth_date
     if ($field === 'customer_age') {

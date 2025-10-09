@@ -120,10 +120,13 @@ include('../common/index_adv.php');
                     <div class=" border-bottom pb-3 mb-3">
                         <p class="r-title">Customer Information</p>
                         <div class="d-flex mb-2">
-                            <div class="me-2">
+                            <div class="me-2 flex-grow-1">
                                 <p class="r-text">I/C No.<span style="color:red;">*</span></p>
-                                <input type="hidden" name="customer_id">
-                                <input type="text" name="customer_ic" class="form-control form-control-sm">
+                                <div class="d-flex gap-2">
+                                    <input type="hidden" name="customer_id">
+                                    <input type="text" name="customer_ic" class="form-control form-control-sm">
+                                    <button type="button" id="clear-customer-btn" class="btn btn-sm btn-outline-danger" title="Clear customer information">Clear</button>
+                                </div>
                                 <div class="error-message" id="error-customer-ic" style="color: red;font-size:12px;">
                                 </div>
                             </div>

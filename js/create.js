@@ -7,6 +7,50 @@ $(document).ready(function () {
     handleFilePreview('#attachmentInput', '#attachmentPreview');
     loadReferralPriorities();
 
+    // Function to clear all customer information
+    function clearCustomerInformation() {
+        // Clear all customer fields
+        $('input[name="customer_id"]').val('');
+        $('input[name="customer_ic"]').val('');
+        $('input[name="customer_name"]').val('');
+        $('input[name="customer_phone"]').val('');
+        $('input[name="customer_email"]').val('');
+        $('input[name="customer_age"]').val('');
+        $('input[name="customer_gender"]').val('');
+        $('textarea[name="customer_address"]').val('');
+
+        // Clear all error messages
+        $('#error-customer-ic').text('');
+        $('#error-customer-name').text('');
+        $('#error-customer-phone').text('');
+        $('#error-customer-email').text('');
+        $('#error-customer-age').text('');
+        $('#error-customer-gender').text('');
+        $('#error-customer-address').text('');
+
+        // Clear any stored original values for inline edit
+        $('input[name="customer_ic"]').removeData('original-value');
+        $('input[name="customer_name"]').removeData('original-value');
+        $('input[name="customer_phone"]').removeData('original-value');
+        $('input[name="customer_email"]').removeData('original-value');
+        $('input[name="customer_age"]').removeData('original-value');
+        $('input[name="customer_gender"]').removeData('original-value');
+        $('textarea[name="customer_address"]').removeData('original-value');
+
+        // Focus back to IC field
+        $('input[name="customer_ic"]').focus();
+
+        // Show success message
+        showFieldMessage('customer-ic', 'Customer information cleared', 'success');
+    }
+
+    // Clear customer information button
+    $('#clear-customer-btn').on('click', function () {
+        if (confirm('Are you sure you want to clear all customer information?')) {
+            clearCustomerInformation();
+        }
+    });
+
     // Display business unit
     $.ajax({
         url: 'api-jwt.php',
@@ -382,6 +426,15 @@ $(document).ready(function () {
         // Update the field with formatted IC (without dashes)
         $(this).val(icno);
 
+        // Validate IC is exactly 12 digits before searching
+        if (icno.length !== 12) {
+            showFieldMessage('customer-ic', 'IC number must be exactly 12 digits', 'error');
+            return;
+        }
+
+        // Clear any previous error messages
+        showFieldMessage('customer-ic', '', 'info');
+
         $.ajax({
             type: 'POST',
             url: 'backend.php?action=searchCustomer',
@@ -434,7 +487,6 @@ $(document).ready(function () {
     // Inline edit functionality for customer fields
     function setupCustomerInlineEdit() {
         const customerFields = [
-            'customer_ic',
             'customer_name',
             'customer_phone',
             'customer_email',
