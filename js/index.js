@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Conditional button for external vs internal referrals
                 const secondButton = row.is_external
                     ? `<a href="#" class="btn-referral download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}">Download Form</a>`
-                    : `<a href="qr.php?id=${row.id}" target="_blank" class="btn-referral">Generate QR</a>`;
+                    : `<a href="qr.php?id=${row.id}" class="btn-referral">Generate QR</a>`;
 
                 tr.innerHTML = `
                     <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
@@ -541,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <br><span class="mt-1.5 fw-bold fst-italic r-text">${row.is_external ? '(External)' : ''}</span>
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
-                        <a href="view.php?id=${row.id}" target="_blank" class="btn-referral">View</a>
+                        <a href="view.php?id=${row.id}" class="btn-referral">View</a>
                         ${secondButton}
                     </td>
                 `;

@@ -168,6 +168,7 @@ $(document).ready(function () {
             error: function (xhr, status, error) {
                 logError(new Error('Error fetching staff location'), { context: 'getStaffLocation', staffId: staffId, status: status, error: error });
                 callback("Unknown");
+
             }
         });
     }

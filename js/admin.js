@@ -201,12 +201,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add more value input fields when the "Add More" button is clicked
     addValueBtn.addEventListener('click', function () {
+        const inputGroup = document.createElement('div');
+        inputGroup.classList.add('input-group', 'mb-2');
+
         const newInputField = document.createElement('input');
         newInputField.type = 'text';
         newInputField.name = 'value_fields[]';
-        newInputField.classList.add('form-control', 'form-control-sm', 'mb-2');
+        newInputField.classList.add('form-control', 'form-control-sm');
         newInputField.placeholder = 'Enter value';
-        valueFieldsContainer.insertBefore(newInputField, addValueBtn);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.classList.add('btn', 'btn-sm', 'btn-danger', 'remove-value-btn');
+        removeBtn.textContent = 'Remove';
+
+        inputGroup.appendChild(newInputField);
+        inputGroup.appendChild(removeBtn);
+        valueFieldsContainer.insertBefore(inputGroup, addValueBtn);
+    });
+
+    // Handle remove button clicks for value fields
+    valueFieldsContainer.addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove-value-btn')) {
+            const inputGroup = e.target.closest('.input-group');
+            const remainingFields = valueFieldsContainer.querySelectorAll('.input-group');
+
+            // Keep at least one field
+            if (remainingFields.length > 1) {
+                inputGroup.remove();
+            } else {
+                alert('At least one value field is required.');
+            }
+        }
     });
 
     const labelNameInput = document.getElementById('label_name');
@@ -314,6 +340,88 @@ function validateForm(e) {
                 if (data.success) {
                     // console.log('Success:', data.id);
                     $('.success-message').text('Form submitted successfully! Form ID: ' + data.id).show();
+
+                    // Reset the form
+                    document.getElementById('admin-form').reset();
+
+                    // Clear error messages
+                    document.querySelectorAll('.error-message').forEach(function(el) {
+                        el.textContent = '';
+                    });
+
+                    // Hide dynamic values section
+                    document.getElementById('dynamic-values').style.display = 'none';
+
+                    // Reset value fields to initial state (one field with remove button)
+                    const valueFieldsContainer = document.getElementById('value-fields');
+                    valueFieldsContainer.innerHTML = `
+                        <div class="input-group mb-2">
+                            <input type="text" name="value_fields[]" class="form-control form-control-sm" placeholder="Enter value">
+                            <button type="button" class="btn btn-sm btn-danger remove-value-btn">Remove</button>
+                        </div>
+                        <button type="button" id="addValueBtn" class="btn btn-sm btn-primary">Add More</button>
+                    `;
+
+                    // Reload all forms table
+                    loadAllForms();
+
+                    // Re-enable business unit dropdown if it was disabled
+                    $('#business-units').prop('disabled', false);
+
+                    // Reload business units to restore selection
+                    $.ajax({
+                        url: 'api-jwt.php',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            action: 'business-units'
+                        },
+                        success: function (data) {
+                            var $select = $('#business-units');
+                            $select.empty().append('<option value="">Select Business Unit</option>');
+
+                            let isSelected = false;
+                            let businessUnitId = '';
+
+                            $.each(data.data, function (i, unit) {
+                                let selected = '';
+
+                                if (department == 1) {
+                                    if (staffPosition.toLowerCase().includes('audiologist')) {
+                                        if (unit.id === 1) {
+                                            selected = 'selected';
+                                            businessUnitId = unit.id;
+                                            isSelected = true;
+                                        }
+                                    } else {
+                                        if (unit.id === 5 && unit.name.toLowerCase().includes('pharmacy')) {
+                                            selected = 'selected';
+                                            businessUnitId = unit.id;
+                                            isSelected = true;
+                                        }
+                                    }
+                                } else {
+                                    if (unit.staff_department_id == department) {
+                                        selected = 'selected';
+                                        businessUnitId = unit.id;
+                                        isSelected = true;
+                                    }
+                                }
+
+                                $select.append('<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>');
+                            });
+
+                            if (isSelected) {
+                                $select.prop('disabled', true);
+                                $select.val(businessUnitId);
+                            }
+                        }
+                    });
+
+                    // Hide success message after 3 seconds
+                    setTimeout(function() {
+                        $('.success-message').fadeOut();
+                    }, 3000);
 
                 } else {
                     console.log('Error:', data)

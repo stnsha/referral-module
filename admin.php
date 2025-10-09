@@ -102,8 +102,11 @@ include('../common/index_adv.php');
                     <div class="row mb-2 align-items-center" id="dynamic-values" style="display: none;">
                         <label class="col-sm-4 col-form-label text-sm-start">Values</label>
                         <div class="col-sm-8" id="value-fields">
-                            <input type="text" name="value_fields[]" class="form-control form-control-sm mb-2"
-                                placeholder="Enter value">
+                            <div class="input-group mb-2">
+                                <input type="text" name="value_fields[]" class="form-control form-control-sm"
+                                    placeholder="Enter value">
+                                <button type="button" class="btn btn-sm btn-danger remove-value-btn">Remove</button>
+                            </div>
                             <button type="button" id="addValueBtn" class="btn btn-sm btn-primary">Add More</button>
                         </div>
                         <div class="error-message" id="error-value-field" style="color: red; font-size: 12px;">

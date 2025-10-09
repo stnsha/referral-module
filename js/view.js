@@ -17,6 +17,7 @@ $(document).ready(function () {
         }),
         success: function (response) {
             var data = response.data;
+            console.log(data);
 
             // Referral Details
             let referralDetails = data.referralDetails;
@@ -300,7 +301,7 @@ $(document).ready(function () {
                                 $('.form-btn-submit').show();
                             }
                             // Reload status options with correct disable state
-                            loadStatusOptions(status, (status == 4 || status == 5));
+                            loadStatusOptions(status, (status == 4 || status == 5), data.status_note);
                         } else {
                             // Department doesn't match - hide reply form
                             window.hasReplyForms = false;
@@ -311,7 +312,7 @@ $(document).ready(function () {
                             $('.refer-another-container').hide();
                             $('.form-btn-submit').hide();
                             // Reload status options with correct disable state
-                            loadStatusOptions(status, true);
+                            loadStatusOptions(status, true, data.status_note);
                         }
                     });
                 } else {
@@ -383,7 +384,7 @@ $(document).ready(function () {
 
             // Load status options dynamically with disable parameter for status 4 or 5 OR not last sequence
             const shouldDisableRadios = (status == 4 || status == 5 || !window.isLastSequence);
-            loadStatusOptions(status, shouldDisableRadios);
+            loadStatusOptions(status, shouldDisableRadios, data.status_note);
 
             // Apply UI changes based on last sequence status - after status options loaded
             if (!window.isLastSequence) {
@@ -802,7 +803,7 @@ function addStatusChangeListeners() {
     });
 }
 
-function loadStatusOptions(selectedStatus, shouldDisableRadios = false) {
+function loadStatusOptions(selectedStatus, shouldDisableRadios = false, statusNote = null) {
     $.ajax({
         url: 'api-jwt.php',
         type: 'POST',
@@ -829,7 +830,7 @@ function loadStatusOptions(selectedStatus, shouldDisableRadios = false) {
                     statusContainer.appendChild(statusDiv);
                 });
                 // Add status_note textarea after status options
-                addStatusNoteField(statusContainer, selectedStatus);
+                addStatusNoteField(statusContainer, selectedStatus, statusNote);
                 // Add event listeners for status change
                 addStatusChangeListeners();
             }
@@ -863,7 +864,7 @@ function loadStatusOptions(selectedStatus, shouldDisableRadios = false) {
                     </div>
                 `;
                 // Add status_note textarea after fallback options
-                addStatusNoteField(statusContainer, selectedStatus);
+                addStatusNoteField(statusContainer, selectedStatus, statusNote);
                 // Add event listeners for status change
                 addStatusChangeListeners();
             }
@@ -872,7 +873,7 @@ function loadStatusOptions(selectedStatus, shouldDisableRadios = false) {
 }
 
 // Add status_note textarea field
-function addStatusNoteField(container, selectedStatus) {
+function addStatusNoteField(container, selectedStatus, statusNote = null) {
     const statusNoteDiv = document.createElement('div');
     statusNoteDiv.className = 'mb-3';
     statusNoteDiv.id = 'status-note-container';
@@ -881,10 +882,14 @@ function addStatusNoteField(container, selectedStatus) {
     const isStatus5Selected = selectedStatus && String(selectedStatus) === '5';
     const displayStyle = isStatus5Selected ? 'block' : 'none';
 
+    // If status is 5 and statusNote exists, set value and disable the field
+    const noteValue = (isStatus5Selected && statusNote) ? statusNote : '';
+    const disabledAttr = (isStatus5Selected && statusNote) ? 'disabled' : '';
+
     statusNoteDiv.innerHTML = `
         <div style="display: ${displayStyle};">
             <label class="form-label r-text" for="status_note">Status Note</label>
-            <textarea class="form-control form-control-sm" name="status_note" id="status_note" rows="3" placeholder="Please provide additional details..."></textarea>
+            <textarea class="form-control form-control-sm" name="status_note" id="status_note" rows="3" placeholder="Please provide additional details..." ${disabledAttr}>${noteValue}</textarea>
             <div id="error-status_note" class="error-message" style="color: red; font-size: 12px;"></div>
         </div>
     `;
@@ -1176,10 +1181,6 @@ function initialTreatment(initialTreatment, bu_id, targetPanel, additionalRemark
     $('.content .form-container').remove();
 
     initialTreatment.forEach(function ({ form_id, label_name, is_hidden, form_details, form_answer }) {
-        // Skip hidden forms
-        if (is_hidden === true) {
-            return;
-        }
         const formContainer = $('<div class="form-container mb-3"></div>');
         const normalizedDetails = Array.isArray(form_details)
             ? form_details
