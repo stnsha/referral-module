@@ -984,11 +984,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         filteredData = filteredData.filter(function (row) {
                             // Check only from_business_unit
                             const fromMatches = row.from_business_unit && row.from_business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
+                            const toMatches = row.to_business_unit && row.to_business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
 
                             if (fromMatches) {
                                 // console.log('From business unit match:', row.from_business_unit);
                             }
-                            return fromMatches;
+                            return toMatches;
                         });
                         // console.log('After business unit filter:', filteredData.length);
                     }
