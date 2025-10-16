@@ -30,18 +30,17 @@ include('../../common/index_adv.php');
                     <table class="table table-striped table-bordered table-sm">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 15%;">Name</th>
-                                <th style="width: 15%;">Email</th>
-                                <th style="width: 10%;">Phone</th>
-                                <th style="width: 20%;">Organization</th>
+                                <th style="width: 20%;">Name</th>
+                                <th style="width: 20%;">Email</th>
+                                <th style="width: 15%;">Phone</th>
+                                <th style="width: 25%;">Organization</th>
                                 <th style="width: 15%;">Position</th>
-                                <th style="width: 15%;">Specialty</th>
                                 <th style="width: 10%;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="external-referees-tbody">
                             <tr>
-                                <td colspan="7" class="text-center">Loading...</td>
+                                <td colspan="6" class="text-center">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -140,11 +139,6 @@ include('../../common/index_adv.php');
                                     <option value="Malaysia" selected>Malaysia</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="mb-2">
-                            <p class="r-text">Specialty<span style="color:red;">*</span></p>
-                            <input type="text" name="specialty" class="form-control form-control-sm">
-                            <div class="error-message" id="error-specialty" style="color: red;font-size:12px;"></div>
                         </div>
                     </div>
                 </div>

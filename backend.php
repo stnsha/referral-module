@@ -439,6 +439,26 @@ function getStaffDetails($staff_id, $location_id, $bu_id = null, $deptId)
     return $staffDetails;
 }
 
+function isStaffMatch($staffId, $deptId)
+{
+    global $conn;
+
+    $staffId = mysqli_real_escape_string($conn, (int)$staffId);
+    $deptId = mysqli_real_escape_string($conn, $deptId);
+
+    $query = "SELECT nama_staff FROM staff WHERE id = '$staffId' AND department = '$deptId' LIMIT 1";
+
+    $result = mysqli_query($conn, $query);
+
+    if (!$result) {
+        return false;
+    }
+
+    $row = mysqli_fetch_assoc($result);
+
+    return $row ? true : false;
+}
+
 function getBusinessUnit($deptId)
 {
     global $conn;
@@ -455,6 +475,42 @@ function getBusinessUnit($deptId)
     $row = mysqli_fetch_assoc($result);
 
     return $row ? $row['id'] : null;
+}
+
+function getBusinessUnitName($buId)
+{
+    global $conn;
+    $buId = mysqli_real_escape_string($conn, $buId);
+
+    $query = "SELECT name FROM ref_business_unit WHERE id = '$buId' LIMIT 1";
+
+    $result = mysqli_query($conn, $query);
+
+    if (!$result) {
+        return null;
+    }
+
+    $row = mysqli_fetch_assoc($result);
+
+    return $row ? $row['name'] : null;
+}
+
+function getStaffName($staffId)
+{
+    global $conn;
+    $staffId = mysqli_real_escape_string($conn, $staffId);
+
+    $query = "SELECT nama_staff FROM staff WHERE id = '$staffId' LIMIT 1";
+
+    $result = mysqli_query($conn, $query);
+
+    if (!$result) {
+        return null;
+    }
+
+    $row = mysqli_fetch_assoc($result);
+
+    return $row ? $row['nama_staff'] : null;
 }
 
 function getRecipientDetails($location, $business_unit)
@@ -534,6 +590,25 @@ if (isset($_GET['action']) && $_GET['action'] == 'getBusinessUnit' && isset($_GE
     echo json_encode(getBusinessUnit($_GET['staffDeptId']));
     exit;
 }
+
+if (isset($_GET['action']) && $_GET['action'] == 'getBusinessUnitName' && isset($_GET['bu_id'])) {
+    header('Content-Type: application/json');
+    echo json_encode(getBusinessUnitName($_GET['bu_id']));
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] == 'getStaffName' && isset($_GET['staff_id'])) {
+    header('Content-Type: application/json');
+    echo json_encode(getStaffName($_GET['staff_id']));
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] == 'isStaffMatch' && isset($_GET['staffId'])  && isset($_GET['deptId'])) {
+    header('Content-Type: application/json');
+    echo json_encode(isStaffMatch($_GET['staffId'], $_GET['deptId']));
+    exit;
+}
+
 
 if (isset($_GET['action']) && $_GET['action'] == 'updateCustomer' && isset($_POST['customer_id']) && isset($_POST['field']) && isset($_POST['value'])) {
     header('Content-Type: application/json');

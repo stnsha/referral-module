@@ -31,9 +31,36 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Function to update referral type counts in radio button labels
+    function updateReferralTypeCounts(data) {
+        if (!data) return;
+
+        const allCount = (data.all && Array.isArray(data.all)) ? data.all.length : 0;
+        const sentCount = (data.sent && Array.isArray(data.sent)) ? data.sent.length : 0;
+        const receivedCount = (data.received && Array.isArray(data.received)) ? data.received.length : 0;
+
+        // Update label text with counts
+        const allLabel = document.querySelector('label[for="type-all"]');
+        const sentLabel = document.querySelector('label[for="type-sent"]');
+        const receivedLabel = document.querySelector('label[for="type-received"]');
+
+        if (allLabel) {
+            allLabel.innerHTML = `All <span class="filter-count">(${allCount})</span>`;
+        }
+        if (sentLabel) {
+            sentLabel.innerHTML = `Sent <span class="filter-count">(${sentCount})</span>`;
+        }
+        if (receivedLabel) {
+            receivedLabel.innerHTML = `Received <span class="filter-count">(${receivedCount})</span>`;
+        }
+    }
+
     // Initialize referral table once all APIs are loaded
     function initializeReferralTable(response) {
         // console.log('DEBUG: All APIs loaded, initializing table...');
+
+        // Update counts in radio button labels
+        updateReferralTypeCounts(response.data);
 
         // Initialize with all data by default
         const checkedRadio = document.querySelector('input[name="referral-type"]:checked');
@@ -522,25 +549,67 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // console.log('DEBUG displayPage: Status mapping for', row.status, ':', statusText, 'class:', statusClass);
 
+                // Determine if referral is sent or received (only show when viewing "all")
+                let directionBadge = '';
+                if (window.currentReferralType === 'all' && window.referralApiData) {
+                    const isSent = window.referralApiData.sent && window.referralApiData.sent.some(item => item.id === row.id);
+                    const isReceived = window.referralApiData.received && window.referralApiData.received.some(item => item.id === row.id);
+
+                    if (isSent) {
+                        directionBadge = '<br><span class="badge-sent">Sent</span>';
+                    } else if (isReceived) {
+                        directionBadge = '<br><span class="badge-received">Received</span>';
+                    }
+                }
+
+                // Determine which business unit to display based on referral type
+                let displayBusinessUnit;
+                if (window.currentReferralType === 'all') {
+                    // For "All" view: Check if referral is sent or received
+                    const isSent = window.referralApiData.sent &&
+                                   window.referralApiData.sent.some(item => item.id === row.id);
+                    const isReceived = window.referralApiData.received &&
+                                       window.referralApiData.received.some(item => item.id === row.id);
+
+                    if (isSent) {
+                        displayBusinessUnit = row.to_business_unit;    // Show destination
+                    } else if (isReceived) {
+                        displayBusinessUnit = row.from_business_unit;  // Show sender
+                    } else {
+                        displayBusinessUnit = row.to_business_unit;    // Fallback
+                    }
+                } else if (window.currentReferralType === 'sent') {
+                    displayBusinessUnit = row.to_business_unit;        // Show destination
+                } else if (window.currentReferralType === 'received') {
+                    displayBusinessUnit = row.from_business_unit;      // Show sender
+                } else {
+                    displayBusinessUnit = row.to_business_unit;        // Fallback
+                }
+
+                // Add external badge if referral is external
+                const externalBadge = row.is_external ? '<br><span class="badge-external">External</span>' : '';
+
                 // Conditional button for external vs internal referrals
                 const secondButton = row.is_external
                     ? `<a href="#" class="btn-referral download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}">Download Form</a>`
                     : `<a href="qr.php?id=${row.id}" class="btn-referral">Generate QR</a>`;
 
+                // Calculate relative time using moment.js
+                const relativeTime = row.ori_created_at ? moment(row.ori_created_at).fromNow() : 'N/A';
+
                 tr.innerHTML = `
-                    <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
+                    <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}${directionBadge}</td>
                     <td style="font-size:14px;width: 40%;text-align:start;">
-                        ${row.reason}<br>
-                        <span class="text-muted fst-italic r-text">${row.is_external ? 'External: ' + row.to_business_unit : ''}</span>
+                        ${row.reason}
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
-                        <span>${row.to_business_unit}</span>
+                        <span>${displayBusinessUnit}</span>${externalBadge}
                     </td>
-                    <td style="font-size:14px;width: 10%;text-align:center;">
+                    <td style="font-size:14px;width: 10%;text-align:start;">
                         <span class="bdg-${statusClass}">${statusText}</span>
-                        <br><span class="mt-1.5 fw-bold fst-italic r-text">${row.is_external ? '(External)' : ''}</span>
+                        <br><span style="color: #6c757d; font-size: 13px; margin-top: 4px; display: inline-block;">${relativeTime}</span>
                     </td>
-                    <td style="font-size:14px;width: 15%;text-align:start;">
+                    <td style="font-size:14px;width: 25%;text-align:start;">
                         <a href="view.php?id=${row.id}" class="btn-referral">View</a>
                         ${secondButton}
                     </td>
@@ -727,7 +796,7 @@ document.addEventListener('DOMContentLoaded', function () {
             type: 'POST',
             data: { action: 'all-referral' },
             success: function (response) {
-                // console.log(response);
+                console.log(response);
                 if (!response || typeof response !== 'object' || !response.data) {
                     logError(new Error('Invalid response format'), { context: 'loadReferralData', response: response });
                     apisLoaded.referralData = true;

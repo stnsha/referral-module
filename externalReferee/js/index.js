@@ -50,7 +50,6 @@ $(document).ready(function () {
                         '<td data-field="phone">' + referee.phone + '</td>' +
                         '<td data-field="organization" data-org-id="' + orgId + '">' + orgName + '</td>' +
                         '<td data-field="position">' + referee.position + '</td>' +
-                        '<td data-field="specialty">' + referee.specialty + '</td>' +
                         '<td>' +
                         '<button class="btn btn-sm btn-primary btn-edit" data-id="' + referee.id + '">Edit</button> ' +
                         '<button class="btn btn-sm btn-danger btn-delete" data-id="' + referee.id + '">Delete</button>' +
@@ -59,12 +58,12 @@ $(document).ready(function () {
                     $tbody.append(row);
                 });
             } else {
-                $tbody.append('<tr><td colspan="7" class="text-center">No external referees found</td></tr>');
+                $tbody.append('<tr><td colspan="6" class="text-center">No external referees found</td></tr>');
             }
         },
         error: function (xhr, status, error) {
             console.error('Error loading external referees:', error);
-            $('#external-referees-tbody').html('<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>');
+            $('#external-referees-tbody').html('<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>');
         }
     });
 
@@ -102,7 +101,6 @@ $(document).ready(function () {
         $row.data('original-org-id', $row.find('[data-field="organization"]').data('org-id'));
         $row.data('original-org-name', $row.find('[data-field="organization"]').text());
         $row.data('original-position', $row.find('[data-field="position"]').text());
-        $row.data('original-specialty', $row.find('[data-field="specialty"]').text());
 
         // Replace text with input fields
         var nameVal = $row.find('[data-field="name"]').text();
@@ -111,7 +109,6 @@ $(document).ready(function () {
         var phoneVal = $row.find('[data-field="phone"]').text();
         var orgId = $row.find('[data-field="organization"]').data('org-id');
         var positionVal = $row.find('[data-field="position"]').text();
-        var specialtyVal = $row.find('[data-field="specialty"]').text();
 
         $row.find('[data-field="name"]').html('<input type="text" class="form-control form-control-sm" value="' + nameVal + '">');
         $row.find('[data-field="email"]').html('<input type="email" class="form-control form-control-sm" value="' + emailVal + '">');
@@ -131,7 +128,6 @@ $(document).ready(function () {
         $row.find('[data-field="organization"]').html(orgSelect);
 
         $row.find('[data-field="position"]').html('<input type="text" class="form-control form-control-sm" value="' + positionVal + '">');
-        $row.find('[data-field="specialty"]').html('<input type="text" class="form-control form-control-sm" value="' + specialtyVal + '">');
 
         // Change buttons
         $(this).replaceWith('<button class="btn btn-sm btn-success btn-update" data-id="' + refereeId + '">Update</button> ' +
@@ -148,7 +144,6 @@ $(document).ready(function () {
         $row.find('[data-field="organization"]').text($row.data('original-org-name'));
         $row.find('[data-field="organization"]').data('org-id', $row.data('original-org-id'));
         $row.find('[data-field="position"]').text($row.data('original-position'));
-        $row.find('[data-field="specialty"]').text($row.data('original-specialty'));
 
         var refereeId = $row.data('id');
         var $actionCell = $row.find('td:last');
@@ -189,7 +184,6 @@ $(document).ready(function () {
         var phone = $row.find('[data-field="phone"] input').val();
         var organizationId = $row.find('[data-field="organization"] select').val();
         var position = $row.find('[data-field="position"] input').val();
-        var specialty = $row.find('[data-field="specialty"] input').val();
 
         var hasError = false;
 
@@ -226,12 +220,6 @@ $(document).ready(function () {
             hasError = true;
         }
 
-        // Validate specialty
-        if (isEmpty(specialty)) {
-            showError($row.find('[data-field="specialty"] input'), 'Specialty cannot be empty.');
-            hasError = true;
-        }
-
         // If validation fails, stop here
         if (hasError) {
             return;
@@ -242,8 +230,7 @@ $(document).ready(function () {
             email: email,
             phone: phone,
             external_organization_id: parseInt(organizationId),
-            position: position,
-            specialty: specialty
+            position: position
         };
 
         console.log('Update data:', updateData);
@@ -359,7 +346,6 @@ function validateForm(event) {
 
     markError("name", isEmpty(form["name"].value), "This field cannot be left blank.");
     markError("position", isEmpty(form["position"].value), "This field cannot be left blank.");
-    markError("specialty", isEmpty(form["specialty"].value), "This field cannot be left blank.");
     markError("phone", isEmpty(form["phone"].value), "This field cannot be left blank.");
     var email = form["email"].value;
     // Email is optional, but if provided, must be valid

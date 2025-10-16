@@ -87,6 +87,8 @@ function getStaffDetails($staff_id, $location_id)
     return $staffDetails;
 }
 
+// print_r($_POST);
+// exit;
 $data = array();
 
 $business_unit_from = isset($_POST['business_unit_id_from']) ? $_POST['business_unit_id_from'] : null;
@@ -132,11 +134,49 @@ if (!isset($_POST['external_referral'])) {
     $staffData = getStaffDetails($staff_id, $location_id);
     $staffDetails = !empty($staffData) ? $staffData[0] : array();
 
-    $recipient = array(
-        'organization' => isset($_POST['organization']) ? (int)$_POST['organization'] : null,
-        'location_organization' => isset($_POST['location_organization']) ? $_POST['location_organization'] : null,
-        'referee' => isset($_POST['referee']) ? $_POST['referee'] : null
-    );
+    // Build recipient data based on conditions
+    $recipient = array();
+
+    // Check if using existing organization or creating new one
+    if (isset($_POST['organization']) && !empty($_POST['organization'])) {
+        // Existing organization selected
+        $recipient['organization'] = (int)$_POST['organization'];
+
+        // Check if using existing referee or creating new one
+        if (isset($_POST['referee']) && !empty($_POST['referee'])) {
+            // Condition 1: Existing organization + existing referee
+            $recipient['referee'] = (int)$_POST['referee'];
+        } elseif (isset($_POST['new_recipient_name']) && !empty($_POST['new_recipient_name'])) {
+            // Condition 2: Existing organization + new recipient
+            $recipient['new_recipient'] = array(
+                'name' => $_POST['new_recipient_name'],
+                'email' => isset($_POST['new_recipient_email']) ? $_POST['new_recipient_email'] : '',
+                'phone' => isset($_POST['new_recipient_phone']) ? $_POST['new_recipient_phone'] : '',
+                'position' => isset($_POST['new_recipient_position']) ? $_POST['new_recipient_position'] : ''
+            );
+        }
+    } elseif (isset($_POST['new_org_name']) && !empty($_POST['new_org_name'])) {
+        // New organization being created
+        $recipient['new_organization'] = array(
+            'name' => $_POST['new_org_name'],
+            'address' => isset($_POST['new_org_address']) ? $_POST['new_org_address'] : '',
+            'postcode' => isset($_POST['new_org_postcode']) ? $_POST['new_org_postcode'] : '',
+            'state' => isset($_POST['new_org_state']) ? $_POST['new_org_state'] : '',
+            'country' => isset($_POST['new_org_country']) ? $_POST['new_org_country'] : 'Malaysia'
+        );
+
+        // Check if creating new recipient as well
+        if (isset($_POST['new_recipient_name']) && !empty($_POST['new_recipient_name'])) {
+            // Condition 3: New organization + new recipient
+            $recipient['new_recipient'] = array(
+                'name' => $_POST['new_recipient_name'],
+                'email' => isset($_POST['new_recipient_email']) ? $_POST['new_recipient_email'] : '',
+                'phone' => isset($_POST['new_recipient_phone']) ? $_POST['new_recipient_phone'] : '',
+                'position' => isset($_POST['new_recipient_position']) ? $_POST['new_recipient_position'] : ''
+            );
+        }
+        // Condition 4 (implicit): New organization only (no new recipient) - already handled above
+    }
 
     // Merge staff details with other assignee data and include staff_id
     $assigneeData = array_merge(
@@ -193,8 +233,16 @@ foreach ($_POST as $key => $value) {
         'customer_address',
         'external_referral',
         'organization',
-        'location_organization',
-        'referee'
+        'referee',
+        'new_org_name',
+        'new_org_address',
+        'new_org_postcode',
+        'new_org_state',
+        'new_org_country',
+        'new_recipient_name',
+        'new_recipient_email',
+        'new_recipient_phone',
+        'new_recipient_position'
     ))) {
         $form_data[$key] = $value;
     }

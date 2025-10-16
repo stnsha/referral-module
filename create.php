@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -76,7 +77,7 @@ include('../common/index_adv.php');
                             <div class="col">
                                 <select name="location_to" id="location_to"
                                     class="form-select form-select-sm text-capitalize">
-                                    <option value="">Location</option>
+                                    <option value="">Location (Optional)</option>
                                 </select>
                                 <div class="error-message" id="error-location-to" style="color: red;font-size:12px;">
                                 </div>
@@ -107,6 +108,9 @@ include('../common/index_adv.php');
                                 </select>
                                 <div class="error-message" id="error-organization" style="color: red;font-size:12px;">
                                 </div>
+                                <div class="mt-2">
+                                    <button type="button" id="add-new-org-btn" class="btn btn-sm btn-outline-primary">+ Add New Organization</button>
+                                </div>
                             </div>
                             <div class="col">
                                 <select name="referee" id="referee" class="form-select form-select-sm text-capitalize">
@@ -114,6 +118,88 @@ include('../common/index_adv.php');
                                 </select>
                                 <div class="error-message" id="error-referee" style="color: red;font-size:12px;">
                                 </div>
+                                <div class="mt-2">
+                                    <button type="button" id="add-new-recipient-btn" class="btn btn-sm btn-outline-primary">+ Add New Recipient</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- New Organization Form (Hidden by default) -->
+                        <div id="new-organization-section" style="display: none;" class="border rounded p-3 mb-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <p class="r-text fw-bold mb-0">New Organization Details</p>
+                                <button type="button" id="cancel-new-org-btn" class="btn btn-sm btn-outline-secondary">Cancel</button>
+                            </div>
+                            <div class="mb-2">
+                                <p class="r-text">Organization Name<span style="color:red;">*</span></p>
+                                <input type="text" name="new_org_name" id="new-org-name" class="form-control form-control-sm">
+                                <div class="error-message" id="error-new-org-name" style="color: red;font-size:12px;"></div>
+                            </div>
+                            <div class="mb-2">
+                                <p class="r-text">Address</p>
+                                <textarea name="new_org_address" id="new-org-address" class="form-control form-control-sm" rows="2"></textarea>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col">
+                                    <p class="r-text">Postcode</p>
+                                    <input type="text" name="new_org_postcode" id="new-org-postcode" class="form-control form-control-sm">
+                                </div>
+                                <div class="col">
+                                    <p class="r-text">State</p>
+                                    <select name="new_org_state" id="new-org-state" class="form-control form-control-sm">
+                                        <option value="">Select State</option>
+                                        <option value="Johor">Johor</option>
+                                        <option value="Kedah">Kedah</option>
+                                        <option value="Kelantan">Kelantan</option>
+                                        <option value="Melaka">Melaka</option>
+                                        <option value="Negeri Sembilan">Negeri Sembilan</option>
+                                        <option value="Pahang">Pahang</option>
+                                        <option value="Perak">Perak</option>
+                                        <option value="Perlis">Perlis</option>
+                                        <option value="Pulau Pinang">Pulau Pinang</option>
+                                        <option value="Sabah">Sabah</option>
+                                        <option value="Sarawak">Sarawak</option>
+                                        <option value="Selangor">Selangor</option>
+                                        <option value="Terengganu">Terengganu</option>
+                                        <option value="Kuala Lumpur">Kuala Lumpur</option>
+                                        <option value="Labuan">Labuan</option>
+                                        <option value="Putrajaya">Putrajaya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <p class="r-text">Country</p>
+                                <select name="new_org_country" id="new-org-country" class="form-control form-control-sm">
+                                    <option value="Malaysia" selected>Malaysia</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- New Recipient Form (Hidden by default) -->
+                        <div id="new-recipient-section" style="display: none;" class="border rounded p-3 mb-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <p class="r-text fw-bold mb-0">New Recipient Details</p>
+                                <button type="button" id="cancel-new-recipient-btn" class="btn btn-sm btn-outline-secondary">Cancel</button>
+                            </div>
+                            <div class="mb-2">
+                                <p class="r-text">Name<span style="color:red;">*</span></p>
+                                <input type="text" name="new_recipient_name" id="new-recipient-name" class="form-control form-control-sm">
+                                <div class="error-message" id="error-new-recipient-name" style="color: red;font-size:12px;"></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col">
+                                    <p class="r-text">Email</p>
+                                    <input type="email" name="new_recipient_email" id="new-recipient-email" class="form-control form-control-sm">
+                                    <div class="error-message" id="error-new-recipient-email" style="color: red;font-size:12px;"></div>
+                                </div>
+                                <div class="col">
+                                    <p class="r-text">Phone<span style="color:red;">*</span></p>
+                                    <input type="tel" name="new_recipient_phone" id="new-recipient-phone" class="form-control form-control-sm">
+                                    <div class="error-message" id="error-new-recipient-phone" style="color: red;font-size:12px;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <p class="r-text">Position<span style="color:red;">*</span></p>
+                                <input type="text" name="new_recipient_position" id="new-recipient-position" class="form-control form-control-sm">
+                                <div class="error-message" id="error-new-recipient-position" style="color: red;font-size:12px;"></div>
                             </div>
                         </div>
                     </div>
@@ -276,6 +362,7 @@ include('../common/index_adv.php');
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;

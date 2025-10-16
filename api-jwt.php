@@ -34,6 +34,28 @@ if (isset($_SESSION["myusername"])) {
 }
 
 /**
+ * Get API host based on environment (auto-detect)
+ * @return string API host URL
+ */
+function getApiHost()
+{
+    // Check if running on localhost (PHP 5.3 compatible)
+    $serverName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+    $httpHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+
+    $isLocal = in_array($serverName, array('localhost', '127.0.0.1')) ||
+        strpos($serverName, 'localhost') !== false ||
+        strpos($httpHost, 'localhost') !== false ||
+        strpos($httpHost, '127.0.0.1') !== false;
+
+    if ($isLocal) {
+        return 'http://127.0.0.1:8000/api/';
+    } else {
+        return 'http://mytotalhealth.com.my/referral-api/api/';
+    }
+}
+
+/**
  * Get staff information for JWT authentication
  * @param int $staff_id Staff ID from session
  * @return array Staff data or null if not found
@@ -73,7 +95,7 @@ function getStaffAuthData($staff_id)
  */
 function getJWTToken($staff_id, $staff_department_id, $status_semasa)
 {
-    $host = 'http://mytotalhealth.com.my/referral-api/api/';
+    $host = getApiHost();
     $url = $host . 'auth';
 
     $authData = array(
@@ -161,7 +183,7 @@ function getAuthToken($staff_id)
  */
 function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id = null)
 {
-    $host = 'http://mytotalhealth.com.my/referral-api/api/';
+    $host = getApiHost();
     $url = $host . $endpoint;
 
     // Get JWT token
@@ -282,7 +304,7 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
  */
 function verifyToken($token)
 {
-    $host = 'http://mytotalhealth.com.my/referral-api/api/';
+    $host = getApiHost();
     $url = $host . 'auth/verify';
 
     $data = array(

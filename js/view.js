@@ -2,6 +2,30 @@ $(document).ready(function () {
     localStorage.clear();
     sessionStorage.clear();
 
+    // Initialize Select2 on the refer_location select field only
+    const select2Config = {
+        allowClear: true,
+        width: '100%',
+        dir: 'ltr',
+        dropdownAutoWidth: false,
+        minimumResultsForSearch: 5,
+        templateResult: function (data) {
+            if (!data.id) {
+                return data.text;
+            }
+            var $result = $('<span style="text-align: left; display: block; font-size: 13px; font-family: Inter, sans-serif;">' + data.text + '</span>');
+            return $result;
+        },
+        templateSelection: function (data) {
+            return $('<span style="text-align: left; display: block; font-size: 13px; font-family: Inter, sans-serif;">' + data.text + '</span>');
+        }
+    };
+
+    $('#refer_location').select2({
+        ...select2Config,
+        placeholder: 'Location'
+    });
+
     referralAccordion();
     referAnother();
     $('.refer-form').hide();
@@ -17,11 +41,10 @@ $(document).ready(function () {
         }),
         success: function (response) {
             var data = response.data;
-            console.log(data);
 
             // Referral Details
             let referralDetails = data.referralDetails;
-            console.log(referralDetails);
+
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
             var location_from = $('#location_from');
@@ -117,35 +140,116 @@ $(document).ready(function () {
                             }
                         });
                     } else {
-                        // When staff_id is null, check if current session user's department matches
-                        getStaffDetails(staffId, toReferral.location, null, department, function (staffResponse) {
-                            if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
-                                // Department matches - use current session user
-                                getStaffDetails(staffId, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
-                                    if (staffResponse && staffResponse.length > 0) {
-                                        recipientTo.val(staffResponse[0].staff || '');
-                                        business_unit_to.val(staffResponse[0].business_unit || '');
-                                        location_to.val(staffResponse[0].outlet || '');
-                                    }
-                                });
-                            } else {
-                                // Department doesn't match - only populate location and business unit
-                                getRecipientDetails(toReferral.location, toReferral.business_unit_id, function (recipientResponse) {
-                                    if (recipientResponse) {
-                                        location_to.val(recipientResponse.outlet_name || '');
-                                        business_unit_to.val(recipientResponse.business_unit_name || '');
-                                        recipientTo.val(''); // Leave staff field empty
-                                    }
-                                });
+                        $.ajax({
+                            url: 'backend.php',
+                            method: 'GET',
+                            data: {
+                                staff_id: staffId,
+                                action: 'getStaffName'
+                            },
+                            dataType: 'json',
+                            success: function (staffName) {
+                                if (staffName) {
+                                    recipientTo.val(staffName);
+                                }
                             }
                         });
+
+                        // When staff_id is null
+                        if (toReferral.location === null && fromReferral.staff_id != staffId) {
+                            // Location is also null - get staff name, business unit name, and all user locations
+                            $.ajax({
+                                url: 'backend.php',
+                                method: 'GET',
+                                data: {
+                                    bu_id: toReferral.business_unit_id,
+                                    action: 'getBusinessUnitName'
+                                },
+                                dataType: 'json',
+                                success: function (businessUnitName) {
+                                    if (businessUnitName) {
+                                        business_unit_to.val(businessUnitName);
+                                    }
+                                }
+                            });
+
+                            $.ajax({
+                                url: 'backend.php',
+                                method: 'GET',
+                                data: {
+                                    staff_id: staffId,
+                                    action: 'getStaffLocation'
+                                },
+                                dataType: 'json',
+                                success: function (locations) {
+                                    if (locations && locations.length > 0) {
+                                        const fieldId = location_to.attr('id');
+                                        const fieldName = location_to.attr('name');
+
+                                        const selectElement = $('<select>', {
+                                            id: fieldId,
+                                            name: fieldName,
+                                            class: 'form-select form-select-sm',
+                                            required: true
+                                        });
+
+                                        selectElement.append($('<option>', {
+                                            value: '',
+                                            text: 'Select Location'
+                                        }));
+
+                                        locations.forEach(function (location) {
+                                            selectElement.append($('<option>', {
+                                                value: location.id,
+                                                text: location.code
+                                            }));
+                                        });
+
+                                        location_to.replaceWith(selectElement);
+
+                                        // Show the location label with asterisk
+                                        // $('#location-to-label').show();
+
+                                        // Initialize select2 on the newly created location_to select element
+                                        $('#location_to').select2({
+                                            ...select2Config,
+                                            placeholder: 'Select Location'
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                        else {
+                            // Location exists - check if current session user's department matches
+                            getStaffDetails(staffId, toReferral.location, null, department, function (staffResponse) {
+                                if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
+                                    // Department matches - use current session user
+                                    getStaffDetails(staffId, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
+                                        if (staffResponse && staffResponse.length > 0) {
+                                            recipientTo.val(staffResponse[0].staff || '');
+                                            business_unit_to.val(staffResponse[0].business_unit || '');
+                                            location_to.val(staffResponse[0].outlet || '');
+                                        }
+                                    });
+                                } else {
+                                    // Department doesn't match - only populate location and business unit
+                                    getRecipientDetails(toReferral.location, toReferral.business_unit_id, function (recipientResponse) {
+                                        if (recipientResponse) {
+                                            location_to.val(recipientResponse.outlet_name || '');
+                                            business_unit_to.val(recipientResponse.business_unit_name || '');
+                                            recipientTo.val(''); // Leave staff field empty
+                                        }
+                                    });
+                                }
+                            });
+                        }
+
                     }
                 }
             }
 
             // Sort asc by sequence
             const sortedReferrals = referralDetails.sort((a, b) => a.sequence - b.sequence);
-            // console.log(sortedReferrals);
 
             const referralHistoryContainer = $('#referralHistoryContainer');
 
@@ -264,6 +368,7 @@ $(document).ready(function () {
                 else if (lastSequence.staff_id) {
                     // Check if current user matches the staff_id in last sequence
                     if (lastSequence.staff_id === staffId) {
+                        // Current user is the staff in last sequence - show reply form and populate forms
                         window.hasReplyForms = true;
                         window.isLastSequence = true;
                         $('.reply-form-container').show();
@@ -276,7 +381,7 @@ $(document).ready(function () {
                     }
                 }
                 // Special case: staff_id is null - check department match
-                else if (lastSequence.staff_id === null) {
+                else if (lastSequence.staff_id === null && lastSequence.location != null) {
                     // Assign current user as recipient
                     updated_recipient_to.val(staffId);
 
@@ -315,7 +420,49 @@ $(document).ready(function () {
                             loadStatusOptions(status, true, data.status_note);
                         }
                     });
-                } else {
+                }
+
+                else if (lastSequence.staff_id === null && lastSequence.location == null) {
+                    // Assign current user as recipient
+                    updated_recipient_to.val(staffId);
+                    // When staff_id is null, check if current session user's department matches
+                    isStaffMatch(staffId, department, function (staffResponse) {
+                        if (staffResponse) {
+                            // Department matches - show reply form and populate forms
+                            window.hasReplyForms = true;
+                            window.isLastSequence = true;
+                            $('.reply-form-container').show();
+
+                            // Check if referral_details is empty - show all forms
+                            if (lastSequence.referral_details && lastSequence.referral_details.length === 0) {
+                                displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                            } else {
+                                displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                            }
+
+                            // Show "Refer Another" container and submit button when department matches
+                            $('.refer-another-container').show();
+                            if (status != 4 && status != 5) {
+                                $('.form-btn-submit').show();
+                            }
+                            // Reload status options with correct disable state
+                            loadStatusOptions(status, (status == 4 || status == 5), data.status_note);
+                        } else {
+                            // Department doesn't match - hide reply form
+                            window.hasReplyForms = false;
+                            window.isLastSequence = false;
+                            $('.reply-form-container').hide();
+
+                            // Hide "Refer Another" container and submit button when department doesn't match
+                            $('.refer-another-container').hide();
+                            $('.form-btn-submit').hide();
+                            // Reload status options with correct disable state
+                            loadStatusOptions(status, true, data.status_note);
+                        }
+                    });
+                }
+
+                else {
                     // Default: hide reply form
                     window.hasReplyForms = false;
                     window.isLastSequence = false;
@@ -326,6 +473,7 @@ $(document).ready(function () {
                 window.isLastSequence = false;
                 $('.reply-form-container').hide();
             }
+
 
             $('input[name="priority"]').on('click', function (e) {
                 e.preventDefault();
@@ -467,22 +615,43 @@ $(document).ready(function () {
 function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = false) {
     const { rd, staff, businessUnit, outlet, contact, staff_department_id, createdAt } = queueItem;
 
-    //display referral info in panel
-    if (rd.referral_reason || rd.referral_condition || rd.medical_history) {
+    // Display Referral Feedback from replyForm object
+    if (rd.replyForm && Object.keys(rd.replyForm).length > 0 && (rd.replyForm.post_diagnosis || rd.replyForm.outcome || rd.replyForm.feedback)) {
+        panel.append(`
+            <div class="referral-feedback-section border-bottom pb-3 mb-3">
+                <p class="r-title">Previous Feedback</p>
+                <div class="mb-2">
+                    <p class="r-text">Post Diagnosis</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.replyForm.post_diagnosis || 'N/A'}</textarea>
+                </div>
+                <div class="mb-2">
+                    <p class="r-text">Outcome</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.replyForm.outcome || 'N/A'}</textarea>
+                </div>
+                <div class="mb-2">
+                    <p class="r-text">Feedback</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.replyForm.feedback || 'N/A'}</textarea>
+                </div>
+            </div>
+            `);
+    }
+
+    // Display Referral Information from createForm object
+    if (rd.createForm && Object.keys(rd.createForm).length > 0 && (rd.createForm.referral_reason || rd.createForm.referral_condition || rd.createForm.medical_history)) {
         panel.append(`
             <div class="referral-info-section border-bottom pb-3 mb-3">
                 <p class="r-title">Referral Information</p>
                 <div class="mb-2">
                     <p class="r-text">Reason of Referral</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_reason || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.createForm.referral_reason || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
                     <p class="r-text">Details of Patient's Condition</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.referral_condition || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.createForm.referral_condition || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
                     <p class="r-text">Relevant Medical History</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.medical_history || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.createForm.medical_history || 'N/A'}</textarea>
                 </div>
             </div>
             `);
@@ -993,6 +1162,26 @@ function getStaffDetails(staffId, locationId, businessUnitId, deptId, callback) 
     });
 }
 
+function isStaffMatch(staffId, deptId, callback) {
+    $.ajax({
+        url: 'backend.php',
+        method: 'GET',
+        data: {
+            staffId: staffId,
+            deptId: deptId,
+            action: 'isStaffMatch'
+        },
+        dataType: 'json',
+        success: function (response) {
+            callback(response);
+        },
+        error: function (xhr, status, error) {
+            logError(new Error('Error fetching staff details'), { context: 'isStaffMatch', staffId: staffId, deptId: deptId, status: status, error: error });
+            callback("Unknown");
+        }
+    });
+}
+
 function getRecipientDetails(location, businessUnit, callback) {
     $.ajax({
         url: 'backend.php',
@@ -1023,7 +1212,6 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
         },
         success: function (response) {
             let forms = response.data.forms;
-            console.log(forms);
 
             // Filter forms based on referralDetails if provided
             if (referralDetails && referralDetails.length > 0) {
@@ -1139,6 +1327,34 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
                 targetDiv.append(formContainer);
             });
 
+            // Add compulsory fields: Post Diagnosis, Outcome, Feedback
+            const postDiagnosisWrapper = $(`
+                <div class="mb-2">
+                    <p class="r-text">Post Diagnosis<span style="color:red;">*</span></p>
+                    <textarea name="post_diagnosis" id="post_diagnosis"
+                        class="form-control form-control-sm" rows="5" required></textarea>
+                    <div id="error-post_diagnosis" class="error-message" style="color: red;font-size:12px;"></div>
+                </div>
+            `);
+
+            const outcomeWrapper = $(`
+                <div class="mb-2">
+                    <p class="r-text">Outcome<span style="color:red;">*</span></p>
+                    <textarea name="outcome" id="outcome"
+                        class="form-control form-control-sm" rows="5" required></textarea>
+                    <div id="error-outcome" class="error-message" style="color: red;font-size:12px;"></div>
+                </div>
+            `);
+
+            const feedbackWrapper = $(`
+                <div class="mb-2">
+                    <p class="r-text">Feedback<span style="color:red;">*</span></p>
+                    <textarea name="feedback" id="feedback"
+                        class="form-control form-control-sm" rows="5" required></textarea>
+                    <div id="error-feedback" class="error-message" style="color: red;font-size:12px;"></div>
+                </div>
+            `);
+
             const remarksWrapper = $(`
                 <div class="mb-2">
                     <p class="r-text">Additional Remarks</p>
@@ -1147,6 +1363,9 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
                 </div>
             `);
 
+            targetDiv.append(postDiagnosisWrapper);
+            targetDiv.append(outcomeWrapper);
+            targetDiv.append(feedbackWrapper);
             targetDiv.append(remarksWrapper);
         },
         error: function (xhr, status, error) {
@@ -1339,6 +1558,8 @@ function referAnother() {
     const checkbox = document.getElementById('refer_another');
     const referBusinessUnit = document.getElementById('refer_business_unit');
     const referLocation = document.getElementById('refer_location');
+    const externalReferralCheckboxContainer = document.getElementById('external-referral-checkbox-container');
+    const externalReferralCheckbox = document.getElementById('refer_external_referral');
 
     checkbox.addEventListener('change', function () {
         const isChecked = this.checked;
@@ -1351,10 +1572,23 @@ function referAnother() {
             referLocation.innerHTML = '<option value="">Location</option>';
             $('.refer-form').hide().find('input[type="text"], textarea').val('');
             $('.refer-form').find('select').prop('selectedIndex', 0);
+
+            // Hide and reset external referral section
+            externalReferralCheckboxContainer.style.display = 'none';
+            externalReferralCheckbox.checked = false;
+            externalReferralCheckbox.disabled = true;
+            $('#refer-external-referral-section').addClass('d-none');
+            resetReferExternalReferralSection();
         } else {
             getBusinessUnits();
+            // Show external referral checkbox when refer another is checked
+            externalReferralCheckboxContainer.style.display = 'flex';
+            externalReferralCheckbox.disabled = false;
         }
     });
+
+    // Handle external referral checkbox toggle
+    toggleReferExternalReferralSection();
 }
 
 function getBusinessUnit(departmentId, callback) {
@@ -1506,14 +1740,52 @@ function validateForm(event) {
         }
     });
 
+    // Check if location_to field is a select element and validate it
+    const locationToField = document.getElementById('location_to');
+    if (locationToField && locationToField.tagName === 'SELECT') {
+        const locationValue = locationToField.value;
+        if (!locationValue || locationValue === '') {
+            const errorLocationTo = document.getElementById('error-location-to');
+            if (errorLocationTo) {
+                errorLocationTo.textContent = 'Please select a location.';
+                // Scroll to the error
+                locationToField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            console.warn('Location not selected - form submission blocked');
+            isValid = false;
+        }
+    }
+
     const form = document.getElementById('referral-form');
     if (!form.checkValidity()) {
         form.reportValidity();
         isValid = false;
     }
 
-    // Add validation for status_note when status 5 is selected
+    // Validate the three compulsory fields when status is not 5
     const selectedStatus = document.querySelector('input[name="status"]:checked');
+    if (!selectedStatus || selectedStatus.value !== '5') {
+        const postDiagnosis = document.getElementById('post_diagnosis');
+        const outcome = document.getElementById('outcome');
+        const feedback = document.getElementById('feedback');
+
+        if (postDiagnosis && !postDiagnosis.value.trim()) {
+            document.getElementById('error-post_diagnosis').textContent = 'Post Diagnosis is required.';
+            isValid = false;
+        }
+
+        if (outcome && !outcome.value.trim()) {
+            document.getElementById('error-outcome').textContent = 'Outcome is required.';
+            isValid = false;
+        }
+
+        if (feedback && !feedback.value.trim()) {
+            document.getElementById('error-feedback').textContent = 'Feedback is required.';
+            isValid = false;
+        }
+    }
+
+    // Add validation for status_note when status 5 is selected
     const statusNoteTextarea = document.getElementById('status_note');
     const statusNoteError = document.getElementById('error-status_note');
 
@@ -1559,6 +1831,16 @@ function validateForm(event) {
             formData.append('attachments[]', file);
         });
 
+        // Manually add location_to value if it's a select element
+        const locationToField = document.getElementById('location_to');
+        if (locationToField && locationToField.tagName === 'SELECT') {
+            const locationValue = locationToField.value;
+            // FormData should capture it, but ensure it's there
+            if (locationValue && !formData.has('location_to')) {
+                formData.set('location_to', locationValue);
+            }
+        }
+
         // for (const [key, value] of formData.entries()) {
         //     if (value instanceof File) {
         //         console.log(`${key}:`, {
@@ -1596,3 +1878,182 @@ function validateForm(event) {
             });
     }
 }
+
+// Toggle external referral section for "Refer Another"
+function toggleReferExternalReferralSection() {
+    $('#refer_external_referral').on('change', function () {
+        if ($(this).is(':checked')) {
+            $('#refer-external-referral-section').removeClass('d-none');
+            $('#refer_business_unit, #refer_location').prop('disabled', true);
+            $('#refer_organization, #refer_referee').prop('disabled', false);
+
+            // Show the referring indication form (referral_reason, referral_condition, medical_history)
+            $('.refer-form').show();
+
+            var externalOrganizations = [];
+
+            $.ajax({
+                url: 'api-jwt.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'external-organizations'
+                },
+                success: function (response) {
+                    if (response && response.data) {
+                        externalOrganizations = response.data;
+                        var $org = $('#refer_organization');
+                        $org.empty().append('<option value="">Organization</option>');
+                        externalOrganizations.forEach(function (org) {
+                            $org.append('<option value="' + org.id + '">' + org.name + '</option>');
+                        });
+                    }
+                    $('#refer_referee').empty().append('<option value="">Recipient (Optional)</option>');
+                    $('#refer_organization, #refer_referee').val('');
+                }
+            });
+
+            $('#refer_organization').on('change', function () {
+                var orgId = $(this).val();
+                if (!orgId) {
+                    $('#refer_referee').empty().append('<option value="">Recipient (Optional)</option>');
+                    $('#refer-add-new-recipient-btn').prop('disabled', true);
+                    return;
+                }
+
+                // Enable add recipient button when organization is selected
+                $('#refer-add-new-recipient-btn').prop('disabled', false);
+
+                var org = externalOrganizations.find(function (o) { return o.id == orgId; });
+                if (org) {
+                    var $ref = $('#refer_referee');
+                    $ref.empty().append('<option value="">Recipient (Optional)</option>');
+                    if (org.referees && org.referees.length) {
+                        org.referees.forEach(function (r) {
+                            $ref.append('<option value="' + r.id + '">' + r.name + ' (' + r.position + ')</option>');
+                        });
+                    }
+                }
+            });
+        } else {
+            $('#refer-external-referral-section').addClass('d-none');
+            $('#refer_business_unit, #refer_location').prop('disabled', false);
+            $('#refer_organization, #refer_referee').prop('disabled', true);
+
+            // Hide referring indication form when external referral is unchecked
+            // Only hide if business unit is also not selected
+            if (!$('#refer_business_unit').val()) {
+                $('.refer-form').hide();
+            }
+
+            resetReferExternalReferralSection();
+        }
+    });
+}
+
+// Reset external referral section
+function resetReferExternalReferralSection() {
+    // Hide and reset new organization section
+    $('#refer-new-organization-section').hide();
+    $('#refer-new-org-name').val('');
+    $('#refer-new-org-address').val('');
+    $('#refer-new-org-postcode').val('');
+    $('#refer-new-org-state').val('');
+    $('#refer-new-org-country').val('Malaysia');
+    $('#error-refer-new-org-name').html('');
+    $('#refer-add-new-org-btn').show();
+
+    // Hide and reset new recipient section
+    $('#refer-new-recipient-section').hide();
+    $('#refer-new-recipient-name').val('');
+    $('#refer-new-recipient-email').val('');
+    $('#refer-new-recipient-phone').val('');
+    $('#refer-new-recipient-position').val('');
+    $('#error-refer-new-recipient-name').html('');
+    $('#error-refer-new-recipient-email').html('');
+    $('#error-refer-new-recipient-phone').html('');
+    $('#error-refer-new-recipient-position').html('');
+    $('#refer-add-new-recipient-btn').show().prop('disabled', true);
+
+    // Reset organization and referee dropdowns
+    $('#refer_organization').empty().append('<option value="">Organization</option>');
+    $('#refer_referee').empty().append('<option value="">Recipient (Optional)</option>');
+}
+
+// Handle "Add New Organization" button click for refer another
+$('#refer-add-new-org-btn').on('click', function () {
+    $('#refer-new-organization-section').show();
+    $('#refer_organization').val('').prop('disabled', true);
+    $('#refer_referee').val('').prop('disabled', true);
+    $(this).hide();
+
+    // Enable add recipient button when creating new org
+    $('#refer-add-new-recipient-btn').prop('disabled', false);
+});
+
+// Handle "Cancel" button click for new organization
+$('#refer-cancel-new-org-btn').on('click', function () {
+    $('#refer-new-organization-section').hide();
+    $('#refer_organization').prop('disabled', false);
+    $('#refer_referee').prop('disabled', false);
+    $('#refer-add-new-org-btn').show();
+
+    // Clear new organization fields
+    $('#refer-new-org-name').val('');
+    $('#refer-new-org-address').val('');
+    $('#refer-new-org-postcode').val('');
+    $('#refer-new-org-state').val('');
+    $('#refer-new-org-country').val('Malaysia');
+    $('#error-refer-new-org-name').html('');
+
+    // Also close new recipient section if it was open
+    if ($('#refer-new-recipient-section').is(':visible')) {
+        $('#refer-new-recipient-section').hide();
+        $('#refer-new-recipient-name').val('');
+        $('#refer-new-recipient-email').val('');
+        $('#refer-new-recipient-phone').val('');
+        $('#refer-new-recipient-position').val('');
+        $('#error-refer-new-recipient-name').html('');
+        $('#error-refer-new-recipient-email').html('');
+        $('#error-refer-new-recipient-phone').html('');
+        $('#error-refer-new-recipient-position').html('');
+        $('#refer-add-new-recipient-btn').show();
+    }
+
+    // Disable add recipient button if no organization selected
+    if (!$('#refer_organization').val()) {
+        $('#refer-add-new-recipient-btn').prop('disabled', true);
+    }
+});
+
+// Handle "Add New Recipient" button click for refer another
+$('#refer-add-new-recipient-btn').on('click', function () {
+    // Check if organization is selected or new org form is visible
+    var hasOrganization = $('#refer_organization').val() || $('#refer-new-organization-section').is(':visible');
+
+    if (!hasOrganization) {
+        alert('Please select or create an organization first before adding a recipient.');
+        return;
+    }
+
+    $('#refer-new-recipient-section').show();
+    $('#refer_referee').val('').prop('disabled', true);
+    $(this).hide();
+});
+
+// Handle "Cancel" button click for new recipient
+$('#refer-cancel-new-recipient-btn').on('click', function () {
+    $('#refer-new-recipient-section').hide();
+    $('#refer_referee').prop('disabled', false);
+    $('#refer-add-new-recipient-btn').show();
+
+    // Clear new recipient fields
+    $('#refer-new-recipient-name').val('');
+    $('#refer-new-recipient-email').val('');
+    $('#refer-new-recipient-phone').val('');
+    $('#refer-new-recipient-position').val('');
+    $('#error-refer-new-recipient-name').html('');
+    $('#error-refer-new-recipient-email').html('');
+    $('#error-refer-new-recipient-phone').html('');
+    $('#error-refer-new-recipient-position').html('');
+});

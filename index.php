@@ -11,7 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
-    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css?v=<?php echo time(); ?>" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
@@ -27,7 +27,7 @@ include('../common/index_adv.php');
     <div class="referral-container mb-3">
         <div class="row mb-3">
             <div class="col-12">
-                <div class="d-flex justify-content-start align-items-end px-3">
+                <div class="d-flex justify-content-start align-items-center px-3">
                     <span class="fw-bold text-start me-3" style="font-size:20px;">Referral Dashboard</span>
                     <a href="create.php" type="button" class="btn-new-referral me-2">New Referral</a>
                     <a href="report.php" type="button" class="btn-referral" id="viewReportbtn">View
@@ -126,15 +126,14 @@ include('../common/index_adv.php');
                     <div class="d-flex gap-2 pb-2 mb-2">
                         <span class="fw-bold text-start" style="font-size:12px; align-self:center;">View:</span>
                         <div class="btn-group" role="group" aria-label="Referral type filter">
-                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all"
-                                checked>
+                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all">
                             <label class="btn btn-outline-primary btn-sm" for="type-all">All</label>
 
                             <input type="radio" class="btn-check" name="referral-type" id="type-sent" value="sent">
                             <label class="btn btn-outline-primary btn-sm" for="type-sent">Sent</label>
 
                             <input type="radio" class="btn-check" name="referral-type" id="type-received"
-                                value="received">
+                                value="received" checked>
                             <label class="btn btn-outline-primary btn-sm" for="type-received">Received</label>
                         </div>
                     </div>
@@ -184,9 +183,9 @@ include('../common/index_adv.php');
                             <tr>
                                 <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
                                 <th style="font-size:16px;width: 40%;text-align:start;">Referral Reason</th>
-                                <th style="font-size:16px;width: 15%;text-align:start;">Referring Business Unit</th>
-                                <th style="font-size:16px;width: 5%;text-align:center;">Status</th>
-                                <th style="font-size:16px;width: 20%;text-align:start;">Action</th>
+                                <th style="font-size:16px;width: 15%;text-align:start;">Referred From</th>
+                                <th style="font-size:16px;width: 10%;text-align:start;">Status</th>
+                                <th style="font-size:16px;width: 25%;text-align:start;">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -207,10 +206,39 @@ include('../common/index_adv.php');
         const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+
+        // Function to update column header based on view
+        function updateBusinessUnitHeader() {
+            const referralType = document.querySelector('input[name="referral-type"]:checked')?.value || 'all';
+            const headerCell = document.querySelector('#referral-tbl thead th:nth-child(3)');
+
+            if (headerCell) {
+                if (referralType === 'all') {
+                    headerCell.textContent = 'Business Unit';
+                } else if (referralType === 'sent') {
+                    headerCell.textContent = 'Referred To';
+                } else if (referralType === 'received') {
+                    headerCell.textContent = 'Referred From';
+                }
+            }
+        }
+
+        // Update header when page loads and when filter changes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial update
+            updateBusinessUnitHeader();
+
+            // Listen for radio button changes
+            document.querySelectorAll('input[name="referral-type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateBusinessUnitHeader();
+                });
+            });
+        });
     </script>
 
-    <script src="js/errorLogger.js"></script>
-    <script src="js/index.js"></script>
+    <script src="js/errorLogger.js?v=<?php echo time(); ?>"></script>
+    <script src="js/index.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>

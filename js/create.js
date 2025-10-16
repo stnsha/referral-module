@@ -3,9 +3,56 @@ $(document).ready(function () {
     localStorage.clear();
     sessionStorage.clear();
     $('#organization, #referee').prop('disabled', true);
+    $('#add-new-recipient-btn').prop('disabled', true);
     toggleExternalReferralSection();
     handleFilePreview('#attachmentInput', '#attachmentPreview');
     loadReferralPriorities();
+
+    // Initialize Select2 on the select fields
+    const select2Config = {
+        allowClear: true,
+        width: '100%',
+        dir: 'ltr',
+        dropdownAutoWidth: false,
+        minimumResultsForSearch: 5,
+        templateResult: function (data) {
+            if (!data.id) {
+                return data.text;
+            }
+            var $result = $('<span style="text-align: left; display: block; font-size: 13px; font-family: Inter, sans-serif;">' + data.text + '</span>');
+            return $result;
+        },
+        templateSelection: function (data) {
+            return $('<span style="text-align: left; display: block; font-size: 13px; font-family: Inter, sans-serif;">' + data.text + '</span>');
+        }
+    };
+
+    $('#location_from').select2({
+        ...select2Config,
+        placeholder: 'Location'
+    });
+
+    $('#business_unit_to').select2({
+        ...select2Config,
+        placeholder: 'Business Unit'
+    });
+
+    $('#location_to').select2({
+        ...select2Config,
+        placeholder: 'Location (Optional)'
+    });
+
+    $('#organization').select2({
+        ...select2Config,
+        placeholder: 'Organization',
+        minimumResultsForSearch: 0
+    });
+
+    $('#referee').select2({
+        ...select2Config,
+        placeholder: 'Recipient (Optional)',
+        minimumResultsForSearch: 0
+    });
 
     // Function to clear all customer information
     function clearCustomerInformation() {
@@ -123,6 +170,8 @@ $(document).ready(function () {
 
             });
 
+            busUnitTo.trigger('change.select2');
+
         },
         error: function () {
             alert('Error loading business units');
@@ -151,6 +200,7 @@ $(document).ready(function () {
                             location.code + '</option>'
                         );
                     });
+                    locationFrom.trigger('change.select2');
                 } else {
                     $.ajax({
                         url: 'backend.php?action=getLocations',
@@ -179,6 +229,7 @@ $(document).ready(function () {
                                 $('input[name="location_id_from"]').val(locationId);
 
                             }
+                            locationFrom.trigger('change.select2');
                         },
                         error: function () {
                             alert('Error loading locations');
@@ -187,7 +238,7 @@ $(document).ready(function () {
                 }
             });
         } else {
-            $('#location_from').empty().append('<option value="">Location</option>');
+            $('#location_from').empty().append('<option value="">Location</option>').trigger('change.select2');
         }
     }
 
@@ -360,7 +411,7 @@ $(document).ready(function () {
                 success: function (response) {
                     var locationTo = $('#location_to');
                     locationTo.empty();
-                    locationTo.append('<option value="">Location</option>');
+                    locationTo.append('<option value="">Location (Optional)</option>');
 
                     $.each(response, function (index, location) {
                         locationTo.append(
@@ -369,6 +420,7 @@ $(document).ready(function () {
                         );
                     });
 
+                    locationTo.trigger('change.select2');
                     firstLoad = false;
                 },
                 error: function () {
@@ -376,7 +428,7 @@ $(document).ready(function () {
                 }
             });
         } else {
-            $('#location_to').empty().append('<option value="">Location</option>');
+            $('#location_to').empty().append('<option value="">Location (Optional)</option>').trigger('change.select2');
         }
     });
 
@@ -815,8 +867,9 @@ $(document).ready(function () {
                             externalOrganizations.forEach(function (org) {
                                 $org.append('<option value="' + org.id + '">' + org.name + '</option>');
                             });
+                            $org.trigger('change.select2');
                         }
-                        $('#referee').empty().append('<option value="">Recipient (Optional)</option>');
+                        $('#referee').empty().append('<option value="">Recipient (Optional)</option>').trigger('change.select2');
                         $('#organization, #referee').val('');
                     }
                 });
@@ -824,9 +877,14 @@ $(document).ready(function () {
                 $('#organization').on('change', function () {
                     var orgId = $(this).val();
                     if (!orgId) {
-                        $('#referee').empty().append('<option value="">Recipient (Optional)</option>');
+                        $('#referee').empty().append('<option value="">Recipient (Optional)</option>').trigger('change.select2');
+                        $('#add-new-recipient-btn').prop('disabled', true);
                         return;
                     }
+
+                    // Enable add recipient button when organization is selected
+                    $('#add-new-recipient-btn').prop('disabled', false);
+
                     var org = externalOrganizations.find(function (o) { return o.id == orgId; });
                     if (org) {
                         var $ref = $('#referee');
@@ -836,14 +894,116 @@ $(document).ready(function () {
                                 $ref.append('<option value="' + r.id + '">' + r.name + ' (' + r.position + ')</option>');
                             });
                         }
+                        $ref.trigger('change.select2');
                     }
                 });
             } else {
                 $('#external-referral').addClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', false);
+                $('#organization, #referee').prop('disabled', true);
+
+                // Hide and reset new organization section when external referral is unchecked
+                $('#new-organization-section').hide();
+                $('#new-org-name').val('');
+                $('#new-org-address').val('');
+                $('#new-org-postcode').val('');
+                $('#new-org-state').val('');
+                $('#new-org-country').val('Malaysia');
+                $('#error-new-org-name').html('');
+                $('#add-new-org-btn').show();
+
+                // Hide and reset new recipient section
+                $('#new-recipient-section').hide();
+                $('#new-recipient-name').val('');
+                $('#new-recipient-email').val('');
+                $('#new-recipient-phone').val('');
+                $('#new-recipient-position').val('');
+                $('#error-new-recipient-name').html('');
+                $('#error-new-recipient-email').html('');
+                $('#error-new-recipient-phone').html('');
+                $('#error-new-recipient-position').html('');
+                $('#add-new-recipient-btn').show().prop('disabled', true);
             }
         });
     }
+
+    // Handle "Add New Organization" button click
+    $('#add-new-org-btn').on('click', function () {
+        $('#new-organization-section').show();
+        $('#organization').val('').prop('disabled', true).trigger('change.select2');
+        $('#referee').val('').prop('disabled', true).trigger('change.select2');
+        $(this).hide();
+
+        // Disable recipient dropdown and enable add recipient button when creating new org
+        $('#add-new-recipient-btn').prop('disabled', false);
+    });
+
+    // Handle "Cancel" button click for new organization
+    $('#cancel-new-org-btn').on('click', function () {
+        $('#new-organization-section').hide();
+        $('#organization').prop('disabled', false).trigger('change.select2');
+        $('#referee').prop('disabled', false).trigger('change.select2');
+        $('#add-new-org-btn').show();
+
+        // Clear new organization fields
+        $('#new-org-name').val('');
+        $('#new-org-address').val('');
+        $('#new-org-postcode').val('');
+        $('#new-org-state').val('');
+        $('#new-org-country').val('Malaysia');
+        $('#error-new-org-name').html('');
+
+        // Also close new recipient section if it was open (since it needs an organization)
+        if ($('#new-recipient-section').is(':visible')) {
+            $('#new-recipient-section').hide();
+            $('#new-recipient-name').val('');
+            $('#new-recipient-email').val('');
+            $('#new-recipient-phone').val('');
+            $('#new-recipient-position').val('');
+            $('#error-new-recipient-name').html('');
+            $('#error-new-recipient-email').html('');
+            $('#error-new-recipient-phone').html('');
+            $('#error-new-recipient-position').html('');
+            $('#add-new-recipient-btn').show();
+        }
+
+        // Disable add recipient button if no organization selected
+        if (!$('#organization').val()) {
+            $('#add-new-recipient-btn').prop('disabled', true);
+        }
+    });
+
+    // Handle "Add New Recipient" button click
+    $('#add-new-recipient-btn').on('click', function () {
+        // Check if organization is selected or new org form is visible
+        var hasOrganization = $('#organization').val() || $('#new-organization-section').is(':visible');
+
+        if (!hasOrganization) {
+            alert('Please select or create an organization first before adding a recipient.');
+            return;
+        }
+
+        $('#new-recipient-section').show();
+        $('#referee').val('').prop('disabled', true).trigger('change.select2');
+        $(this).hide();
+    });
+
+    // Handle "Cancel" button click for new recipient
+    $('#cancel-new-recipient-btn').on('click', function () {
+        $('#new-recipient-section').hide();
+        $('#referee').prop('disabled', false).trigger('change.select2');
+        $('#add-new-recipient-btn').show();
+
+        // Clear new recipient fields
+        $('#new-recipient-name').val('');
+        $('#new-recipient-email').val('');
+        $('#new-recipient-phone').val('');
+        $('#new-recipient-position').val('');
+        $('#error-new-recipient-name').html('');
+        $('#error-new-recipient-email').html('');
+        $('#error-new-recipient-phone').html('');
+        $('#error-new-recipient-position').html('');
+    });
 
     // Load referral priorities from API
     function loadReferralPriorities() {
@@ -1045,7 +1205,29 @@ function validateForm(event) {
     markError("location-to", !isExternalReferral && !isInteger(form["location_to"].value), "Select one location.");
 
     //add validation if external referral = true
-    markError("organization", isExternalReferral && isEmpty(form["organization"].value), "This field cannot be left blank.");
+    // Check if new organization section is visible
+    var isNewOrgVisible = $('#new-organization-section').is(':visible');
+    var isNewRecipientVisible = $('#new-recipient-section').is(':visible');
+
+    if (isExternalReferral) {
+        if (isNewOrgVisible) {
+            // Validate new organization name
+            markError("new-org-name", isEmpty(form["new_org_name"].value), "Organization name is required.");
+        } else {
+            // Validate organization selection
+            markError("organization", isEmpty(form["organization"].value), "This field cannot be left blank.");
+        }
+
+        // Validate new recipient if that section is visible
+        if (isNewRecipientVisible) {
+            markError("new-recipient-name", isEmpty(form["new_recipient_name"].value), "Name is required.");
+            markError("new-recipient-phone", isEmpty(form["new_recipient_phone"].value), "Phone is required.");
+            markError("new-recipient-position", isEmpty(form["new_recipient_position"].value), "Position is required.");
+
+            var recipientEmail = form["new_recipient_email"].value;
+            markError("new-recipient-email", !isEmpty(recipientEmail) && !isEmail(recipientEmail), "Invalid email format.");
+        }
+    }
 
     markError("referral-reason", isEmpty(form["referral_reason"].value), "This field cannot be left blank.");
     markError("referral-condition", isEmpty(form["referral_condition"].value), "This field cannot be left blank.");
@@ -1070,17 +1252,17 @@ function validateForm(event) {
             formData.append('attachments[]', file);
         });
 
-        // for (const [key, value] of formData.entries()) {
-        //     if (value instanceof File) {
-        //         console.log(`${key}:`, {
-        //             name: value.name,
-        //             size: value.size + ' bytes',
-        //             type: value.type,
-        //         });
-        //     } else {
-        //         console.log(`${key}: ${value}`);
-        //     }
-        // }
+        for (const [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`${key}:`, {
+                    name: value.name,
+                    size: value.size + ' bytes',
+                    type: value.type,
+                });
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+        }
 
         fetch('post.php', {
             method: 'POST',

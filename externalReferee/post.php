@@ -11,8 +11,7 @@ $data = array(
     "name" => isset($_POST['name']) ? $_POST['name'] : "",
     "email" => isset($_POST['email']) ? $_POST['email'] : "",
     "phone" => isset($_POST['phone']) ? $_POST['phone'] : "",
-    "position" => isset($_POST['position']) ? $_POST['position'] : "",
-    "specialty" => isset($_POST['specialty']) ? $_POST['specialty'] : ""
+    "position" => isset($_POST['position']) ? $_POST['position'] : ""
 );
 
 // Check if using existing organization or creating new one
