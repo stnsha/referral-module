@@ -182,7 +182,8 @@ $(document).ready(function () {
                                 },
                                 dataType: 'json',
                                 success: function (locations) {
-                                    if (locations && locations.length > 0) {
+                                    if (locations && locations.length > 1) {
+                                        // Multiple locations - create select dropdown
                                         const fieldId = location_to.attr('id');
                                         const fieldName = location_to.attr('name');
 
@@ -215,6 +216,9 @@ $(document).ready(function () {
                                             ...select2Config,
                                             placeholder: 'Select Location'
                                         });
+                                    } else if (locations && locations.length === 1) {
+                                        // Only one location - display as readonly input
+                                        location_to.val(locations[0].code);
                                     }
                                 }
                             });
