@@ -494,9 +494,13 @@ function getAllReferral($staff_id)
     return isset($decoded['data']) ? $decoded['data'] : array('all' => array(), 'sent' => array(), 'received' => array());
 }
 
-function getReferral($referral_id, $staff_id)
+function getReferral($referral_id, $staff_id, $view_only = null)
 {
-    $result = getApiDataWithJWT('referral/' . $referral_id, null, 'GET', $staff_id);
+    $endpoint = 'referral/' . $referral_id;
+    if ($view_only === 'true') {
+        $endpoint .= '?view_only=true';
+    }
+    $result = getApiDataWithJWT($endpoint, null, 'GET', $staff_id);
 
     if (!$result['success']) {
         return array();
@@ -607,6 +611,63 @@ function getSummaryReport($staff_id)
     }
     $decoded = json_decode($result['response'], true);
     return isset($decoded) ? $decoded : array();
+}
+
+/**
+ * Search referrals by customer ID
+ * @param int $customer_id Customer ID to search for
+ * @param int $staff_id Staff ID for authentication
+ * @return array Search result with referrals data
+ */
+function searchReferralByCustomerId($customer_id, $staff_id)
+{
+    $data = array(
+        'customer_id' => (int)$customer_id
+    );
+
+    $result = getApiDataWithJWT('referral/search', $data, 'POST', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    // Handle different HTTP status codes according to API documentation
+    switch ($httpCode) {
+        case 200:
+            return array(
+                'success' => true,
+                'data' => isset($decoded['data']) ? $decoded['data'] : array()
+            );
+        case 401:
+            return array(
+                'success' => false,
+                'message' => isset($decoded['message']) ? $decoded['message'] : 'Unauthorized',
+                'data' => array()
+            );
+        case 404:
+            return array(
+                'success' => false,
+                'message' => isset($decoded['message']) ? $decoded['message'] : 'Customer not found',
+                'data' => array()
+            );
+        case 422:
+            return array(
+                'success' => false,
+                'message' => isset($decoded['message']) ? $decoded['message'] : 'Validation error',
+                'data' => array()
+            );
+        case 500:
+            return array(
+                'success' => false,
+                'message' => isset($decoded['message']) ? $decoded['message'] : 'Internal server error',
+                'error' => isset($decoded['error']) ? $decoded['error'] : 'Unknown error',
+                'data' => array()
+            );
+        default:
+            return array(
+                'success' => false,
+                'message' => 'API request failed with HTTP code: ' . $httpCode,
+                'data' => array()
+            );
+    }
 }
 
 /**
@@ -1130,7 +1191,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             case 'get-referral':
                 if (isset($jsonData['referral_id'])) {
-                    $response = array('data' => getReferral($jsonData['referral_id'], $staff_id));
+                    $view_only = isset($jsonData['view_only']) ? $jsonData['view_only'] : null;
+                    $response = array('data' => getReferral($jsonData['referral_id'], $staff_id, $view_only));
                 }
                 break;
             case 'get-report':
@@ -1237,6 +1299,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'unhide-form':
                 if (isset($jsonData['form_id'])) {
                     $response = unhideForm($jsonData['form_id'], $staff_id);
+                }
+                break;
+            case 'search-referral':
+                if (isset($jsonData['customer_id'])) {
+                    $response = searchReferralByCustomerId($jsonData['customer_id'], $staff_id);
+                } else {
+                    $response = array(
+                        'success' => false,
+                        'message' => 'Customer ID is required',
+                        'data' => array()
+                    );
                 }
                 break;
         }

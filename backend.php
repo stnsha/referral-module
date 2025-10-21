@@ -108,6 +108,34 @@ function searchCustomer($icno = null, $customer_id = null)
     return $customerDetails;
 }
 
+function searchCustomerByIc($icno)
+{
+    global $conn;
+
+    if ($icno === null || $icno === '') {
+        return null;
+    }
+
+    $icno = formatIC($icno); // Remove dashes
+
+    // Validate IC is exactly 12 digits
+    if (strlen($icno) !== 12 || !ctype_digit($icno)) {
+        return null;
+    }
+
+    $icno = mysqli_real_escape_string($conn, $icno);
+
+    $query = "SELECT id FROM customer WHERE ic = '$icno' LIMIT 1";
+    $result = mysqli_query($conn, $query);
+
+    if (!$result || mysqli_num_rows($result) == 0) {
+        return null;
+    }
+
+    $row = mysqli_fetch_assoc($result);
+    return $row ? (int)$row['id'] : null;
+}
+
 function updateCustomer($customer_id, $field, $value)
 {
     global $conn;
@@ -627,5 +655,18 @@ if (isset($_GET['action']) && $_GET['action'] == 'createCustomer') {
 
     header('Content-Type: application/json');
     echo json_encode(createCustomer($ic, $name, $phone, $email, $address, $age, $gender));
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] == 'searchCustomerByIc' && isset($_POST['icno'])) {
+    $icno = $_POST['icno'];
+    $customer_id = searchCustomerByIc($icno);
+
+    header('Content-Type: application/json');
+    if ($customer_id !== null) {
+        echo json_encode(array('success' => true, 'customer_id' => $customer_id));
+    } else {
+        echo json_encode(array('success' => false, 'message' => 'Customer not found'));
+    }
     exit;
 }

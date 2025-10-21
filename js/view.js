@@ -37,7 +37,8 @@ $(document).ready(function () {
         dataType: 'json',
         data: JSON.stringify({
             action: 'get-referral',
-            referral_id: referral_id
+            referral_id: referral_id,
+            view_only: viewOnly
         }),
         success: function (response) {
             var data = response.data;
