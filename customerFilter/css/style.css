@@ -71,6 +71,62 @@ select.form-select.form-select-sm {
     box-shadow: 0 4px 8px rgba(19, 92, 170, 0.3);
 }
 
+/* Icon Buttons */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 4px;
+    font-size: 18px;
+}
+
+.btn-icon-edit {
+    color: #20639b;
+    background-color: rgba(32, 99, 155, 0.1);
+}
+
+.btn-icon-edit:hover {
+    color: #fff;
+    background-color: #20639b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(32, 99, 155, 0.3);
+}
+
+.btn-icon-qr {
+    color: #6a4c93;
+    background-color: rgba(106, 76, 147, 0.1);
+}
+
+.btn-icon-qr:hover {
+    color: #fff;
+    background-color: #6a4c93;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(106, 76, 147, 0.3);
+}
+
+.btn-icon-download {
+    color: #f77f00;
+    background-color: rgba(247, 127, 0, 0.1);
+}
+
+.btn-icon-download:hover {
+    color: #fff;
+    background-color: #f77f00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(247, 127, 0, 0.3);
+}
+
+/* Tooltip font size */
+.tooltip-inner {
+    font-size: 13px;
+}
+
 .error-message {
     color: red;
     font-size: 12px;

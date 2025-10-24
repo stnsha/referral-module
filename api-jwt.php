@@ -18,6 +18,7 @@ if (!isset($conn)) {
 $staff_id = null;
 $department = null;
 $status_semasa = null;
+$outlet = null;
 
 if (isset($_SESSION["myusername"])) {
     $username = $_SESSION["myusername"];
@@ -29,6 +30,7 @@ if (isset($_SESSION["myusername"])) {
             $staff_id = stripslashes($rows['id']);
             $department = stripslashes($rows['department']);
             $status_semasa = stripslashes($rows['status_semasa']);
+            $outlet = stripslashes($rows['outlet']);
         }
     }
 }
@@ -66,7 +68,7 @@ function getStaffAuthData($staff_id)
 
     $staff_id = mysqli_real_escape_string($conn, $staff_id);
 
-    $query = "SELECT id, department, status_semasa FROM staff WHERE id = $staff_id";
+    $query = "SELECT id, department, status_semasa, outlet FROM staff WHERE id = $staff_id";
     $result = mysqli_query($conn, $query);
 
     if (!$result) {
@@ -78,22 +80,33 @@ function getStaffAuthData($staff_id)
         return null;
     }
 
+    // Convert outlet string to array of integers
+    $outlet = array();
+    if (!empty($row['outlet'])) {
+        $outletArray = explode(',', $row['outlet']);
+        foreach ($outletArray as $outletId) {
+            $outlet[] = (int)trim($outletId);
+        }
+    }
+
     // Return in the format expected by JWT API
     return array(
         'staff_id' => (int)$row['id'],
         'staff_department_id' => (int)$row['department'],
-        'status_semasa' => $row['status_semasa']
+        'status_semasa' => $row['status_semasa'],
+        'outlet' => $outlet
     );
 }
 
 /**
  * Get JWT token from the referral API
  * @param int $staff_id Staff ID
- * @param int $staff_department_id Staff department ID  
+ * @param int $staff_department_id Staff department ID
  * @param string $status_semasa Staff status
+ * @param array $outlet Outlet IDs array
  * @return string|null JWT token or null on failure
  */
-function getJWTToken($staff_id, $staff_department_id, $status_semasa)
+function getJWTToken($staff_id, $staff_department_id, $status_semasa, $outlet)
 {
     $host = getApiHost();
     $url = $host . 'auth';
@@ -101,7 +114,8 @@ function getJWTToken($staff_id, $staff_department_id, $status_semasa)
     $authData = array(
         'staff_id' => (int)$staff_id,
         'staff_department_id' => (int)$staff_department_id,
-        'status_semasa' => $status_semasa
+        'status_semasa' => $status_semasa,
+        'outlet' => $outlet
     );
 
     $headers = array(
@@ -160,7 +174,8 @@ function getAuthToken($staff_id)
     $token = getJWTToken(
         $staffData['staff_id'],
         $staffData['staff_department_id'],
-        $staffData['status_semasa']
+        $staffData['status_semasa'],
+        $staffData['outlet']
     );
 
     if ($token) {

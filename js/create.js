@@ -39,7 +39,7 @@ $(document).ready(function () {
 
     $('#location_to').select2({
         ...select2Config,
-        placeholder: 'Location (Optional)'
+        placeholder: 'Location'
     });
 
     $('#organization').select2({
@@ -411,7 +411,7 @@ $(document).ready(function () {
                 success: function (response) {
                     var locationTo = $('#location_to');
                     locationTo.empty();
-                    locationTo.append('<option value="">Location (Optional)</option>');
+                    locationTo.append('<option value="">Location</option>');
 
                     $.each(response, function (index, location) {
                         locationTo.append(
@@ -428,7 +428,7 @@ $(document).ready(function () {
                 }
             });
         } else {
-            $('#location_to').empty().append('<option value="">Location (Optional)</option>').trigger('change.select2');
+            $('#location_to').empty().append('<option value="">Location</option>').trigger('change.select2');
         }
     });
 
@@ -1202,7 +1202,7 @@ function validateForm(event) {
     //change to optional if true
     var isExternalReferral = $("#external_referral").is(":checked");
     markError("business-unit-to", !isExternalReferral && !isInteger(form["business_unit_to"].value), "Select one business unit.");
-    // markError("location-to", !isExternalReferral && !isInteger(form["location_to"].value), "Select one location.");
+    markError("location-to", !isExternalReferral && !isInteger(form["location_to"].value), "Select one location.");
 
     //add validation if external referral = true
     // Check if new organization section is visible

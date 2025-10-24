@@ -14,9 +14,10 @@
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
 </head>
 <?php
-require_once('../lock_adv.php');
+require_once('../lock3_old.php');
 $connect = 1;
-include('../common/index_adv.php');
+include('../common/index.php');
+echo $businessUnitId;
 ?>
 
 <body>
@@ -69,7 +70,8 @@ include('../common/index_adv.php');
                                 </div>
                             </div>
                             <div class="col">
-                                <p class="r-text" id="location-to-label" style="display:none;">Location<span style="color:red;">*</span></p>
+                                <p class="r-text" id="location-to-label" style="display:none;">Location<span
+                                        style="color:red;">*</span></p>
                                 <!-- <select name="location_to" id="location_to"
                                     class="form-select form-select-sm text-capitalize">
                                     <option value="">Location</option>
@@ -109,6 +111,14 @@ include('../common/index_adv.php');
                                     class="form-control form-control-sm text-capitalize" readonly>
                                 <div class="error-message" id="error-referee" style="color: red;font-size:12px;">
                                 </div>
+                            </div>
+                        </div>
+                        <!-- Takeover Button -->
+                        <div class="row mb-2" id="takeover-button-container" style="display: none;">
+                            <div class="col">
+                                <button type="button" id="takeover-referral-btn" class="btn btn-primary btn-sm">
+                                    Takeover Referral
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -318,7 +328,7 @@ include('../common/index_adv.php');
 
                                 <div class="col">
                                     <select name="refer_location" id="refer_location"
-                                        class="form-select form-select-sm text-capitalize" disabled>
+                                        class="form-select form-select-sm text-capitalize" disabled required>
                                         <option value="">Location</option>
                                     </select>
                                     <div class="error-message text-danger small" id="error-refer-location"></div>
@@ -326,8 +336,10 @@ include('../common/index_adv.php');
 
                             </div>
 
-                            <div class="d-flex align-items-center gap-2 py-2" style="display: none;" id="external-referral-checkbox-container">
-                                <input type="checkbox" class="me-2" name="refer_external_referral" id="refer_external_referral" disabled>
+                            <div class="d-flex align-items-center gap-2 py-2" style="display: none;"
+                                id="external-referral-checkbox-container">
+                                <input type="checkbox" class="me-2" name="refer_external_referral"
+                                    id="refer_external_referral" disabled>
                                 <span class="r-text" style="padding: 0;">External Referral</span>
                             </div>
 
@@ -341,46 +353,59 @@ include('../common/index_adv.php');
                                             class="form-select form-select-sm text-capitalize">
                                             <option value="">Organization</option>
                                         </select>
-                                        <div class="error-message" id="error-refer-organization" style="color: red;font-size:12px;">
+                                        <div class="error-message" id="error-refer-organization"
+                                            style="color: red;font-size:12px;">
                                         </div>
                                         <div class="mt-2">
-                                            <button type="button" id="refer-add-new-org-btn" class="btn btn-sm btn-outline-primary">+ Add New Organization</button>
+                                            <button type="button" id="refer-add-new-org-btn"
+                                                class="btn btn-sm btn-outline-primary">+ Add New Organization</button>
                                         </div>
                                     </div>
                                     <div class="col">
-                                        <select name="refer_referee" id="refer_referee" class="form-select form-select-sm text-capitalize">
+                                        <select name="refer_referee" id="refer_referee"
+                                            class="form-select form-select-sm text-capitalize">
                                             <option value="">Recipient (Optional)</option>
                                         </select>
-                                        <div class="error-message" id="error-refer-referee" style="color: red;font-size:12px;">
+                                        <div class="error-message" id="error-refer-referee"
+                                            style="color: red;font-size:12px;">
                                         </div>
                                         <div class="mt-2">
-                                            <button type="button" id="refer-add-new-recipient-btn" class="btn btn-sm btn-outline-primary" disabled>+ Add New Recipient</button>
+                                            <button type="button" id="refer-add-new-recipient-btn"
+                                                class="btn btn-sm btn-outline-primary" disabled>+ Add New
+                                                Recipient</button>
                                         </div>
                                     </div>
                                 </div>
                                 <!-- New Organization Form (Hidden by default) -->
-                                <div id="refer-new-organization-section" style="display: none;" class="border rounded p-3 mb-3 bg-light">
+                                <div id="refer-new-organization-section" style="display: none;"
+                                    class="border rounded p-3 mb-3 bg-light">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <p class="r-text fw-bold mb-0">New Organization Details</p>
-                                        <button type="button" id="refer-cancel-new-org-btn" class="btn btn-sm btn-outline-secondary">Cancel</button>
+                                        <button type="button" id="refer-cancel-new-org-btn"
+                                            class="btn btn-sm btn-outline-secondary">Cancel</button>
                                     </div>
                                     <div class="mb-2">
                                         <p class="r-text">Organization Name<span style="color:red;">*</span></p>
-                                        <input type="text" name="refer_new_org_name" id="refer-new-org-name" class="form-control form-control-sm">
-                                        <div class="error-message" id="error-refer-new-org-name" style="color: red;font-size:12px;"></div>
+                                        <input type="text" name="refer_new_org_name" id="refer-new-org-name"
+                                            class="form-control form-control-sm">
+                                        <div class="error-message" id="error-refer-new-org-name"
+                                            style="color: red;font-size:12px;"></div>
                                     </div>
                                     <div class="mb-2">
                                         <p class="r-text">Address</p>
-                                        <textarea name="refer_new_org_address" id="refer-new-org-address" class="form-control form-control-sm" rows="2"></textarea>
+                                        <textarea name="refer_new_org_address" id="refer-new-org-address"
+                                            class="form-control form-control-sm" rows="2"></textarea>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col">
                                             <p class="r-text">Postcode</p>
-                                            <input type="text" name="refer_new_org_postcode" id="refer-new-org-postcode" class="form-control form-control-sm">
+                                            <input type="text" name="refer_new_org_postcode" id="refer-new-org-postcode"
+                                                class="form-control form-control-sm">
                                         </div>
                                         <div class="col">
                                             <p class="r-text">State</p>
-                                            <select name="refer_new_org_state" id="refer-new-org-state" class="form-control form-control-sm">
+                                            <select name="refer_new_org_state" id="refer-new-org-state"
+                                                class="form-control form-control-sm">
                                                 <option value="">Select State</option>
                                                 <option value="Johor">Johor</option>
                                                 <option value="Kedah">Kedah</option>
@@ -403,38 +428,49 @@ include('../common/index_adv.php');
                                     </div>
                                     <div class="mb-2">
                                         <p class="r-text">Country</p>
-                                        <select name="refer_new_org_country" id="refer-new-org-country" class="form-control form-control-sm">
+                                        <select name="refer_new_org_country" id="refer-new-org-country"
+                                            class="form-control form-control-sm">
                                             <option value="Malaysia" selected>Malaysia</option>
                                         </select>
                                     </div>
                                 </div>
                                 <!-- New Recipient Form (Hidden by default) -->
-                                <div id="refer-new-recipient-section" style="display: none;" class="border rounded p-3 mb-3 bg-light">
+                                <div id="refer-new-recipient-section" style="display: none;"
+                                    class="border rounded p-3 mb-3 bg-light">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <p class="r-text fw-bold mb-0">New Recipient Details</p>
-                                        <button type="button" id="refer-cancel-new-recipient-btn" class="btn btn-sm btn-outline-secondary">Cancel</button>
+                                        <button type="button" id="refer-cancel-new-recipient-btn"
+                                            class="btn btn-sm btn-outline-secondary">Cancel</button>
                                     </div>
                                     <div class="mb-2">
                                         <p class="r-text">Name<span style="color:red;">*</span></p>
-                                        <input type="text" name="refer_new_recipient_name" id="refer-new-recipient-name" class="form-control form-control-sm">
-                                        <div class="error-message" id="error-refer-new-recipient-name" style="color: red;font-size:12px;"></div>
+                                        <input type="text" name="refer_new_recipient_name" id="refer-new-recipient-name"
+                                            class="form-control form-control-sm">
+                                        <div class="error-message" id="error-refer-new-recipient-name"
+                                            style="color: red;font-size:12px;"></div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col">
                                             <p class="r-text">Email</p>
-                                            <input type="email" name="refer_new_recipient_email" id="refer-new-recipient-email" class="form-control form-control-sm">
-                                            <div class="error-message" id="error-refer-new-recipient-email" style="color: red;font-size:12px;"></div>
+                                            <input type="email" name="refer_new_recipient_email"
+                                                id="refer-new-recipient-email" class="form-control form-control-sm">
+                                            <div class="error-message" id="error-refer-new-recipient-email"
+                                                style="color: red;font-size:12px;"></div>
                                         </div>
                                         <div class="col">
                                             <p class="r-text">Phone<span style="color:red;">*</span></p>
-                                            <input type="tel" name="refer_new_recipient_phone" id="refer-new-recipient-phone" class="form-control form-control-sm">
-                                            <div class="error-message" id="error-refer-new-recipient-phone" style="color: red;font-size:12px;"></div>
+                                            <input type="tel" name="refer_new_recipient_phone"
+                                                id="refer-new-recipient-phone" class="form-control form-control-sm">
+                                            <div class="error-message" id="error-refer-new-recipient-phone"
+                                                style="color: red;font-size:12px;"></div>
                                         </div>
                                     </div>
                                     <div class="mb-2">
                                         <p class="r-text">Position<span style="color:red;">*</span></p>
-                                        <input type="text" name="refer_new_recipient_position" id="refer-new-recipient-position" class="form-control form-control-sm">
-                                        <div class="error-message" id="error-refer-new-recipient-position" style="color: red;font-size:12px;"></div>
+                                        <input type="text" name="refer_new_recipient_position"
+                                            id="refer-new-recipient-position" class="form-control form-control-sm">
+                                        <div class="error-message" id="error-refer-new-recipient-position"
+                                            style="color: red;font-size:12px;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -505,6 +541,7 @@ include('../common/index_adv.php');
             const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
             const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
             const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+            const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
             const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
         </script>
         <script src="js/errorLogger.js"></script>

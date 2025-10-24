@@ -10,6 +10,8 @@ if (!isset($conn)) {
     die(json_encode(array("status" => 500, "message" => "Database connection error")));
 }
 
+
+
 function normalizeCompName($comp_name)
 {
     $comp_name = ucwords(strtolower($comp_name));
@@ -423,9 +425,7 @@ function getStaffDetails($staff_id, $location_id, $bu_id = null, $deptId)
     $bu_id = !empty($bu_id) ? mysqli_real_escape_string($conn, $bu_id) : null;
     $deptId = mysqli_real_escape_string($conn, $deptId);
 
-    //simulate session staff id (testing purposes)
-    if (!empty($staff_id)) {
-        $sql = "SELECT
+    $sql = "SELECT
             " . (!empty($bu_id) ? "r.name" : "NULL as name") . ",
             s.nama_staff,
             s.department,
@@ -434,21 +434,43 @@ function getStaffDetails($staff_id, $location_id, $bu_id = null, $deptId)
         FROM staff s
         INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
         " . (!empty($bu_id) ? "INNER JOIN ref_business_unit r ON r.id = $bu_id" : "") . "
-        WHERE s.id = $staff_id OR s.department = $deptId";
-    } else {
-        $sql = "SELECT
-        " . (!empty($bu_id) ? "r.name" : "NULL as name") . ",
-        s.nama_staff,
-        s.department,
-        CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
-        o.code
-    FROM staff s
-    INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
-    " . (!empty($bu_id) ? "INNER JOIN ref_business_unit r ON r.id = $bu_id" : "") . "
-    WHERE FIND_IN_SET($location_id, s.outlet) OR s.department = $deptId
-    ORDER BY s.id ASC
-    LIMIT 1";
+        WHERE s.id = $staff_id AND s.department = $deptId";
+
+    $result = mysqli_query($conn, $sql);
+
+    $staffDetails = array();
+
+    if ($row = mysqli_fetch_assoc($result)) {
+        $staffDetails[] = array(
+            'business_unit' => $row['name'],
+            'staff' => $row['nama_staff'],
+            'contact' => $row['contact'],
+            'outlet' => $row['code'],
+            'department_id' => $row['department']
+        );
     }
+
+    return $staffDetails;
+}
+
+function getReferredFrom($staff_id, $location_id, $bu_id)
+{
+    global $conn;
+
+    $staff_id = mysqli_real_escape_string($conn, (int)$staff_id);
+    $location_id = mysqli_real_escape_string($conn, $location_id);
+    $bu_id = !empty($bu_id) ? mysqli_real_escape_string($conn, $bu_id) : null;
+
+    $sql = "SELECT
+            r.name as name,
+            s.nama_staff,
+            s.department,
+            CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
+            o.code
+        FROM staff s
+        INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
+        " . (!empty($bu_id) ? "INNER JOIN ref_business_unit r ON r.id = $bu_id" : "") . "
+        WHERE s.id = $staff_id";
 
     $result = mysqli_query($conn, $sql);
 
@@ -475,6 +497,32 @@ function isStaffMatch($staffId, $deptId)
     $deptId = mysqli_real_escape_string($conn, $deptId);
 
     $query = "SELECT nama_staff FROM staff WHERE id = '$staffId' AND department = '$deptId' LIMIT 1";
+
+    $result = mysqli_query($conn, $query);
+
+    if (!$result) {
+        return false;
+    }
+
+    $row = mysqli_fetch_assoc($result);
+
+    return $row ? true : false;
+}
+
+function isLocationMatch($staffId, $locationId, $businessUnitId)
+{
+    global $conn;
+
+    $staffId = mysqli_real_escape_string($conn, (int)$staffId);
+    $locationId = mysqli_real_escape_string($conn, (int)$locationId);
+    $businessUnitId = mysqli_real_escape_string($conn, (int)$businessUnitId);
+
+    $query = "SELECT s.id
+    FROM staff s
+    INNER JOIN ref_business_unit r ON r.staff_department_id = $businessUnitId
+    WHERE s.id = '$staffId' 
+    AND FIND_IN_SET('$locationId', s.outlet)
+    LIMIT 1";
 
     $result = mysqli_query($conn, $query);
 
@@ -607,6 +655,12 @@ if (isset($_GET['action']) && $_GET['action'] == 'getStaffDetails' && isset($_GE
     exit;
 }
 
+if (isset($_GET['action']) && $_GET['action'] == 'getReferredFrom' && isset($_GET['staff_id']) && isset($_GET['location_id']) && isset($_GET['bu_id'])) {
+    header('Content-Type: application/json');
+    echo json_encode(getReferredFrom($_GET['staff_id'], $_GET['location_id'], $_GET['bu_id']));
+    exit;
+}
+
 if (isset($_GET['action']) && $_GET['action'] == 'getRecipientDetails' && isset($_GET['location']) && isset($_GET['business_unit'])) {
     header('Content-Type: application/json');
     echo json_encode(getRecipientDetails($_GET['location'], $_GET['business_unit']));
@@ -637,6 +691,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'isStaffMatch' && isset($_GET['
     exit;
 }
 
+if (isset($_GET['action']) && $_GET['action'] == 'isLocationMatch' && isset($_GET['staffId']) && isset($_GET['locationId']) && isset($_GET['businessUnitId'])) {
+    header('Content-Type: application/json');
+    echo json_encode(isLocationMatch($_GET['staffId'], $_GET['locationId'], $_GET['businessUnitId']));
+    exit;
+}
 
 if (isset($_GET['action']) && $_GET['action'] == 'updateCustomer' && isset($_POST['customer_id']) && isset($_POST['field']) && isset($_POST['value'])) {
     header('Content-Type: application/json');

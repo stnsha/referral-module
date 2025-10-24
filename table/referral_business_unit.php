@@ -4,7 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $connect = 1;
-include('../../common/index_adv.php');
+include('../../common/index.php');
 
 if (!isset($conn)) {
     die(json_encode(array("status" => 500, "message" => "Database connection error")));

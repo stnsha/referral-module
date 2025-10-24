@@ -14,7 +14,7 @@ if (session_id() == '') {
 
 // Check if user is authenticated (reuse existing auth logic)
 $connect = 1;
-include('../common/index_adv.php');
+include('../common/index.php');
 
 if (!isset($_SESSION["myusername"])) {
     http_response_code(401);

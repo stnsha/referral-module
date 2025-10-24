@@ -17,10 +17,10 @@
 
 </head>
 <?php
-require_once('../lock_adv.php');
+require_once('../lock3_old.php');
 $connect = 1;
-include('../common/index_adv.php');
-
+include('../common/index.php');
+echo 'BUSINESS UNIT ID' . $businessUnitId;
 ?>
 
 <body>
@@ -126,7 +126,8 @@ include('../common/index_adv.php');
                     <div class="d-flex gap-2 pb-2 mb-2">
                         <span class="fw-bold text-start" style="font-size:12px; align-self:center;">View:</span>
                         <div class="btn-group" role="group" aria-label="Referral type filter">
-                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all" checked>
+                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all"
+                                checked>
                             <label class="btn btn-outline-primary btn-sm" for="type-all">All</label>
 
                             <input type="radio" class="btn-check" name="referral-type" id="type-sent" value="sent">
@@ -182,11 +183,11 @@ include('../common/index_adv.php');
                         <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
                             <tr>
                                 <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
-                                <th style="font-size:16px;width: 30%;text-align:start;">Referral Reason</th>
-                                <th style="font-size:16px;width: 12%;text-align:start;">Referred From</th>
-                                <th style="font-size:16px;width: 12%;text-align:start;">Referred To</th>
-                                <th style="font-size:16px;width: 11%;text-align:start;">Status</th>
-                                <th style="font-size:16px;width: 25%;text-align:start;">Action</th>
+                                <th style="font-size:16px;width: 35%;text-align:start;">Referral Reason</th>
+                                <th style="font-size:16px;width: 13%;text-align:start;">Referred From</th>
+                                <th style="font-size:16px;width: 13%;text-align:start;">Referred To</th>
+                                <th style="font-size:16px;width: 14%;text-align:start;">Status</th>
+                                <th style="font-size:16px;width: 15%;text-align:start;">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -206,7 +207,7 @@ include('../common/index_adv.php');
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet =
-            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock3_old.php
     </script>
 
     <script src="js/errorLogger.js?v=<?php echo time(); ?>"></script>

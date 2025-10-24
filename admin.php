@@ -12,9 +12,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <?php
-require_once('../lock_adv.php');
+require_once('../lock3_old.php');
 $connect = 1;
-include('../common/index_adv.php');
+include('../common/index.php');
 ?>
 
 <body>
@@ -159,7 +159,7 @@ include('../common/index_adv.php');
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet =
-            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock3_old.php
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
     </script>
     <script src="js/admin.js"></script>

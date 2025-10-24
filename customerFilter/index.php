@@ -16,9 +16,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <?php
-require_once('../../lock_adv.php');
+require_once('../../lock3_old.php');
 $connect = 1;
-include('../../common/index_adv.php');
+include('../../common/index.php');
 ?>
 
 <body>
@@ -56,11 +56,11 @@ include('../../common/index_adv.php');
                         <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
                             <tr>
                                 <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
-                                <th style="font-size:16px;width: 30%;text-align:start;">Referral Reason</th>
-                                <th style="font-size:16px;width: 12%;text-align:start;">Referred From</th>
-                                <th style="font-size:16px;width: 12%;text-align:start;">Referred To</th>
-                                <th style="font-size:16px;width: 11%;text-align:start;">Status</th>
-                                <th style="font-size:16px;width: 25%;text-align:start;">Action</th>
+                                <th style="font-size:16px;width: 35%;text-align:start;">Referral Reason</th>
+                                <th style="font-size:16px;width: 13%;text-align:start;">Referred From</th>
+                                <th style="font-size:16px;width: 13%;text-align:start;">Referred To</th>
+                                <th style="font-size:16px;width: 14%;text-align:start;">Status</th>
+                                <th style="font-size:16px;width: 15%;text-align:start;">Action</th>
                             </tr>
                         </thead>
                         <tbody id="customer-filter-tbody">

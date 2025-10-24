@@ -554,29 +554,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Conditional button for external vs internal referrals
                 const secondButton = row.is_external
-                    ? `<a href="#" class="btn-referral download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}">Download Form</a>`
-                    : `<a href="qr.php?id=${row.id}" class="btn-referral">Generate QR</a>`;
+                    ? `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Form"><i class="bi bi-file-earmark-arrow-down"></i></a>`
+                    : `<a href="qr.php?id=${row.id}" class="btn-icon btn-icon-qr" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Generate QR"><i class="bi bi-qr-code"></i></a>`;
 
                 // Calculate relative time using moment.js
                 const relativeTime = row.ori_created_at ? moment(row.ori_created_at).fromNow() : 'N/A';
 
                 tr.innerHTML = `
                     <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
-                    <td style="font-size:14px;width: 30%;text-align:start;">
+                    <td style="font-size:14px;width: 35%;text-align:start;">
                         ${row.reason}
                     </td>
-                    <td style="font-size:14px;width: 12%;text-align:start;">
+                    <td style="font-size:14px;width: 13%;text-align:start;">
                         <span>${row.from_business_unit || 'N/A'}</span>
                     </td>
-                    <td style="font-size:14px;width: 12%;text-align:start;">
+                    <td style="font-size:14px;width: 13%;text-align:start;">
                         <span>${row.to_business_unit || 'N/A'}</span>${externalBadge}
                     </td>
-                    <td style="font-size:14px;width: 11%;text-align:start;">
+                    <td style="font-size:14px;width: 14%;text-align:start;">
                         <span class="bdg-${statusClass}">${statusText}</span>
                         <br><span style="color: #6c757d; font-size: 13px; margin-top: 4px; display: inline-block;">${relativeTime}</span>
                     </td>
-                    <td style="font-size:14px;width: 25%;text-align:start;">
-                        <a href="view.php?id=${row.id}" class="btn-referral">View</a>
+                    <td style="font-size:14px;width: 15%;text-align:start;">
+                        <a href="view.php?id=${row.id}" class="btn-icon btn-icon-edit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View"><i class="bi bi-pencil-square"></i></a>
                         ${secondButton}
                     </td>
                 `;
@@ -585,6 +585,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 tbody.appendChild(tr);
                 // console.log('DEBUG displayPage: Appended row to tbody, tbody now has', tbody.children.length, 'rows');
             });
+
+            // Initialize Bootstrap tooltips for the newly added buttons
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
             updatePagination();
         }

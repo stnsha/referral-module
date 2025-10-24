@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    console.log(businessUnitId);
     localStorage.clear();
     sessionStorage.clear();
 
@@ -42,6 +43,7 @@ $(document).ready(function () {
         }),
         success: function (response) {
             var data = response.data;
+            console.log(data);
 
             // Referral Details
             let referralDetails = data.referralDetails;
@@ -83,7 +85,7 @@ $(document).ready(function () {
 
                 // Populate FROM section with second to last sequence
                 if (fromReferral.staff_id) {
-                    getStaffDetails(fromReferral.staff_id, fromReferral.location, fromReferral.business_unit_id, department, function (staffResponse) {
+                    getReferredFrom(fromReferral.staff_id, fromReferral.location, fromReferral.business_unit_id, function (staffResponse) {
                         if (staffResponse && staffResponse.length > 0) {
                             assigneeFrom.val(staffResponse[0].staff || '');
                             business_unit_from.val(staffResponse[0].business_unit || '');
@@ -141,20 +143,23 @@ $(document).ready(function () {
                             }
                         });
                     } else {
-                        $.ajax({
-                            url: 'backend.php',
-                            method: 'GET',
-                            data: {
-                                staff_id: staffId,
-                                action: 'getStaffName'
-                            },
-                            dataType: 'json',
-                            success: function (staffName) {
-                                if (staffName) {
-                                    recipientTo.val(staffName);
+                        // Only show staff name if not in view_only mode
+                        if (!viewOnly) {
+                            $.ajax({
+                                url: 'backend.php',
+                                method: 'GET',
+                                data: {
+                                    staff_id: staffId,
+                                    action: 'getStaffName'
+                                },
+                                dataType: 'json',
+                                success: function (staffName) {
+                                    if (staffName) {
+                                        recipientTo.val(staffName);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
 
                         // When staff_id is null
                         if (toReferral.location === null && fromReferral.staff_id != staffId) {
@@ -253,6 +258,25 @@ $(document).ready(function () {
                 }
             }
 
+            // Handle takeover button visibility and functionality
+            if (viewOnly && lastTwoSequences.length >= 2) {
+                const toReferral = lastTwoSequences[1];
+
+                // Check conditions: view_only=true AND location_to NOT NULL AND same business unit 
+                if (toReferral.location !== null && toReferral.business_unit_id) {
+                    // Check if business units match
+                    if (businessUnitId && String(businessUnitId) === String(toReferral.business_unit_id)) {
+                        // Show takeover button
+                        $('#takeover-button-container').show();
+
+                        // Add click handler for takeover button
+                        $('#takeover-referral-btn').off('click').on('click', function () {
+                            handleTakeoverReferral(toReferral, referralDetails);
+                        });
+                    }
+                }
+            }
+
             // Sort asc by sequence
             const sortedReferrals = referralDetails.sort((a, b) => a.sequence - b.sequence);
 
@@ -268,7 +292,7 @@ $(document).ready(function () {
 
                 referralHistoryItems.forEach((rd, index) => {
                     // Get staff details first to populate accordion header
-                    getStaffDetails(rd.staff_id, rd.location, rd.business_unit_id, department, function (staffResponse) {
+                    getReferredFrom(rd.staff_id, rd.location, rd.business_unit_id, function (staffResponse) {
                         const staff = staffResponse && staffResponse.length > 0 ? staffResponse[0].staff : 'Unknown';
                         const contact = staffResponse && staffResponse.length > 0 ? staffResponse[0].contact : '';
                         const businessUnit = staffResponse && staffResponse.length > 0 ? staffResponse[0].business_unit : '';
@@ -1167,6 +1191,27 @@ function getStaffDetails(staffId, locationId, businessUnitId, deptId, callback) 
     });
 }
 
+function getReferredFrom(staffId, locationId, businessUnitId, callback) {
+    $.ajax({
+        url: 'backend.php',
+        method: 'GET',
+        data: {
+            staff_id: staffId,
+            location_id: locationId,
+            bu_id: businessUnitId,
+            action: 'getReferredFrom'
+        },
+        dataType: 'json',
+        success: function (response) {
+            callback(response);
+        },
+        error: function (xhr, status, error) {
+            logError(new Error('Error fetching referred from staff'), { context: 'getReferredFrom', staffId: staffId, locationId: locationId, businessUnitId: businessUnitId, status: status, error: error });
+            callback("Unknown");
+        }
+    });
+}
+
 function isStaffMatch(staffId, deptId, callback) {
     $.ajax({
         url: 'backend.php',
@@ -1183,6 +1228,27 @@ function isStaffMatch(staffId, deptId, callback) {
         error: function (xhr, status, error) {
             logError(new Error('Error fetching staff details'), { context: 'isStaffMatch', staffId: staffId, deptId: deptId, status: status, error: error });
             callback("Unknown");
+        }
+    });
+}
+
+function isLocationMatch(staffId, locationId, businessUnitId, callback) {
+    $.ajax({
+        url: 'backend.php',
+        method: 'GET',
+        data: {
+            staffId: staffId,
+            locationId: locationId,
+            businessUnitId: businessUnitId,
+            action: 'isLocationMatch'
+        },
+        dataType: 'json',
+        success: function (response) {
+            callback(response);
+        },
+        error: function (xhr, status, error) {
+            logError(new Error('Error checking location match'), { context: 'isLocationMatch', staffId: staffId, locationId: locationId, businessUnitId: businessUnitId, status: status, error: error });
+            callback(false);
         }
     });
 }
@@ -1594,26 +1660,6 @@ function referAnother() {
 
     // Handle external referral checkbox toggle
     toggleReferExternalReferralSection();
-}
-
-function getBusinessUnit(departmentId, callback) {
-    $.ajax({
-        url: 'backend.php',
-        type: 'GET',
-        dataType: 'json',
-        data: {
-            action: 'getBusinessUnit',
-            staffDeptId: departmentId
-        },
-        success: function (response) {
-            callback(response);
-        },
-        error: function (xhr, status, error) {
-            console.log(status, error);
-            logError(new Error('Error fetching business unit'), { context: 'getBusinessUnit', businessUnitId: businessUnitId, status: status, error: error });
-            callback("Unknown");
-        }
-    });
 }
 
 function getBusinessUnits() {
@@ -2062,3 +2108,124 @@ $('#refer-cancel-new-recipient-btn').on('click', function () {
     $('#error-refer-new-recipient-phone').html('');
     $('#error-refer-new-recipient-position').html('');
 });
+
+// Handle Takeover Referral functionality
+function handleTakeoverReferral(toReferral, referralDetails) {
+    if (!confirm('Are you sure you want to takeover this referral? You will be assigned as the recipient.')) {
+        return;
+    }
+
+    // 1. Update recipient_to field to current user's name
+    $.ajax({
+        url: 'backend.php',
+        method: 'GET',
+        data: {
+            staff_id: staffId,
+            action: 'getStaffName'
+        },
+        dataType: 'json',
+        success: function (staffName) {
+            if (staffName) {
+                $('#recipient_to').val(staffName);
+            }
+        }
+    });
+
+    // 2. Make location_to editable and populate with select2
+    const locationToField = $('#location_to');
+    const fieldId = locationToField.attr('id');
+    const fieldName = locationToField.attr('name');
+
+    // Get staff locations and create select dropdown
+    $.ajax({
+        url: 'backend.php',
+        method: 'GET',
+        data: {
+            staff_id: staffId,
+            action: 'getStaffLocation'
+        },
+        dataType: 'json',
+        success: function (locations) {
+            if (locations && locations.length > 0) {
+                // Create select element
+                const selectElement = $('<select>', {
+                    id: fieldId,
+                    name: fieldName,
+                    class: 'form-select form-select-sm',
+                    required: true
+                });
+
+                selectElement.append($('<option>', {
+                    value: '',
+                    text: 'Select Location'
+                }));
+
+                locations.forEach(function (location) {
+                    selectElement.append($('<option>', {
+                        value: location.id,
+                        text: location.code
+                    }));
+                });
+
+                // Replace input with select
+                locationToField.replaceWith(selectElement);
+
+                // Initialize select2
+                $('#location_to').select2({
+                    allowClear: true,
+                    width: '100%',
+                    dir: 'ltr',
+                    dropdownAutoWidth: false,
+                    minimumResultsForSearch: 5,
+                    placeholder: 'Select Location',
+                    templateResult: function (data) {
+                        if (!data.id) {
+                            return data.text;
+                        }
+                        return $('<span style="text-align: left; display: block; font-size: 13px; font-family: Inter, sans-serif;">' + data.text + '</span>');
+                    },
+                    templateSelection: function (data) {
+                        return $('<span style="text-align: left; display: block; font-size: 13px; font-family: Inter, sans-serif;">' + data.text + '</span>');
+                    }
+                });
+            }
+        }
+    });
+
+    // 3. Set updated_recipient_to to current user's ID
+    $('#updated_recipient_to').val(staffId);
+
+    // 4. Enable reply form and show it
+    window.hasReplyForms = true;
+    window.isLastSequence = true;
+    $('.reply-form-container').show();
+
+    // 5. Display content/forms for reply
+    if (toReferral.referral_details && toReferral.referral_details.length === 0) {
+        displayContent(toReferral.business_unit_id, '.reply-content', null);
+    } else {
+        displayContent(toReferral.business_unit_id, '.reply-content', referralDetails);
+    }
+
+    // 6. Show "Refer Another" container and submit button
+    $('.refer-another-container').show();
+    $('.form-btn-submit').show();
+
+    // 7. Reload status options
+    $.ajax({
+        url: 'api-jwt.php',
+        type: 'POST',
+        data: { action: 'get-referral', referral_id: referral_id, view_only: viewOnly },
+        dataType: 'json',
+        success: function (response) {
+            if (response && response.data) {
+                loadStatusOptions(response.data.status, false, response.data.status_note);
+            }
+        }
+    });
+
+    // 8. Hide takeover button after takeover
+    $('#takeover-button-container').hide();
+
+    alert('You have successfully taken over this referral. You can now update the form.');
+}
