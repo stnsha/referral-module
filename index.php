@@ -126,14 +126,14 @@ include('../common/index_adv.php');
                     <div class="d-flex gap-2 pb-2 mb-2">
                         <span class="fw-bold text-start" style="font-size:12px; align-self:center;">View:</span>
                         <div class="btn-group" role="group" aria-label="Referral type filter">
-                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all">
+                            <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all" checked>
                             <label class="btn btn-outline-primary btn-sm" for="type-all">All</label>
 
                             <input type="radio" class="btn-check" name="referral-type" id="type-sent" value="sent">
                             <label class="btn btn-outline-primary btn-sm" for="type-sent">Sent</label>
 
                             <input type="radio" class="btn-check" name="referral-type" id="type-received"
-                                value="received" checked>
+                                value="received">
                             <label class="btn btn-outline-primary btn-sm" for="type-received">Received</label>
                         </div>
                     </div>
@@ -182,9 +182,10 @@ include('../common/index_adv.php');
                         <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
                             <tr>
                                 <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
-                                <th style="font-size:16px;width: 40%;text-align:start;">Referral Reason</th>
-                                <th style="font-size:16px;width: 15%;text-align:start;">Referred From</th>
-                                <th style="font-size:16px;width: 10%;text-align:start;">Status</th>
+                                <th style="font-size:16px;width: 30%;text-align:start;">Referral Reason</th>
+                                <th style="font-size:16px;width: 12%;text-align:start;">Referred From</th>
+                                <th style="font-size:16px;width: 12%;text-align:start;">Referred To</th>
+                                <th style="font-size:16px;width: 11%;text-align:start;">Status</th>
                                 <th style="font-size:16px;width: 25%;text-align:start;">Action</th>
                             </tr>
                         </thead>
@@ -206,35 +207,6 @@ include('../common/index_adv.php');
         const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock_adv.php
-
-        // Function to update column header based on view
-        function updateBusinessUnitHeader() {
-            const referralType = document.querySelector('input[name="referral-type"]:checked')?.value || 'all';
-            const headerCell = document.querySelector('#referral-tbl thead th:nth-child(3)');
-
-            if (headerCell) {
-                if (referralType === 'all') {
-                    headerCell.textContent = 'Business Unit';
-                } else if (referralType === 'sent') {
-                    headerCell.textContent = 'Referred To';
-                } else if (referralType === 'received') {
-                    headerCell.textContent = 'Referred From';
-                }
-            }
-        }
-
-        // Update header when page loads and when filter changes
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initial update
-            updateBusinessUnitHeader();
-
-            // Listen for radio button changes
-            document.querySelectorAll('input[name="referral-type"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    updateBusinessUnitHeader();
-                });
-            });
-        });
     </script>
 
     <script src="js/errorLogger.js?v=<?php echo time(); ?>"></script>

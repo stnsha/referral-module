@@ -1202,7 +1202,7 @@ function validateForm(event) {
     //change to optional if true
     var isExternalReferral = $("#external_referral").is(":checked");
     markError("business-unit-to", !isExternalReferral && !isInteger(form["business_unit_to"].value), "Select one business unit.");
-    markError("location-to", !isExternalReferral && !isInteger(form["location_to"].value), "Select one location.");
+    // markError("location-to", !isExternalReferral && !isInteger(form["location_to"].value), "Select one location.");
 
     //add validation if external referral = true
     // Check if new organization section is visible
@@ -1252,17 +1252,17 @@ function validateForm(event) {
             formData.append('attachments[]', file);
         });
 
-        for (const [key, value] of formData.entries()) {
-            if (value instanceof File) {
-                console.log(`${key}:`, {
-                    name: value.name,
-                    size: value.size + ' bytes',
-                    type: value.type,
-                });
-            } else {
-                console.log(`${key}: ${value}`);
-            }
-        }
+        // for (const [key, value] of formData.entries()) {
+        //     if (value instanceof File) {
+        //         console.log(`${key}:`, {
+        //             name: value.name,
+        //             size: value.size + ' bytes',
+        //             type: value.type,
+        //         });
+        //     } else {
+        //         console.log(`${key}: ${value}`);
+        //     }
+        // }
 
         fetch('post.php', {
             method: 'POST',

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('referral-tbl').appendChild(newTbody);
         }
         const tableBody = document.querySelector('#referral-tbl tbody');
-        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><div class="mt-2">Loading referral data...</div></td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><div class="mt-2">Loading referral data...</div></td></tr>';
     }
 
     // Check if all APIs are loaded
@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (allData.length === 0) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td colspan="5" style="text-align: center; padding: 20px; color: #666; font-style: italic;">No data available</td>
+                    <td colspan="6" style="text-align: center; padding: 20px; color: #666; font-style: italic;">No data available</td>
                 `;
                 document.querySelector('#referral-tbl tbody').appendChild(tr);
                 updatePagination();
@@ -549,43 +549,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // console.log('DEBUG displayPage: Status mapping for', row.status, ':', statusText, 'class:', statusClass);
 
-                // Determine if referral is sent or received (only show when viewing "all")
-                let directionBadge = '';
-                if (window.currentReferralType === 'all' && window.referralApiData) {
-                    const isSent = window.referralApiData.sent && window.referralApiData.sent.some(item => item.id === row.id);
-                    const isReceived = window.referralApiData.received && window.referralApiData.received.some(item => item.id === row.id);
-
-                    if (isSent) {
-                        directionBadge = '<br><span class="badge-sent">Sent</span>';
-                    } else if (isReceived) {
-                        directionBadge = '<br><span class="badge-received">Received</span>';
-                    }
-                }
-
-                // Determine which business unit to display based on referral type
-                let displayBusinessUnit;
-                if (window.currentReferralType === 'all') {
-                    // For "All" view: Check if referral is sent or received
-                    const isSent = window.referralApiData.sent &&
-                                   window.referralApiData.sent.some(item => item.id === row.id);
-                    const isReceived = window.referralApiData.received &&
-                                       window.referralApiData.received.some(item => item.id === row.id);
-
-                    if (isSent) {
-                        displayBusinessUnit = row.to_business_unit;    // Show destination
-                    } else if (isReceived) {
-                        displayBusinessUnit = row.from_business_unit;  // Show sender
-                    } else {
-                        displayBusinessUnit = row.to_business_unit;    // Fallback
-                    }
-                } else if (window.currentReferralType === 'sent') {
-                    displayBusinessUnit = row.to_business_unit;        // Show destination
-                } else if (window.currentReferralType === 'received') {
-                    displayBusinessUnit = row.from_business_unit;      // Show sender
-                } else {
-                    displayBusinessUnit = row.to_business_unit;        // Fallback
-                }
-
                 // Add external badge if referral is external
                 const externalBadge = row.is_external ? '<br><span class="badge-external">External</span>' : '';
 
@@ -598,14 +561,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 const relativeTime = row.ori_created_at ? moment(row.ori_created_at).fromNow() : 'N/A';
 
                 tr.innerHTML = `
-                    <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}${directionBadge}</td>
-                    <td style="font-size:14px;width: 40%;text-align:start;">
+                    <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
+                    <td style="font-size:14px;width: 30%;text-align:start;">
                         ${row.reason}
                     </td>
-                    <td style="font-size:14px;width: 15%;text-align:start;">
-                        <span>${displayBusinessUnit}</span>${externalBadge}
+                    <td style="font-size:14px;width: 12%;text-align:start;">
+                        <span>${row.from_business_unit || 'N/A'}</span>
                     </td>
-                    <td style="font-size:14px;width: 10%;text-align:start;">
+                    <td style="font-size:14px;width: 12%;text-align:start;">
+                        <span>${row.to_business_unit || 'N/A'}</span>${externalBadge}
+                    </td>
+                    <td style="font-size:14px;width: 11%;text-align:start;">
                         <span class="bdg-${statusClass}">${statusText}</span>
                         <br><span style="color: #6c757d; font-size: 13px; margin-top: 4px; display: inline-block;">${relativeTime}</span>
                     </td>
