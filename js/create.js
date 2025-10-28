@@ -1273,6 +1273,7 @@ function validateForm(event) {
                 const parsed = JSON.parse(data);
                 const inner = JSON.parse(parsed.response);
                 console.log('ID:', inner.id);
+                console.log('ID', inner.pdf_base64)
                 console.log('HTTP Code:', parsed.httpCode);
 
                 const successCode = parsed.httpCode;
@@ -1282,17 +1283,7 @@ function validateForm(event) {
                     allUploadedFiles = [];
                     $('#attachmentPreview').empty();
 
-                    // Check if external referral with PDF
-                    if (inner.pdf_base64) {
-                        console.log('External referral PDF received, initiating download...');
-                        downloadPdfBase64(inner.pdf_base64, `referral_${inner.id}.pdf`);
-                        setTimeout(function () {
-                            window.location.href = 'index.php';
-                        }, 1000);
-                    } else {
-                        // Internal referral - go to QR page
-                        window.location.href = 'qr.php?id=' + inner.id;
-                    }
+                    window.location.href = 'successful.php?id=' + inner.id;
 
                 } else {
                     console.log('Failed:', inner.message);

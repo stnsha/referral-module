@@ -524,6 +524,18 @@ function getReferral($referral_id, $staff_id, $view_only = null)
     return isset($decoded) ? $decoded : array();
 }
 
+function getReferralSuccessful($referral_id, $staff_id)
+{
+    $endpoint = 'referral/successful/' . $referral_id;
+    $result = getApiDataWithJWT($endpoint, null, 'GET', $staff_id);
+
+    if (!$result['success']) {
+        return array();
+    }
+    $decoded = json_decode($result['response'], true);
+    return isset($decoded) ? $decoded : array();
+}
+
 function getExternalOrganization($staff_id)
 {
     $result = getApiDataWithJWT('external-organizations', null, 'GET', $staff_id);
@@ -1323,6 +1335,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = array(
                         'success' => false,
                         'message' => 'Customer ID is required',
+                        'data' => array()
+                    );
+                }
+                break;
+            case 'referral-successful':
+                $referral_id = isset($jsonData['referral_id']) ? $jsonData['referral_id'] : null;
+                if ($referral_id) {
+                    $response = array('data' => getReferralSuccessful($referral_id, $staff_id));
+                } else {
+                    $response = array(
+                        'success' => false,
+                        'message' => 'Referral ID is required',
                         'data' => array()
                     );
                 }
