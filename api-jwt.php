@@ -1,5 +1,8 @@
 <?php
-header('Content-Type: application/json');
+// Only set JSON header if this file is accessed directly (not included)
+if (!defined('API_JWT_INCLUDED')) {
+    header('Content-Type: application/json');
+}
 
 // Start session if not already started (PHP 5.3 compatible)
 if (session_id() == '') {
@@ -1172,24 +1175,27 @@ function downloadExternalForm($referral_id, $staff_id)
     exit;
 }
 
-// Check if we have a staff ID for authentication
-if (!$staff_id) {
-    echo json_encode(array(
-        'success' => false,
-        'error' => 'No staff ID available for authentication',
-        'message' => 'Staff ID is required for JWT authentication. Please ensure you are logged in.',
-        'debug' => array(
-            'session_username' => isset($_SESSION["myusername"]) ? $_SESSION["myusername"] : 'not set',
-            'staff_id' => $staff_id
-        )
-    ));
-    exit;
-}
+// Only run request handler if this file is accessed directly (not included)
+// Check if a constant is defined to indicate this is being included
+if (!defined('API_JWT_INCLUDED')) {
+    // Check if we have a staff ID for authentication
+    if (!$staff_id) {
+        echo json_encode(array(
+            'success' => false,
+            'error' => 'No staff ID available for authentication',
+            'message' => 'Staff ID is required for JWT authentication. Please ensure you are logged in.',
+            'debug' => array(
+                'session_username' => isset($_SESSION["myusername"]) ? $_SESSION["myusername"] : 'not set',
+                'staff_id' => $staff_id
+            )
+        ));
+        exit;
+    }
 
-// Main request handler
-$input = file_get_contents('php://input');
-$jsonData = json_decode($input, true);
-$response = array('success' => false, 'message' => 'Invalid request');
+    // Main request handler
+    $input = file_get_contents('php://input');
+    $jsonData = json_decode($input, true);
+    $response = array('success' => false, 'message' => 'Invalid request');
 
 // Check for action in query parameter or JSON body
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($jsonData['action']) ? $jsonData['action'] : null);
@@ -1198,15 +1204,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action) {
         // Handle JSON requests
         switch ($action) {
-            case 'business-units':
-                $response = array('data' => getBusinessUnit($staff_id));
-                break;
-            case 'create-form':
-                if (isset($jsonData['formData'])) {
-                    $response = createForm($jsonData['formData'], $staff_id);
-                }
-                break;
-            case 'get-forms':
+                case 'business-units':
+                    $response = array('data' => getBusinessUnit($staff_id));
+                    break;
+                case 'create-form':
+                    if (isset($jsonData['formData'])) {
+                        $response = createForm($jsonData['formData'], $staff_id);
+                    }
+                    break;
+                case 'get-forms':
                 if (isset($jsonData['recipientBuId'])) {
                     $response = array('data' => getAllForm($jsonData['recipientBuId'], $staff_id));
                 }
@@ -1417,3 +1423,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     echo json_encode($response);
 }
+} // End of direct access check

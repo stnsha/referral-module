@@ -1,4 +1,5 @@
 <?php
+define('API_JWT_INCLUDED', true);
 require 'api-jwt.php';
 header('Content-Type: application/json');
 
