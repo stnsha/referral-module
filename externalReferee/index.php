@@ -13,9 +13,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <?php
-require_once('../../lock3_old.php');
+require_once('../../lock_adv.php');
 $connect = 1;
-include('../../common/index.php');
+include('../../common/index_adv.php');
 ?>
 
 <body>

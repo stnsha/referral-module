@@ -17,9 +17,9 @@
 
 </head>
 <?php
-require_once('../lock3_old.php');
+require_once('../lock_adv.php');
 $connect = 1;
-include('../common/index.php');
+include('../common/index_adv.php');
 ?>
 
 <body>
@@ -157,7 +157,7 @@ include('../common/index.php');
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet =
-            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock3_old.php
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
     </script>
 

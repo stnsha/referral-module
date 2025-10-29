@@ -16,9 +16,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <?php
-require_once('../../lock3_old.php');
+require_once('../../lock_adv.php');
 $connect = 1;
-include('../../common/index.php');
+include('../../common/index_adv.php');
 ?>
 
 <body>

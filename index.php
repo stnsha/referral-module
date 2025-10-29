@@ -17,9 +17,9 @@
 
 </head>
 <?php
-require_once('../lock3_old.php');
+require_once('../lock_adv.php');
 $connect = 1;
-include('../common/index.php');
+include('../common/index_adv.php');
 echo 'BUSINESS UNIT ID' . $businessUnitId;
 ?>
 
@@ -207,7 +207,7 @@ echo 'BUSINESS UNIT ID' . $businessUnitId;
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet =
-            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock3_old.php
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
     </script>
 
     <script src="js/errorLogger.js?v=<?php echo time(); ?>"></script>

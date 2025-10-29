@@ -14,9 +14,9 @@
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
 </head>
 <?php
-require_once('../lock3_old.php');
+require_once('../lock_adv.php');
 $connect = 1;
-include('../common/index.php');
+include('../common/index_adv.php');
 echo $businessUnitId;
 ?>
 
