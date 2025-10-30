@@ -174,7 +174,11 @@ $(document).ready(function () {
 
         },
         error: function () {
-            alert('Error loading business units');
+            if (window.toast) {
+                toast.error('Error loading business units');
+            } else {
+                alert('Error loading business units');
+            }
         }
     });
 
@@ -232,7 +236,11 @@ $(document).ready(function () {
                             locationFrom.trigger('change.select2');
                         },
                         error: function () {
-                            alert('Error loading locations');
+                            if (window.toast) {
+                                toast.error('Error loading locations');
+                            } else {
+                                alert('Error loading locations');
+                            }
                         }
                     });
                 }
@@ -424,7 +432,11 @@ $(document).ready(function () {
                     firstLoad = false;
                 },
                 error: function () {
-                    alert('Error loading locations');
+                    if (window.toast) {
+                        toast.error('Error loading locations');
+                    } else {
+                        alert('Error loading locations');
+                    }
                 }
             });
         } else {
@@ -1053,22 +1065,103 @@ const maxFileSize = 5 * 1024 * 1024; // 5MB
 
 function handleFilePreview(inputSelector, previewSelector) {
     const uploadedFileNames = new Set();
+    const $input = $(inputSelector);
+    const $preview = $(previewSelector);
 
-    $(inputSelector).on('change', function () {
+    // Create drag and drop zone wrapper
+    const $dropZone = $input.closest('.mb-2');
+
+    // Add drag and drop styles
+    $dropZone.css({
+        'position': 'relative',
+        'border': '2px dashed #ccc',
+        'border-radius': '8px',
+        'padding': '20px',
+        'text-align': 'center',
+        'background-color': '#fafafa',
+        'transition': 'all 0.3s ease',
+        'cursor': 'pointer'
+    });
+
+    // Add helper text if it doesn't exist
+    if (!$dropZone.find('.drop-zone-text').length) {
+        $dropZone.prepend(`
+            <div class="drop-zone-text" style="margin-bottom: 10px; color: #666;">
+                <i class="bi bi-cloud-upload" style="font-size: 32px; display: block; margin-bottom: 8px;"></i>
+                <p style="margin: 0; font-size: 14px;">Drag & drop files here or click to browse</p>
+                <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">Max 5MB per file • PDF, Images, Word, Excel</p>
+            </div>
+        `);
+    }
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        $dropZone.on(eventName, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    // Highlight drop zone when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        $dropZone.on(eventName, function() {
+            $(this).css({
+                'border-color': '#135caa',
+                'background-color': '#e8f4ff'
+            });
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        $dropZone.on(eventName, function() {
+            $(this).css({
+                'border-color': '#ccc',
+                'background-color': '#fafafa'
+            });
+        });
+    });
+
+    // Handle dropped files
+    $dropZone.on('drop', function(e) {
+        const droppedFiles = e.originalEvent.dataTransfer.files;
+        processFiles(droppedFiles);
+    });
+
+    // Handle file input change
+    $input.on('change', function () {
         const files = this.files;
-        const preview = $(previewSelector);
+        processFiles(files);
+        this.value = ''; // allow same file to be re-selected
+    });
 
+    // Make drop zone clickable to trigger file input
+    $dropZone.on('click', function(e) {
+        if (!$(e.target).hasClass('remove-file') && !$(e.target).closest('.remove-file').length) {
+            $input.click();
+        }
+    });
+
+    // Process files function
+    function processFiles(files) {
         Array.from(files).forEach((file, index) => {
             const isValidType = allowedTypes.includes(file.type);
             const isValidSize = file.size <= maxFileSize;
 
             if (!isValidType) {
-                alert(`${file.name} is not an allowed file type.`);
+                if (window.toast) {
+                    toast.error(`${file.name} is not an allowed file type.`);
+                } else {
+                    alert(`${file.name} is not an allowed file type.`);
+                }
                 return;
             }
 
             if (!isValidSize) {
-                alert(`${file.name} exceeds the 5MB size limit.`);
+                if (window.toast) {
+                    toast.error(`${file.name} exceeds the 5MB size limit.`);
+                } else {
+                    alert(`${file.name} exceeds the 5MB size limit.`);
+                }
                 return;
             }
 
@@ -1077,24 +1170,57 @@ function handleFilePreview(inputSelector, previewSelector) {
                 allUploadedFiles.push(file);
 
                 const fileId = 'file-' + Date.now() + '-' + index;
+                const fileSize = (file.size / 1024).toFixed(2); // Convert to KB
+                const fileIcon = getFileIcon(file.type);
 
                 const fileItem = `
-                    <div class="col mb-2" id="${fileId}">
-                        <img src="img/document.png" alt="" style="width: 25px;">
-                        <span class="r-text">${file.name}</span>
-                        <button type="button" class="btn btn-sm btn-danger ms-2 remove-file" data-name="${file.name}" data-id="${fileId}">Remove</button>
+                    <div class="uploaded-file-item" id="${fileId}" style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 12px;
+                        background: white;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 6px;
+                        margin-bottom: 8px;
+                    ">
+                        <div style="font-size: 24px;">${fileIcon}</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 13px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${file.name}</div>
+                            <div style="font-size: 11px; color: #999; margin-top: 2px;">${fileSize} KB</div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger remove-file" data-name="${file.name}" data-id="${fileId}" style="padding: 4px 12px; font-size: 12px;">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
                 `;
 
-                preview.append(fileItem);
+                $preview.append(fileItem);
+
+                // Show success toast
+                if (window.toast) {
+                    toast.success(`${file.name} added successfully`);
+                }
+            } else if (uploadedFileNames.has(file.name)) {
+                if (window.toast) {
+                    toast.warning(`${file.name} is already added`);
+                }
             }
         });
+    }
 
-        this.value = ''; // allow same file to be re-selected
-    });
+    // Get file icon based on file type
+    function getFileIcon(fileType) {
+        if (fileType.includes('pdf')) return '📄';
+        if (fileType.includes('image')) return '🖼️';
+        if (fileType.includes('word')) return '📝';
+        if (fileType.includes('excel') || fileType.includes('spreadsheet')) return '📊';
+        return '📎';
+    }
 
     // Handle remove
-    $(document).on('click', '.remove-file', function () {
+    $(document).on('click', '.remove-file', function (e) {
+        e.stopPropagation();
         const fileName = $(this).data('name');
         const fileId = $(this).data('id');
 
@@ -1104,6 +1230,11 @@ function handleFilePreview(inputSelector, previewSelector) {
         uploadedFileNames.delete(fileName);
         // Remove from DOM
         $('#' + fileId).remove();
+
+        // Show toast
+        if (window.toast) {
+            toast.info(`${fileName} removed`);
+        }
     });
 }
 
@@ -1141,11 +1272,19 @@ function downloadPdfBase64(base64Data, filename) {
         console.log('PDF download initiated:', filename);
 
         // Show success message to user
-        alert('External referral submitted successfully! PDF document has been downloaded.');
+        if (window.toast) {
+            toast.success('External referral submitted successfully! PDF document has been downloaded.');
+        } else {
+            alert('External referral submitted successfully! PDF document has been downloaded.');
+        }
 
     } catch (error) {
         console.error('PDF download failed:', error);
-        alert('Referral submitted successfully, but PDF download failed. Please contact support.');
+        if (window.toast) {
+            toast.error('Referral submitted successfully, but PDF download failed. Please contact support.');
+        } else {
+            alert('Referral submitted successfully, but PDF download failed. Please contact support.');
+        }
     }
 }
 
@@ -1264,6 +1403,12 @@ function validateForm(event) {
         //     }
         // }
 
+        // Show loading overlay
+        showLoadingOverlay();
+
+        // Disable submit button to prevent double submission
+        $('input[type="submit"]').prop('disabled', true);
+
         fetch('post.php', {
             method: 'POST',
             body: formData
@@ -1291,8 +1436,70 @@ function validateForm(event) {
 
             })
             .catch(error => {
+                // Hide loading overlay on error
+                hideLoadingOverlay();
+
+                // Re-enable submit button
+                $('input[type="submit"]').prop('disabled', false);
+
                 logError(new Error('Form submission error'), { context: 'validateForm', error: error.message });
+
+                // Show error message to user
+                if (window.toast) {
+                    toast.error('An error occurred while submitting the referral. Please try again.');
+                } else {
+                    alert('An error occurred while submitting the referral. Please try again.');
+                }
             });
 
     }
+}
+
+// Function to show loading overlay
+function showLoadingOverlay() {
+    // Check if overlay already exists, if not create it
+    if ($('#loading-overlay').length === 0) {
+        const loadingHTML = `
+            <div id="loading-overlay" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            ">
+                <div style="
+                    background-color: white;
+                    padding: 30px 40px;
+                    border-radius: 10px;
+                    text-align: center;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                ">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 18px; font-weight: 500; color: #333;">
+                        Submitting referral...
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                        Please wait, do not close this page
+                    </div>
+                </div>
+            </div>
+        `;
+        $('body').append(loadingHTML);
+    } else {
+        $('#loading-overlay').show();
+    }
+}
+
+// Function to hide loading overlay
+function hideLoadingOverlay() {
+    $('#loading-overlay').fadeOut(300, function() {
+        $(this).remove();
+    });
 }

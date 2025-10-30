@@ -11,6 +11,7 @@
 
     <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="css/toast.css?v=<?php echo time(); ?>" />
 </head>
 <?php
 require_once('../lock_adv.php');
@@ -380,7 +381,9 @@ include('../common/index_adv.php');
             </div>
         </form>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
@@ -388,6 +391,7 @@ include('../common/index_adv.php');
             const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
             const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
         </script>
+        <script src="js/toast.js?v=<?php echo time(); ?>"></script>
         <script src="js/errorLogger.js"></script>
         <script src="js/create.js"></script>
 

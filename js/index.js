@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
         businessUnits: false
     };
 
-    // Show loading state
+    // Show loading state with spinner
     function showLoadingState() {
         const tbody = document.querySelector('#referral-tbl tbody');
         if (!tbody) {
@@ -18,7 +18,18 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('referral-tbl').appendChild(newTbody);
         }
         const tableBody = document.querySelector('#referral-tbl tbody');
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><div class="mt-2">Loading referral data...</div></td></tr>';
+
+        // Create loading row with spinner
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px;">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div style="margin-top: 12px; color: #6c757d; font-size: 14px;">Loading referrals...</div>
+                </td>
+            </tr>
+        `;
     }
 
     // Check if all APIs are loaded
@@ -448,7 +459,11 @@ document.addEventListener('DOMContentLoaded', function () {
             checkAllApisLoaded();
         },
         error: function () {
-            alert('Error loading business units');
+            if (window.toast) {
+                toast.error('Error loading business units');
+            } else {
+                alert('Error loading business units');
+            }
             apisLoaded.businessUnits = true;
             checkAllApisLoaded();
         }
@@ -552,10 +567,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Add external badge if referral is external
                 const externalBadge = row.is_external ? '<br><span class="badge-external">External</span>' : '';
 
-                // Conditional button for external vs internal referrals
-                const secondButton = row.is_external
-                    ? `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Form"><i class="bi bi-file-earmark-arrow-down"></i></a>`
-                    : `<a href="qr.php?id=${row.id}" class="btn-icon btn-icon-qr" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Generate QR"><i class="bi bi-qr-code"></i></a>`;
+                // Generate PDF button for all referrals (both internal and external)
+                const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Form"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
 
                 // Calculate relative time using moment.js
                 const relativeTime = row.ori_created_at ? moment(row.ori_created_at).fromNow() : 'N/A';
@@ -670,10 +683,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const formattedTimestamp = timestamp ? timestamp.replace(/[:.]/g, '-').replace('T', '_').split('.')[0] : '';
             const fileName = `${cleanRefId}_${formattedTimestamp}.pdf`;
 
-            // Show loading state
+            // Show loading state with spinning icon
             const btn = $(this);
-            const originalText = btn.text();
-            btn.text('Downloading...').prop('disabled', true);
+            const originalHTML = btn.html();
+            btn.html('<i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite;"></i>').prop('disabled', true);
+
+            // Add spin animation if not already in CSS
+            if (!document.getElementById('spin-animation-style')) {
+                const style = document.createElement('style');
+                style.id = 'spin-animation-style';
+                style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                document.head.appendChild(style);
+            }
 
             $.ajax({
                 url: 'api-jwt.php',
@@ -696,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 const jsonResponse = JSON.parse(reader.result);
                                 if (!jsonResponse.success) {
                                     alert(jsonResponse.message || 'Failed to download form. Please try again.');
-                                    btn.text(originalText).prop('disabled', false);
+                                    btn.html(originalHTML).prop('disabled', false);
                                     return;
                                 }
                             } catch (e) {
@@ -717,20 +738,20 @@ document.addEventListener('DOMContentLoaded', function () {
                                 }, 100);
 
                                 // Restore button
-                                btn.text(originalText).prop('disabled', false);
+                                btn.html(originalHTML).prop('disabled', false);
                             }
                         };
                         reader.readAsText(response);
                     } catch (error) {
                         alert('Failed to process file data. Please try again.');
                         console.error('Download error:', error);
-                        btn.text(originalText).prop('disabled', false);
+                        btn.html(originalHTML).prop('disabled', false);
                     }
                 },
                 error: function (xhr, status, error) {
                     alert('Error downloading form. Please try again.');
                     console.error('Download error:', error);
-                    btn.text(originalText).prop('disabled', false);
+                    btn.html(originalHTML).prop('disabled', false);
                 }
             });
         });
@@ -1322,6 +1343,101 @@ document.addEventListener('DOMContentLoaded', function () {
     // initChart();
 
     // Date range picker is already initialized above - removed duplicate
+
+    // Table column sorting functionality
+    let currentSortColumn = null;
+    let currentSortDirection = 'asc';
+
+    document.querySelectorAll('.sortable').forEach(header => {
+        header.addEventListener('click', function () {
+            const column = this.getAttribute('data-column');
+
+            // Toggle sort direction if clicking same column, otherwise default to asc
+            if (currentSortColumn === column) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortDirection = 'asc';
+            }
+
+            currentSortColumn = column;
+
+            // Update header icons
+            document.querySelectorAll('.sortable i').forEach(icon => {
+                icon.className = 'bi bi-arrow-down-up';
+                icon.style.opacity = '0.5';
+            });
+
+            const icon = this.querySelector('i');
+            if (currentSortDirection === 'asc') {
+                icon.className = 'bi bi-arrow-up';
+                icon.style.opacity = '1';
+            } else {
+                icon.className = 'bi bi-arrow-down';
+                icon.style.opacity = '1';
+            }
+
+            // Sort the data
+            sortTableData(column, currentSortDirection);
+        });
+
+        // Add hover effect
+        header.addEventListener('mouseenter', function () {
+            this.style.backgroundColor = '#f0f4f8';
+        });
+
+        header.addEventListener('mouseleave', function () {
+            this.style.backgroundColor = '';
+        });
+    });
+
+    function sortTableData(column, direction) {
+        if (!allData || allData.length === 0) return;
+
+        allData.sort((a, b) => {
+            let valueA = a[column];
+            let valueB = b[column];
+
+            // Handle null/undefined values
+            if (valueA === null || valueA === undefined) valueA = '';
+            if (valueB === null || valueB === undefined) valueB = '';
+
+            // Convert to string for comparison
+            valueA = String(valueA).toLowerCase();
+            valueB = String(valueB).toLowerCase();
+
+            // For ref_id, extract the number for proper sorting
+            if (column === 'ref_id') {
+                const numA = parseInt(valueA.replace(/\D/g, '')) || 0;
+                const numB = parseInt(valueB.replace(/\D/g, '')) || 0;
+                return direction === 'asc' ? numA - numB : numB - numA;
+            }
+
+            // For status, sort by status ID number
+            if (column === 'status') {
+                const numA = parseInt(valueA) || 0;
+                const numB = parseInt(valueB) || 0;
+                return direction === 'asc' ? numA - numB : numB - numA;
+            }
+
+            // String comparison for other columns
+            if (direction === 'asc') {
+                return valueA.localeCompare(valueB);
+            } else {
+                return valueB.localeCompare(valueA);
+            }
+        });
+
+        // Reset to first page and display sorted data
+        currentPage = 1;
+        displayPage(currentPage);
+
+        // Show toast notification
+        if (window.toast) {
+            const directionText = direction === 'asc' ? 'ascending' : 'descending';
+            const columnName = document.querySelector(`[data-column="${column}"]`).textContent.trim();
+            toast.info(`Sorted by ${columnName} (${directionText})`);
+        }
+    }
 
 });
 

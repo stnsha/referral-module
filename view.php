@@ -12,12 +12,13 @@
 
     <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
     <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="css/toast.css?v=<?php echo time(); ?>" />
 </head>
 <?php
 require_once('../lock_adv.php');
 $connect = 1;
 include('../common/index_adv.php');
-echo $businessUnitId;
+// echo $businessUnitId;
 ?>
 
 <body>
@@ -538,12 +539,13 @@ echo $businessUnitId;
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
-            const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
-            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-            const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-            const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
-            const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
+        const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
+        const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
         </script>
+        <script src="js/toast.js?v=<?php echo time(); ?>"></script>
         <script src="js/errorLogger.js"></script>
         <script src="js/view.js"></script>
 </body>

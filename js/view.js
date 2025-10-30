@@ -2227,5 +2227,10 @@ function handleTakeoverReferral(toReferral, referralDetails) {
     // 8. Hide takeover button after takeover
     $('#takeover-button-container').hide();
 
-    alert('You have successfully taken over this referral. You can now update the form.');
+    if (window.toast) {
+        toast.success('You have successfully taken over this referral. You can now update the form.');
+    } else {
+        alert('You have successfully taken over this referral. You can now update the form.');
+    }
 }
+
