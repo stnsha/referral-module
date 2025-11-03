@@ -68,7 +68,7 @@ include('../common/index_adv.php');
             <?php endif; ?>
 
             <?php if ($outletPhone): ?>
-            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $outletPhone); ?>?text=<?php echo urlencode('New referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been created.'); ?>"
+            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $outletPhone); ?>?text=<?php echo urlencode('New referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been created. http://octopusdb.info:8080/odb/referral/view.php?id=' . $referral_id); ?>"
                target="_blank" class="btn-new-referral mt-2">
                 <i class="bi bi-whatsapp"></i> Send WhatsApp to Outlet
             </a>
