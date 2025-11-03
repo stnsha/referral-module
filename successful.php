@@ -61,7 +61,7 @@ include('../common/index_adv.php');
             <?php endif; ?>
 
             <?php if ($patientPhone): ?>
-            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $patientPhone); ?>?text=<?php echo urlencode('Hello! Your referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been submitted successfully.'); ?>"
+            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $patientPhone); ?>?text=<?php echo urlencode('Dear Patient, your healthcare referral document has been issued. Kindly review the attached PDF for further instructions. https://mytotalhealth.com.my/referral-api/view/' . $referral_id); ?>"
                target="_blank" class="btn-new-referral mt-2">
                 <i class="bi bi-whatsapp"></i> Send WhatsApp to Patient
             </a>
