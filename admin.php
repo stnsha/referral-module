@@ -71,28 +71,28 @@ include('../common/index_adv.php');
                         <div class="col-sm-8">
                             <select name="input_type" id="input_type" class="form-select form-select-sm">
                                 <option value="">Select Field Type</option>
-                                <option value="button">button - clickable button</option>
+                                <!-- <option value="button">button - clickable button</option> -->
                                 <option value="checkbox">checkbox - checkbox</option>
-                                <option value="color">color - color picker</option>
-                                <option value="date">date - date control</option>
-                                <option value="datetime-local">datetime-local - date and time control</option>
-                                <option value="email">email - field for an e-mail address</option>
+                                <!-- <option value="color">color - color picker</option> -->
+                                <!-- <option value="date">date - date control</option> -->
+                                <!-- <option value="datetime-local">datetime-local - date and time control</option> -->
+                                <!-- <option value="email">email - field for an e-mail address</option> -->
                                 <option value="file">file - file-select field</option>
-                                <option value="hidden">hidden - hidden input field</option>
-                                <option value="image">image - image as submit button</option>
+                                <!-- <option value="hidden">hidden - hidden input field</option> -->
+                                <!-- <option value="image">image - image as submit button</option>
                                 <option value="month">month - month and year control</option>
                                 <option value="number">number - field for entering a number</option>
-                                <option value="password">password - password field</option>
+                                <option value="password">password - password field</option> -->
                                 <option value="radio">radio - radio button</option>
-                                <option value="range">range - range control</option>
+                                <!-- <option value="range">range - range control</option>
                                 <option value="reset">reset - reset button</option>
                                 <option value="search">search - text field for search</option>
                                 <option value="submit">submit - submit button</option>
-                                <option value="tel">tel - field for entering a telephone number</option>
+                                <option value="tel">tel - field for entering a telephone number</option> -->
                                 <option value="text">text - single-line text field</option>
-                                <option value="time">time - control for entering a time</option>
+                                <!-- <option value="time">time - control for entering a time</option>
                                 <option value="url">url - field for entering a URL</option>
-                                <option value="week">week - week and year control</option>
+                                <option value="week">week - week and year control</option> -->
                             </select>
                             <div class="error-message" id="error-field-type" style="color: red; font-size: 12px;">
                             </div>
@@ -156,11 +156,11 @@ include('../common/index_adv.php');
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="js/errorLogger.js"></script>
     <script>
-    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-    const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-    const staff_outlet =
-        <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
-    const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staff_outlet =
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
+        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
     </script>
     <script src="js/admin.js"></script>
 

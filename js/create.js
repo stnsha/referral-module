@@ -1391,17 +1391,17 @@ function validateForm(event) {
             formData.append('attachments[]', file);
         });
 
-        // for (const [key, value] of formData.entries()) {
-        //     if (value instanceof File) {
-        //         console.log(`${key}:`, {
-        //             name: value.name,
-        //             size: value.size + ' bytes',
-        //             type: value.type,
-        //         });
-        //     } else {
-        //         console.log(`${key}: ${value}`);
-        //     }
-        // }
+        for (const [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`${key}:`, {
+                    name: value.name,
+                    size: value.size + ' bytes',
+                    type: value.type,
+                });
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+        }
 
         // Show loading overlay
         showLoadingOverlay();

@@ -34,6 +34,7 @@ if (isset($_SESSION["myusername"])) {
             $department = stripslashes($rows['department']);
             $status_semasa = stripslashes($rows['status_semasa']);
             $outlet = stripslashes($rows['outlet']);
+            $referral = stripslashes($rows['referral']);
         }
     }
 }
@@ -107,9 +108,10 @@ function getStaffAuthData($staff_id)
  * @param int $staff_department_id Staff department ID
  * @param string $status_semasa Staff status
  * @param array $outlet Outlet IDs array
+ * @param int $referral role
  * @return string|null JWT token or null on failure
  */
-function getJWTToken($staff_id, $staff_department_id, $status_semasa, $outlet)
+function getJWTToken($staff_id, $staff_department_id, $status_semasa, $outlet, $referral)
 {
     $host = getApiHost();
     $url = $host . 'auth';
@@ -118,7 +120,8 @@ function getJWTToken($staff_id, $staff_department_id, $status_semasa, $outlet)
         'staff_id' => (int)$staff_id,
         'staff_department_id' => (int)$staff_department_id,
         'status_semasa' => $status_semasa,
-        'outlet' => $outlet
+        'outlet' => $outlet,
+        'referral' => $referral
     );
 
     $headers = array(
