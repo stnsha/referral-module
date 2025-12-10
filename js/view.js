@@ -100,9 +100,9 @@ $(document).ready(function () {
                     const externalRef = toReferral.external_referral[0];
 
                     // Populate external referral fields
-                    organization.val(externalRef.organization || '');
-                    location_organization.val(externalRef.state || '');
-                    referee.val(externalRef.name || '');
+                    organization.val(externalRef.organization ? externalRef.organization.name : '');
+                    location_organization.val(externalRef.organization ? externalRef.organization.state : '');
+                    referee.val(externalRef.referee ? externalRef.referee : '');
 
                     // Show external referral fields
                     organization.show();
@@ -681,6 +681,10 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
                 <div class="mb-2">
                     <p class="r-text">Relevant Medical History</p>
                     <textarea class="form-control form-control-sm" rows="3" readonly>${rd.createForm.medical_history || 'N/A'}</textarea>
+                </div>
+                <div class="mb-2">
+                    <p class="r-text">Additional Remarks</p>
+                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.additional_remarks || 'N/A'}</textarea>
                 </div>
             </div>
             `);
@@ -1583,18 +1587,6 @@ function initialTreatment(initialTreatment, bu_id, targetPanel, additionalRemark
 
         targetPanel.append(formContainer);
     });
-
-    const remarksWrapper = $('<div class="mb-3"></div>');
-    const remarksLabel = $('<p class="r-text">Additional Remarks</p>');
-    const remarksTextarea = $('<textarea>', {
-        class: 'form-control form-control-sm',
-        readonly: true,
-        disabled: true,
-        rows: 5
-    }).val(additionalRemarks || '');
-
-    remarksWrapper.append(remarksLabel, remarksTextarea);
-    targetPanel.append(remarksWrapper);
 }
 
 function referralAccordion() {

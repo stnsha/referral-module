@@ -220,6 +220,7 @@ include('../common/index_adv.php');
         const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
     </script>
 
     <script src="js/toast.js?v=<?php echo time(); ?>"></script>

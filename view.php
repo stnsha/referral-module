@@ -544,6 +544,7 @@ include('../common/index_adv.php');
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
         const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
         </script>
         <script src="js/toast.js?v=<?php echo time(); ?>"></script>
         <script src="js/errorLogger.js"></script>

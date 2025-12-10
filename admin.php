@@ -15,6 +15,12 @@
 require_once('../lock_adv.php');
 $connect = 1;
 include('../common/index_adv.php');
+
+// Check if user has admin permission (referral must be 1 or 2)
+if (isset($referral) && $referral == 0) {
+    header('Location: index.php');
+    exit();
+}
 ?>
 
 <body>
@@ -161,6 +167,7 @@ include('../common/index_adv.php');
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
     </script>
     <script src="js/admin.js"></script>
 

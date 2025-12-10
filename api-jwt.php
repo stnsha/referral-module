@@ -72,7 +72,7 @@ function getStaffAuthData($staff_id)
 
     $staff_id = mysqli_real_escape_string($conn, $staff_id);
 
-    $query = "SELECT id, department, status_semasa, outlet FROM staff WHERE id = $staff_id";
+    $query = "SELECT id, department, status_semasa, outlet, referral FROM staff WHERE id = $staff_id";
     $result = mysqli_query($conn, $query);
 
     if (!$result) {
@@ -98,7 +98,8 @@ function getStaffAuthData($staff_id)
         'staff_id' => (int)$row['id'],
         'staff_department_id' => (int)$row['department'],
         'status_semasa' => $row['status_semasa'],
-        'outlet' => $outlet
+        'outlet' => $outlet,
+        'referral' => isset($row['referral']) ? (int)$row['referral'] : 2
     );
 }
 
@@ -181,7 +182,8 @@ function getAuthToken($staff_id)
         $staffData['staff_id'],
         $staffData['staff_department_id'],
         $staffData['status_semasa'],
-        $staffData['outlet']
+        $staffData['outlet'],
+        $staffData['referral']
     );
 
     if ($token) {
@@ -385,7 +387,8 @@ function getBusinessUnit($staff_id)
         return array();
     }
     $decoded = json_decode($result['response'], true);
-    return isset($decoded['data']) ? $decoded['data'] : array();
+    // API returns direct array: [{id: 1, name: "..."}, ...]
+    return is_array($decoded) ? $decoded : array();
 }
 
 function createForm($data, $staff_id)
