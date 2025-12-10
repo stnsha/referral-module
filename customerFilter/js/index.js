@@ -18,13 +18,42 @@ $(document).ready(function () {
         resetTable();
     });
 
-    function performSearch() {
-        const icno = $('#search-customer').val().trim();
+    function detectSearchType(input) {
+        const trimmedInput = input.trim().toUpperCase();
 
-        if (icno === '') {
-            alert('Please enter customer IC number');
+        // Check if starts with "REF" (case-insensitive)
+        if (trimmedInput.startsWith('REF')) {
+            return {
+                type: 'referral',
+                value: input.trim().substring(3) // Strip "REF" prefix
+            };
+        }
+
+        // Check if it's a valid IC (12 digits after removing dashes)
+        const cleanedInput = input.replace(/[^0-9]/g, '');
+        if (cleanedInput.length === 12 && /^\d+$/.test(cleanedInput)) {
+            return {
+                type: 'ic',
+                value: input.trim()
+            };
+        }
+
+        return {
+            type: 'unknown',
+            value: input.trim()
+        };
+    }
+
+    function performSearch() {
+        const input = $('#search-customer').val().trim();
+
+        if (input === '') {
+            alert('Please enter customer IC or referral ID');
             return;
         }
+
+        // Detect search type
+        const searchType = detectSearchType(input);
 
         // Show loading state
         $('#customer-filter-tbody').html(`
@@ -35,28 +64,36 @@ $(document).ready(function () {
             </tr>
         `);
 
-        // Step 1: Get customer details by IC
-        $.ajax({
-            url: 'referral/backend.php?action=searchCustomer',
-            type: 'POST',
-            data: {
-                icno: icno
-            },
-            dataType: 'json',
-            success: function (customerData) {
-                if (customerData && customerData.length > 0) {
-                    const customer = customerData[0];
-                    // Step 2: Search referrals using customer ID
-                    searchReferralsByCustomerId(customer.id, customer.name, customer.ic);
-                } else {
-                    showError('Customer not found');
+        if (searchType.type === 'referral') {
+            // Search by Referral ID
+            searchReferralsByRefId(searchType.value);
+        } else if (searchType.type === 'ic') {
+            // Step 1: Get customer details by IC
+            $.ajax({
+                url: 'referral/backend.php?action=searchCustomer',
+                type: 'POST',
+                data: {
+                    icno: searchType.value
+                },
+                dataType: 'json',
+                success: function (customerData) {
+                    if (customerData && customerData.length > 0) {
+                        const customer = customerData[0];
+                        // Step 2: Search referrals using customer ID
+                        searchReferralsByCustomerId(customer.id, customer.name, customer.ic);
+                    } else {
+                        showError('Customer not found');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Customer search error:', error);
+                    showError('An error occurred while searching for customer. Please try again.');
                 }
-            },
-            error: function (xhr, status, error) {
-                console.error('Customer search error:', error);
-                showError('An error occurred while searching for customer. Please try again.');
-            }
-        });
+            });
+        } else {
+            // Invalid format
+            showError('Invalid input. Please enter a valid Customer IC (12 digits) or Referral ID (REF followed by alphanumeric)');
+        }
     }
 
     function searchReferralsByCustomerId(customerId, customerName, customerIc) {
@@ -83,6 +120,31 @@ $(document).ready(function () {
                     displayResults(referralsWithCustomerInfo);
                 } else {
                     showError(response.message || 'No referrals found for this customer');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Referral search error:', error);
+                showError('An error occurred while searching for referrals. Please try again.');
+            }
+        });
+    }
+
+    function searchReferralsByRefId(refId) {
+        // Make AJAX request to search for referrals by referral ID
+        $.ajax({
+            url: 'referral/api-jwt.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'search-referral',
+                ref_id: refId
+            }),
+            dataType: 'json',
+            success: function (response) {
+                if (response.success && response.data) {
+                    displayResults(response.data);
+                } else {
+                    showError(response.message || 'No referrals found for this referral ID');
                 }
             },
             error: function (xhr, status, error) {

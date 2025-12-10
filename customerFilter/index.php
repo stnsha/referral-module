@@ -37,7 +37,7 @@ include('../../common/index_adv.php');
                     <span class="fw-bold text-start pb-3" style="font-size:14px;">Search</span>
                     <div class="d-flex gap-2 mb-2">
                         <input type="text" class="form-control form-control-sm" name="search-customer"
-                            id="search-customer" placeholder="Enter Customer IC Number">
+                            id="search-customer" placeholder="Enter Customer IC or Referral ID">
                         <button type="button" id="searchBtn" class="btn-referral" style="white-space: nowrap;">
                             <i class="bi bi-search me-1"></i>Search
                         </button>

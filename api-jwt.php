@@ -650,16 +650,26 @@ function getSummaryReport($staff_id)
 }
 
 /**
- * Search referrals by customer ID
+ * Search referrals by customer ID or referral ID
  * @param int $customer_id Customer ID to search for
  * @param int $staff_id Staff ID for authentication
+ * @param string $ref_id Referral ID to search for (optional)
  * @return array Search result with referrals data
  */
-function searchReferralByCustomerId($customer_id, $staff_id)
+function searchReferralByCustomerId($customer_id, $staff_id, $ref_id = null)
 {
-    $data = array(
-        'customer_id' => (int)$customer_id
-    );
+    // Build data array based on which parameter is provided
+    if ($ref_id !== null) {
+        $data = array(
+            'customer_id' => null,
+            'ref_id' => $ref_id
+        );
+    } else {
+        $data = array(
+            'customer_id' => (int)$customer_id,
+            'ref_id' => null
+        );
+    }
 
     $result = getApiDataWithJWT('referral/search', $data, 'POST', $staff_id);
     $httpCode = $result['httpCode'];
@@ -1341,12 +1351,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
             case 'search-referral':
-                if (isset($jsonData['customer_id'])) {
-                    $response = searchReferralByCustomerId($jsonData['customer_id'], $staff_id);
+                $customer_id = isset($jsonData['customer_id']) ? $jsonData['customer_id'] : null;
+                $ref_id = isset($jsonData['ref_id']) ? $jsonData['ref_id'] : null;
+
+                if ($customer_id !== null || $ref_id !== null) {
+                    $response = searchReferralByCustomerId($customer_id, $staff_id, $ref_id);
                 } else {
                     $response = array(
                         'success' => false,
-                        'message' => 'Customer ID is required',
+                        'message' => 'Customer ID or Referral ID is required',
                         'data' => array()
                     );
                 }
