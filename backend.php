@@ -61,17 +61,29 @@ function getLocations($ref_bus_id)
     return array();
 }
 
-function searchCustomer($icno = null, $customer_id = null)
+function searchCustomer($icno = null, $customer_id = null, $id_type = 'nric')
 {
     global $conn;
 
     $conditions = array();
     if ($icno !== null && $icno !== '') {
-        $icno = formatIC($icno); // Remove dashes
+        // For NRIC: format and validate 12 digits
+        if ($id_type === 'nric') {
+            $icno = formatIC($icno); // Remove dashes
 
-        // Validate IC is exactly 12 digits
-        if (strlen($icno) !== 12 || !ctype_digit($icno)) {
-            return array();
+            // Validate IC is exactly 12 digits
+            if (strlen($icno) !== 12 || !ctype_digit($icno)) {
+                return array();
+            }
+        } else {
+            // For Passport: just trim and sanitize, no length validation
+            $icno = trim($icno);
+            $icno = preg_replace('/\s+/', '', $icno);  // Remove spaces
+
+            // Optional: basic validation (not empty, reasonable length)
+            if (empty($icno) || strlen($icno) < 6) {
+                return array();
+            }
         }
 
         $icno = mysqli_real_escape_string($conn, $icno);
@@ -95,12 +107,21 @@ function searchCustomer($icno = null, $customer_id = null)
 
     $customerDetails = array();
     while ($row = mysqli_fetch_assoc($searchIcno)) {
+        // Calculate age if birth_date exists
+        $age = null;
+        if ($row['birth_date'] && $row['birth_date'] !== '0000-00-00') {
+            $birthDate = new DateTime($row['birth_date']);
+            $today = new DateTime();
+            $age = $today->diff($birthDate)->y;
+        }
+
         $customerDetails[] = array(
             'id' => $row['id'],
             'name' => $row['customer_name'],
             'ic' => $row['ic'],
             'gender' => $row['gender'],
             'birth_date' => $row['birth_date'],
+            'age' => $age,  // Add calculated age to response
             'phone' => $row['phone'],
             'email' => $row['email'],
             'address' => $row['c_addr']
@@ -629,9 +650,10 @@ if (
 ) {
     $icno = isset($_POST['icno']) ? $_POST['icno'] : null;
     $customer_id = isset($_POST['customer_id']) ? $_POST['customer_id'] : null;
+    $id_type = isset($_POST['id_type']) ? $_POST['id_type'] : 'nric';  // NEW
 
     header('Content-Type: application/json');
-    echo json_encode(searchCustomer($icno, $customer_id));
+    echo json_encode(searchCustomer($icno, $customer_id, $id_type));  // Pass id_type
     exit;
 }
 

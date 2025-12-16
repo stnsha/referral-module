@@ -33,6 +33,7 @@ if (isset($_POST['refer_another']) && $_POST['refer_another'] === 'on') {
     $referral_reason = isset($_POST['referral_reason']) ? $_POST['referral_reason'] : null;
     $referral_condition = isset($_POST['referral_condition']) ? $_POST['referral_condition'] : null;
     $medical_history = isset($_POST['medical_history']) ? $_POST['medical_history'] : null;
+    $priority = isset($_POST['priority']) ? $_POST['priority'] : null;
     $status = 3;
     $refer_business_unit = isset($_POST['refer_business_unit_id']) ? $_POST['refer_business_unit_id'] : null;
     $refer_location = isset($_POST['refer_location']) ? $_POST['refer_location'] : null;
@@ -66,7 +67,8 @@ if (isset($_POST['refer_another']) && $_POST['refer_another'] === 'on') {
             'refer_referee' => $refer_referee,
             'referral_reason' => $referral_reason,
             'referral_condition' => $referral_condition,
-            'medical_history' => $medical_history
+            'medical_history' => $medical_history,
+            'priority' => $priority
         );
 
         // Add new organization data if provided
@@ -99,6 +101,7 @@ if (isset($_POST['refer_another']) && $_POST['refer_another'] === 'on') {
             'referral_reason' => $referral_reason,
             'referral_condition' => $referral_condition,
             'medical_history' => $medical_history,
+            'priority' => $priority,
             'additional_remarks_refer' => $additional_remarks_refer
         );
     }

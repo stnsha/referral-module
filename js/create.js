@@ -84,6 +84,16 @@ $(document).ready(function () {
         $('input[name="customer_gender"]').removeData('original-value');
         $('textarea[name="customer_address"]').removeData('original-value');
 
+        // Hide create customer link
+        hideCreateCustomerLink();
+
+        // Reset radio button to NRIC (default)
+        $('input[name="id_type"][value="nric"]').prop('checked', true);
+
+        // Remove readonly attributes (in case passport search set them)
+        $('input[name="customer_age"]').prop('readonly', false);
+        $('input[name="customer_gender"]').prop('readonly', false);
+
         // Focus back to IC field
         $('input[name="customer_ic"]').focus();
 
@@ -484,36 +494,64 @@ $(document).ready(function () {
     }
 
     $('input[name="customer_ic"]').on('change', function () {
-        var icno = formatIC($(this).val().trim());
-        if (icno === '') return;
+        var idNumber = $(this).val().trim();
 
-        // Update the field with formatted IC (without dashes)
-        $(this).val(icno);
-
-        // Validate IC is exactly 12 digits before searching
-        if (icno.length !== 12) {
-            showFieldMessage('customer-ic', 'IC number must be exactly 12 digits', 'error');
+        if (idNumber === '') {
             return;
         }
 
-        // Clear any previous error messages
-        showFieldMessage('customer-ic', '', 'info');
+        // Get selected ID type (NRIC or Passport)
+        var idType = $('input[name="id_type"]:checked').val();
 
+        // Format ID number (remove dashes, spaces, special chars)
+        if (idType === 'nric') {
+            idNumber = formatIC(idNumber);  // Remove non-numeric
+            $(this).val(idNumber);
+
+            // Validate NRIC: must be exactly 12 digits
+            if (idNumber.length !== 12) {
+                showFieldMessage('customer-ic', 'NRIC must be exactly 12 digits', 'error');
+                return;
+            }
+        } else {
+            // Passport: just trim, no strict validation
+            idNumber = idNumber.replace(/\s+/g, '');  // Remove spaces
+            $(this).val(idNumber);
+
+            // Optional: minimum length check for passport
+            if (idNumber.length < 6) {
+                showFieldMessage('customer-ic', 'Passport number seems too short', 'error');
+                return;
+            }
+        }
+
+        // Clear previous messages
+        showFieldMessage('customer-ic', '', 'info');
+        hideCreateCustomerLink();
+
+        // AJAX search for customer
         $.ajax({
             type: 'POST',
             url: 'backend.php?action=searchCustomer',
             data: {
-                icno: icno
+                icno: idNumber,
+                id_type: idType  // Send ID type to backend
             },
             dataType: 'json',
             success: function (response) {
                 if (response.length === 0) {
-                    // Customer not found - show create customer dialog
-                    showCreateCustomerDialog(icno);
+                    // CUSTOMER NOT FOUND - Show create link
+                    showFieldMessage('customer-ic', 'Customer not found', 'error');
+                    showCreateCustomerLink();
+
+                    // Clear all customer fields
+                    clearCustomerFields();
                     return;
                 }
 
+                // CUSTOMER FOUND - Populate all fields
                 var customer = response[0];
+
                 $('input[name="customer_id"]').val(customer.id || '');
                 $('input[name="customer_name"]').val(customer.name || '');
                 $('input[name="customer_phone"]').val(customer.phone || '');
@@ -522,31 +560,86 @@ $(document).ready(function () {
                 $('textarea[name="customer_address"]').val(customer.address || '');
                 $('input[name="customer_ic"]').val(customer.ic || '');
 
-                if (customer.birth_date) {
-                    var parts = customer.birth_date.split('-');
-                    var birthYear = parseInt(parts[0], 10);
-                    var birthMonth = parseInt(parts[1], 10);
-                    var birthDay = parseInt(parts[2], 10);
-
-                    var today = new Date();
-                    var age = today.getFullYear() - birthYear;
-                    if (
-                        today.getMonth() + 1 < birthMonth ||
-                        (today.getMonth() + 1 === birthMonth && today.getDate() <
-                            birthDay)
-                    ) {
-                        age--;
-                    }
+                // Age handling
+                if (idType === 'nric' && customer.birth_date) {
+                    // For NRIC: Calculate age from birth_date
+                    var age = calculateAgeFromBirthDate(customer.birth_date);
                     $('input[name="customer_age"]').val(age);
+                    $('input[name="customer_age"]').prop('readonly', true);
                 } else {
-                    $('input[name="customer_age"]').val('');
+                    // For Passport: Use age from DB, allow manual entry if empty
+                    $('input[name="customer_age"]').val(customer.age || '');
+                    $('input[name="customer_age"]').prop('readonly', false);
                 }
+
+                // Gender handling
+                if (idType === 'nric') {
+                    // For NRIC: Gender from DB (extracted during creation)
+                    $('input[name="customer_gender"]').val(customer.gender || '');
+                    $('input[name="customer_gender"]').prop('readonly', true);
+                } else {
+                    // For Passport: Use gender from DB, allow manual entry if empty
+                    $('input[name="customer_gender"]').val(customer.gender || '');
+                    $('input[name="customer_gender"]').prop('readonly', false);
+                }
+
+                showFieldMessage('customer-ic', 'Customer found', 'success');
+
+                // Setup inline edit for all fields except IC
+                setupCustomerInlineEdit();
             },
-            error: function () {
-                // alert('Error retrieving data');
+            error: function (xhr, status, error) {
+                showFieldMessage('customer-ic', 'Search failed. Please try again.', 'error');
             }
         });
     });
+
+    // Show "Create New Customer" link
+    function showCreateCustomerLink() {
+        $('#create-customer-link-container').show();
+    }
+
+    // Hide "Create New Customer" link
+    function hideCreateCustomerLink() {
+        $('#create-customer-link-container').hide();
+    }
+
+    // Calculate age from birth_date (YYYY-MM-DD)
+    function calculateAgeFromBirthDate(birthDate) {
+        if (!birthDate || birthDate === '0000-00-00') {
+            return '';
+        }
+
+        var parts = birthDate.split('-');
+        var birthYear = parseInt(parts[0], 10);
+        var birthMonth = parseInt(parts[1], 10);
+        var birthDay = parseInt(parts[2], 10);
+
+        var today = new Date();
+        var age = today.getFullYear() - birthYear;
+
+        if (today.getMonth() + 1 < birthMonth ||
+            (today.getMonth() + 1 === birthMonth && today.getDate() < birthDay)) {
+            age--;
+        }
+
+        return age;
+    }
+
+    // Clear customer fields (for "not found" scenario)
+    function clearCustomerFields() {
+        $('input[name="customer_id"]').val('');
+        $('input[name="customer_name"]').val('');
+        $('input[name="customer_phone"]').val('');
+        $('input[name="customer_email"]').val('');
+        $('input[name="customer_age"]').val('');
+        $('input[name="customer_gender"]').val('');
+        $('textarea[name="customer_address"]').val('');
+
+        // Remove readonly attributes
+        $('input[name="customer_age"]').prop('readonly', false);
+        $('input[name="customer_gender"]').prop('readonly', false);
+    }
 
     // Inline edit functionality for customer fields
     function setupCustomerInlineEdit() {
@@ -665,175 +758,10 @@ $(document).ready(function () {
     // Initialize inline edit functionality
     setupCustomerInlineEdit();
 
-    function showCreateCustomerDialog(icno) {
-        const message = `Customer with I/C "${icno}" not found.\nWould you like to create a new customer?`;
-
-        if (confirm(message)) {
-            // Clear existing customer data
-            $('input[name="customer_id"]').val('');
-            $('input[name="customer_name"]').val('');
-            $('input[name="customer_phone"]').val('');
-            $('input[name="customer_email"]').val('');
-            $('input[name="customer_age"]').val('');
-            $('input[name="customer_gender"]').val('');
-            $('textarea[name="customer_address"]').val('');
-
-            // Pre-populate IC field
-            $('input[name="customer_ic"]').val(icno);
-
-            // Auto-extract and populate age and gender from IC
-            extractAgeGenderFromIC(icno);
-
-            // Clear any error messages
-            $('.error-message').text('');
-
-            // Show instruction message below I/C field
-            showFieldMessage('customer-ic', 'Please fill in the customer details below', 'info');
-
-            // Enable inline customer creation mode
-            enableInlineCustomerCreation(icno);
-        } else {
-            // User cancelled - clear IC field
-            $('input[name="customer_ic"]').val('');
-        }
-    }
-
-    function enableInlineCustomerCreation(icno) {
-        // Mark fields as being in creation mode
-        const customerFields = ['customer_name', 'customer_phone', 'customer_email', 'customer_age', 'customer_gender', 'customer_address'];
-
-        customerFields.forEach(function (fieldName) {
-            const fieldSelector = fieldName === 'customer_address' ?
-                'textarea[name="' + fieldName + '"]' :
-                'input[name="' + fieldName + '"]';
-
-            $(fieldSelector).data('creation-mode', true);
-        });
-
-        // Set up blur handler for customer creation
-        $('.form-control, textarea').off('blur.customerCreation').on('blur.customerCreation', function () {
-            if ($(this).data('creation-mode') && checkAllRequiredFieldsFilled(icno)) {
-                $(this).off('blur.customerCreation');
-                createCustomerInline(icno);
-            }
-        });
-    }
-
-    function checkAllRequiredFieldsFilled(icno) {
-        const name = $('input[name="customer_name"]').val().trim();
-        const phone = $('input[name="customer_phone"]').val().trim();
-        const address = $('textarea[name="customer_address"]').val().trim();
-
-        return icno && name && phone && address;
-    }
-
-    function createCustomerInline(icno) {
-        const customerData = {
-            ic: formatIC(icno),
-            name: $('input[name="customer_name"]').val().trim(),
-            phone: $('input[name="customer_phone"]').val().trim(),
-            email: $('input[name="customer_email"]').val().trim(),
-            age: $('input[name="customer_age"]').val().trim(),
-            gender: $('input[name="customer_gender"]').val().trim(),
-            address: $('textarea[name="customer_address"]').val().trim()
-        };
-
-        // Validation
-        if (!customerData.name) {
-            showFieldMessage('customer-name', 'Name is required', 'error');
-            return;
-        }
-        if (!customerData.phone) {
-            showFieldMessage('customer-phone', 'Phone is required', 'error');
-            return;
-        }
-        if (!customerData.address) {
-            showFieldMessage('customer-address', 'Address is required', 'error');
-            return;
-        }
-
-        // Show loading state
-        $('input[name="customer_name"]').css('background-color', '#f8f9fa').prop('disabled', true);
-        showFieldMessage('customer-name', 'Creating customer...', 'info');
-
-        $.ajax({
-            type: 'POST',
-            url: 'backend.php?action=createCustomer',
-            data: customerData,
-            dataType: 'json',
-            success: function (response) {
-                if (response.success) {
-                    // Customer created successfully
-                    $('input[name="customer_id"]').val(response.customer_id);
-
-                    // Clear creation mode flags
-                    const customerFields = ['customer_name', 'customer_phone', 'customer_email', 'customer_age', 'customer_gender', 'customer_address'];
-                    customerFields.forEach(function (fieldName) {
-                        const fieldSelector = fieldName === 'customer_address' ?
-                            'textarea[name="' + fieldName + '"]' :
-                            'input[name="' + fieldName + '"]';
-                        $(fieldSelector).removeData('creation-mode');
-                        $(fieldSelector).css('background-color', '#d4edda'); // Green success
-
-                        // Reset background after 2 seconds
-                        setTimeout(function () {
-                            $(fieldSelector).css('background-color', '');
-                        }, 2000);
-                    });
-
-                    // Show success message
-                    showFieldMessage('customer-name', 'Customer created successfully!', 'success');
-
-                    // Re-enable inline edit for the newly created customer
-                    setupCustomerInlineEdit();
-
-                } else {
-                    // Creation failed
-                    showFieldMessage('customer-name', response.message, 'error');
-                    $('input[name="customer_name"]').css('background-color', '#f8d7da'); // Red error
-
-                    setTimeout(function () {
-                        $('input[name="customer_name"]').css('background-color', '');
-                    }, 2000);
-                }
-            },
-            error: function (xhr, status, error) {
-                console.log('Create customer error:', {
-                    xhr: xhr,
-                    status: status,
-                    error: error,
-                    responseText: xhr.responseText
-                });
-
-                let errorMessage = 'Network error. Please try again.';
-
-                if (xhr.status === 500) {
-                    errorMessage = 'Server error: ' + (xhr.responseText || 'Internal server error');
-                } else if (xhr.status === 404) {
-                    errorMessage = 'Backend endpoint not found';
-                } else if (xhr.status === 0) {
-                    errorMessage = 'Connection failed - check network';
-                } else if (xhr.responseText) {
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        errorMessage = response.message || errorMessage;
-                    } catch (e) {
-                        errorMessage = 'Server response: ' + xhr.responseText.substring(0, 100);
-                    }
-                }
-
-                showFieldMessage('customer-name', errorMessage, 'error');
-                $('input[name="customer_name"]').css('background-color', '#f8d7da'); // Red error
-
-                setTimeout(function () {
-                    $('input[name="customer_name"]').css('background-color', '');
-                }, 2000);
-            },
-            complete: function () {
-                $('input[name="customer_name"]').prop('disabled', false);
-            }
-        });
-    }
+    // REMOVED: Inline customer creation functions
+    // These functions have been removed as customer creation is now handled via a separate page
+    // Removed functions: showCreateCustomerDialog, enableInlineCustomerCreation,
+    // checkAllRequiredFieldsFilled, createCustomerInline
 
     // Enhanced showFieldMessage function to handle info messages
     function showFieldMessage(fieldName, message, type) {
@@ -1371,7 +1299,23 @@ function validateForm(event) {
     markError("referral-reason", isEmpty(form["referral_reason"].value), "This field cannot be left blank.");
     markError("referral-condition", isEmpty(form["referral_condition"].value), "This field cannot be left blank.");
     markError("priority", isEmpty(form["priority"].value), "This field cannot be left blank.");
-    markError("customer-ic", !isIC(getFieldValue("customer_ic")), "This field must be a 12-digit number.");
+    // Get ID type and IC/Passport value
+    var idType = $('input[name="id_type"]:checked').val();
+    var idNumber = getFieldValue("customer_ic");
+
+    // Validation based on ID type
+    if (idType === 'nric') {
+        // NRIC: Must be exactly 12 digits
+        markError("customer-ic", !isIC(idNumber), "NRIC must be a 12-digit number.");
+    } else {
+        // Passport: Just check not empty
+        markError("customer-ic", isEmpty(idNumber), "Passport number cannot be empty.");
+    }
+
+    // Validate customer_id - must exist and be a positive integer
+    var customerId = getFieldValue("customer_id");
+    markError("customer-ic", !customerId || !isInteger(customerId) || parseInt(customerId) === 0,
+        "Please search for a customer before submitting.");
     markError("customer-name", isEmpty(form["customer_name"].value), "This field cannot be left blank.");
     markError("customer-phone", isEmpty(form["customer_phone"].value), "This field cannot be left blank.");
     var email = form["customer_email"].value;
@@ -1431,7 +1375,20 @@ function validateForm(event) {
                     window.location.href = 'successful.php?id=' + inner.id;
 
                 } else {
+                    // Hide loading overlay on validation error
+                    hideLoadingOverlay();
+
+                    // Re-enable submit button
+                    $('input[type="submit"]').prop('disabled', false);
+
                     console.log('Failed:', inner.message);
+
+                    // Show error message to user
+                    if (window.toast) {
+                        toast.error(inner.message || 'Referral submission failed. Please check your information and try again.');
+                    } else {
+                        alert(inner.message || 'Referral submission failed. Please check your information and try again.');
+                    }
                 }
 
             })

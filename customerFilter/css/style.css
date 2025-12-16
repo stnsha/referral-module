@@ -220,6 +220,49 @@ select.form-select.form-select-sm {
     line-height: 1.3;
 }
 
+/* Priority badges for referral list */
+.referral-tbl .bdg-priority-low {
+    background-color: #4CAF50 !important;  /* Green */
+    color: white !important;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 8px;
+    display: inline-block;
+    text-transform: capitalize;
+    font-family: 'Inter', sans-serif !important;
+    line-height: 1.3;
+}
+
+.referral-tbl .bdg-priority-medium {
+    background-color: #9C27B0 !important;  /* Purple */
+    color: white !important;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 8px;
+    display: inline-block;
+    text-transform: capitalize;
+    font-family: 'Inter', sans-serif !important;
+    line-height: 1.3;
+}
+
+.referral-tbl .bdg-priority-high {
+    background-color: #DC143C !important;  /* Crimson Red */
+    color: white !important;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 8px;
+    display: inline-block;
+    text-transform: capitalize;
+    font-family: 'Inter', sans-serif !important;
+    line-height: 1.3;
+}
+
 /* External badge for external referrals */
 .badge-external {
     background-color: #FF9800 !important;

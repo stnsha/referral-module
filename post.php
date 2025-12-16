@@ -35,6 +35,20 @@ $referralData = array(
     'priority' => isset($_POST['priority']) ? (int)$_POST['priority'] : null
 );
 
+// Validate customer_id - must be a positive integer
+if (!isset($_POST['customer_id']) || empty($_POST['customer_id']) || (int)$_POST['customer_id'] <= 0) {
+    http_response_code(400);
+    echo json_encode(array(
+        'success' => false,
+        'httpCode' => 400,
+        'response' => json_encode(array(
+            'error' => 'Invalid customer_id',
+            'message' => 'Customer ID is required and must be a valid positive integer. Please ensure you have selected or created a customer.'
+        ))
+    ));
+    exit;
+}
+
 if (isset($_POST['external_referral'])) {
     //external
     // Get patient data using searchCustomer

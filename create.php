@@ -227,14 +227,36 @@ include('../common/index_adv.php');
                         <p class="r-title">Customer Information</p>
                         <div class="d-flex mb-2">
                             <div class="me-2 flex-grow-1">
-                                <p class="r-text">I/C No.<span style="color:red;">*</span></p>
+                                <!-- <p class="r-text">NRIC/Passport<span style="color:red;">*</span></p> -->
+
+                                <!-- Radio buttons for ID type selection -->
+                                <div class="mb-2">
+                                    <label class="me-3 r-text" style="display: inline-flex; align-items: center;">
+                                        <input type="radio" name="id_type" value="nric" checked style="margin-right: 5px;"> NRIC<span
+                                            style="color:red;">*</span>
+                                    </label>
+                                    <label class="r-text" style="display: inline-flex; align-items: center;">
+                                        <input type="radio" name="id_type" value="passport" style="margin-right: 5px;"> Passport<span
+                                            style="color:red;">*</span>
+                                    </label>
+                                </div>
+
                                 <div class="d-flex gap-2">
                                     <input type="hidden" name="customer_id">
-                                    <input type="text" name="customer_ic" class="form-control form-control-sm">
+                                    <input type="text" name="customer_ic" class="form-control form-control-sm"
+                                        placeholder="Enter NRIC or Passport number">
                                     <button type="button" id="clear-customer-btn" class="btn btn-sm btn-outline-danger"
                                         title="Clear customer information">Clear</button>
                                 </div>
                                 <div class="error-message" id="error-customer-ic" style="color: red;font-size:12px;">
+                                </div>
+
+                                <!-- Create customer link (shown when not found) -->
+                                <div id="create-customer-link-container" style="display: none; margin-top: 8px;">
+                                    <a href="../customer/add.php" id="create-customer-link"
+                                        class="btn btn-sm btn-primary" target="_blank">
+                                        Create New Customer
+                                    </a>
                                 </div>
                             </div>
                             <!-- <div class="text-center align-self-end w-auto">
@@ -308,7 +330,7 @@ include('../common/index_adv.php');
                     <div class="border-bottom pb-3 mb-3">
                         <p class="r-title">Referring Indication</p>
                         <div class="mb-2">
-                            <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                            <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
                             <textarea name="referral_reason" class="form-control form-control-sm" rows="5"></textarea>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
@@ -384,17 +406,17 @@ include('../common/index_adv.php');
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-        <script>
-            const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-            const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-            const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
-        </script>
-        <script src="js/toast.js?v=<?php echo time(); ?>"></script>
-        <script src="js/errorLogger.js"></script>
-        <script src="js/create.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+    </script>
+    <script src="js/toast.js?v=<?php echo time(); ?>"></script>
+    <script src="js/errorLogger.js"></script>
+    <script src="js/create.js"></script>
 
 
 </body>

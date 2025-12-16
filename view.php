@@ -7,6 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -223,7 +224,7 @@ include('../common/index_adv.php');
                     <!-- <div class="border-bottom pb-3 mb-3">
                         <p class="r-title">Initial Referral</p>
                         <div class="mb-2">
-                            <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                            <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
                             <textarea name="referral_reason" id="referral_reason" class="form-control form-control-sm"
                                 rows="5" readonly></textarea>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
@@ -268,7 +269,7 @@ include('../common/index_adv.php');
                 <div class="col h-auto border rounded me-2 p-2 referring-indication">
                     <p class="r-title">Referring Indication</p>
                     <div class="mb-2">
-                        <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                        <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
                         <textarea name="referral_reason_refer" id="referral_reason_refer"
                             class="form-control form-control-sm" rows="5" readonly></textarea>
                         <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
@@ -311,9 +312,11 @@ include('../common/index_adv.php');
                 <div class="row align-items-start text-start py-2 px-4">
                     <div class="col h-auto border rounded me-2 p-2">
                         <div class="refer-another-container">
-                            <div class="d-flex align-items-center gap-2 py-2">
-                                <span class="r-title" style="padding: 0;">Refer Another</span>
-                                <input type="checkbox" name="refer_another" id="refer_another">
+                            <div class="py-2">
+                                <label class="r-title" style="display: inline-flex; align-items: center; padding: 0;">
+                                    Refer Another
+                                    <input type="checkbox" name="refer_another" id="refer_another" style="margin-left: 8px;">
+                                </label>
                             </div>
 
                             <div class="row mb-2 refer-another">
@@ -481,7 +484,7 @@ include('../common/index_adv.php');
                                     <p class="r-title">Referring Indication</p>
 
                                     <div class="mb-2">
-                                        <p class="r-text">Reason of Referral<span style="color:red;">*</span></p>
+                                        <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
                                         <textarea name="referral_reason" class="form-control form-control-sm"
                                             rows="5"></textarea>
                                         <div class="error-message" id="error-referral-reason"
@@ -504,6 +507,13 @@ include('../common/index_adv.php');
                                             rows="5"></textarea>
                                         <div class="error-message" id="error-medical-history"
                                             style="color: red;font-size:12px;"></div>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <p class="r-text">Priority <span style="color:red;">*</span></p>
+                                        <div class="referral-priority"></div>
+                                        <div class="error-message" id="error-priority" style="color: red;font-size:12px;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -539,12 +549,12 @@ include('../common/index_adv.php');
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
-        const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
-        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-        const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
-        const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+            const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+            const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+            const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
+            const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
+            const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
         </script>
         <script src="js/toast.js?v=<?php echo time(); ?>"></script>
         <script src="js/errorLogger.js"></script>

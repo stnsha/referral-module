@@ -176,6 +176,18 @@ $(document).ready(function () {
             // Add external badge if referral is external
             const externalBadge = item.is_external ? '<br><span class="badge-external">External</span>' : '';
 
+            // Priority mapping and defaulting
+            const priorityMap = {
+                '1': { name: 'Low', class: 'bdg-priority-low' },
+                '2': { name: 'Medium', class: 'bdg-priority-medium' },
+                '3': { name: 'High', class: 'bdg-priority-high' }
+            };
+
+            // Default to Medium (2) if priority is null/empty
+            const priorityValue = item.priority ? item.priority.toString() : '2';
+            const priorityInfo = priorityMap[priorityValue] || priorityMap['2'];
+            const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name} priority</span>`;
+
             // Generate PDF button for all referrals (both internal and external)
             const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${item.id}" data-ref-id="${item.ref_id}" data-timestamp="${item.ori_created_at}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Form"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
 
@@ -185,7 +197,7 @@ $(document).ready(function () {
             rows += `
                 <tr>
                     <td style="font-size:14px;width: 10%;text-align:start;">${item.ref_id || ''}</td>
-                    <td style="font-size:14px;width: 35%;text-align:start;">${item.reason || ''}</td>
+                    <td style="font-size:14px;width: 35%;text-align:start;">${item.reason || ''} ${priorityBadge}</td>
                     <td style="font-size:14px;width: 13%;text-align:start;">
                         <span>${fromBusinessUnit}</span>
                     </td>

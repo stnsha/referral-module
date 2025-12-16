@@ -107,153 +107,51 @@ select.form-select.form-select-sm {
     color: black;
 }
 
-/* PRIMARY ACTION BUTTONS - Dark Navy (Highest Priority) */
-.btn-new-referral,
-.form-btn-submit,
-input[type="submit"].btn-new-referral {
-    text-decoration: none;
-    padding: 8px 20px;
-    background-color: #173F5F !important;
-    color: #fff !important;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    text-transform: capitalize;
-    font-family: 'Inter', sans-serif;
-    display: inline-block;
-    line-height: 1.5;
-    box-shadow: 0 2px 4px rgba(23, 63, 95, 0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-new-referral:hover,
-input[type="submit"].btn-new-referral:hover {
-    background-color: #0f2d44 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(23, 63, 95, 0.35);
-}
-
-.btn-new-referral:active,
-input[type="submit"].btn-new-referral:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(23, 63, 95, 0.2);
-}
-
-/* SECONDARY ACTION BUTTONS - Medium Blue */
+/* Primary Button - Generate Report (Highest Priority) */
 .btn-referral,
-.submitButton,
-.btn.btn-primary {
+.submitButton {
     text-decoration: none;
-    padding: 8px 20px;
+    padding: 6px 12px;
     background-color: #20639b;
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
     font-weight: 500;
     font-size: 14px;
     text-transform: capitalize;
     font-family: 'Inter', sans-serif;
     display: inline-block;
-    line-height: 1.5;
-        box-shadow: 0 2px 4px rgba(32, 99, 155, 0.2);
+    line-height: 1.3;
+    vertical-align: top;
+    margin: 0;
     transition: all 0.3s ease;
 }
 
 .btn-referral:hover,
 .submitButton:hover,
-.btn.btn-primary:hover {
-    background-color: #1a5280;
+.btn-new-referral:hover {
     color: #fff;
-    transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(32, 99, 155, 0.35);
-    }
-    
-    .btn-referral:active,
-    .submitButton:active,
-    .btn.btn-primary:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 4px rgba(32, 99, 155, 0.2);
-    }
-    
-    /* OUTLINE BUTTONS - Blue Outline */
-    .btn.btn-outline-primary,
-    .btn-outline-primary {
-        color: #20639b;
-        border: 2px solid #20639b;
-        background-color: transparent;
-        padding: 6px 16px;
-        border-radius: 6px;
-        font-weight: 500;
-        font-size: 14px;
-        font-family: 'Inter', sans-serif;
-        transition: all 0.3s ease;
-        box-shadow: none;
-    }
-    
-    .btn.btn-outline-primary:hover,
-    .btn-outline-primary:hover {
-        background-color: #20639b;
-        color: #fff;
-        border-color: #20639b;
+    background-color: #0a4788;
     transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(32, 99, 155, 0.25);
-    }
-    
-    .btn.btn-outline-primary:active,
-    .btn-outline-primary:active {
-        transform: translateY(0);
-    }
-    
-    .btn.btn-outline-primary:disabled,
-    .btn-outline-primary:disabled {
-        color: #a8c5e0;
-        border-color: #a8c5e0;
-        background-color: transparent;
-        cursor: not-allowed;
-        opacity: 0.6;
-        transform: none;
-        box-shadow: none;
+    box-shadow: 0 4px 8px rgba(19, 92, 170, 0.3);
 }
 
-/* CANCEL/SECONDARY OUTLINE BUTTONS - Gray */
-.btn.btn-outline-secondary,
-.btn-outline-secondary {
-    color: #6c757d;
-    border: 2px solid #6c757d;
-    background-color: transparent;
-    padding: 6px 16px;
-    border-radius: 6px;
+.btn-new-referral {
+    text-decoration: none;
+    padding: 6px 12px;
+    background-color: #173F5F;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
     font-weight: 500;
     font-size: 14px;
+    text-transform: capitalize;
     font-family: 'Inter', sans-serif;
+    display: inline-block;
+    line-height: 1.3;
     transition: all 0.3s ease;
-    box-shadow: none;
-    }
-    
-    .btn.btn-outline-secondary:hover,
-    .btn-outline-secondary:hover {
-        background-color: #6c757d;
-        color: #fff;
-        border-color: #6c757d;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(108, 117, 125, 0.25);
-    }
-    
-    .btn.btn-outline-secondary:active,
-    .btn-outline-secondary:active {
-        transform: translateY(0);
-    }
-    
-    /* SMALL BUTTONS */
-    .btn-sm.btn-outline-primary,
-    .btn-sm.btn-outline-secondary,
-    .btn-sm.btn-primary {
-        padding: 4px 12px;
-        font-size: 13px;
 }
 
 /* Icon Buttons */
@@ -352,23 +250,9 @@ input[type="submit"].btn-new-referral:active {
     box-shadow: 0 4px 8px rgba(123, 163, 211, 0.3);
 }
 
-/* Readonly fields - Minimal grayscale */
 .referral-show input[readonly],
 .referral-show textarea[readonly] {
-    background-color: #fafbfc;
-        border: 1px solid #e5e7eb;
-        color: #6b7280;
-        font-weight: 400;
-        cursor: default;
-        transition: all 0.2s ease;
-    }
-    
-    .referral-show input[readonly]:focus,
-    .referral-show textarea[readonly]:focus {
-        background-color: #f3f4f6;
-        border-color: #9ca3af;
-        box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.05);
-        outline: none;
+    background-color: rgb(238, 236, 236);
 }
 
 .referral-show input[type="radio"][disabled],
@@ -377,72 +261,6 @@ input[type="submit"].btn-new-referral:active {
     pointer-events: none;
 }
 
-/* Enhanced section dividers - Neutral */
-.referral-show .border-bottom {
-    border-bottom: 2px solid #e5e7eb !important;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-}
-
-/* Title styling - Keep brand color for text */
-.referral-show .r-title {
-    color: #173F5F;
-    font-weight: 600;
-    font-size: 15px;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-}
-
-/* Editable input fields - Neutral borders */
-.referral-show input:not([readonly]):not([type="radio"]):not([type="checkbox"]),
-.referral-show textarea:not([readonly]),
-.referral-show select {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    background-color: #ffffff;
-}
-
-/* Focus states use brand blue */
-.referral-show input:not([readonly]):focus,
-.referral-show textarea:not([readonly]):focus,
-.referral-show select:focus {
-    border-color: #20639b;
-    box-shadow: 0 0 0 0.2rem rgba(32, 99, 155, 0.15);
-    outline: none;
-}
-
-/* Checkbox styling */
-.referral-show input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #20639b;
-}
-
-.referral-show input[type="checkbox"]:focus {
-    outline: 2px solid rgba(32, 99, 155, 0.3);
-    outline-offset: 2px;
-}
-
-/* View Page Container Enhancements - Neutral Shadows */
-.referral-show .col.h-auto.border.rounded {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-    border: 1px solid #e5e7eb !important;
-    border-radius: 8px !important;
-    transition: box-shadow 0.3s ease;
-}
-
-.referral-show .col.h-auto.border.rounded:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-
-/* Main container wrapper enhancement */
-.text-center.bg-white.rounded.p-2 {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%) !important;
-}
 .bg-open {
     background-color: green;
     color: white;
@@ -450,47 +268,31 @@ input[type="submit"].btn-new-referral:active {
     border-radius: 4px;
 }
 
-/* Minimal Accordion */
 .referral-accordion {
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-        color: #1f2937;
+    background-color: #eee;
+    color: #444;
     cursor: pointer;
-    padding: 12px 12px 12px 48px;
+    padding: 10px;
     width: 100%;
-    border: 1px solid #e5e7eb;
+    border: none;
     text-align: left;
     outline: none;
     font-size: 13px;
-    font-weight: 500;
-        transition: all 0.3s ease;
+    transition: 0.4s;
     position: relative;
     display: flex;
     align-items: center;
-    border-radius: 8px;
-        margin-bottom: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    padding-left: 44px;
+    border-radius: 15px;
 }
 
-.referral-accordion:hover {
-    background: linear-gradient(135deg, #fafbfc 0%, #f3f4f6 100%);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-}
-
-.referral-accordion.active {
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-    border-color: #9ca3af;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Clock icon - neutral gray */
 .referral-accordion::before {
     content: "";
-    background-image: url('../img/clock.png');
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>');
     background-repeat: no-repeat;
-    background-size: 22px 22px;
-        width: 22px;
-        height: 22px;
+    background-size: 20px 20px;
+    width: 20px;
+    height: 20px;
     position: absolute;
     left: 15px;
     top: 50%;
@@ -520,7 +322,7 @@ input[type="submit"].btn-new-referral:active {
 /* Referral accordion action buttons container */
 .referral-actions {
     position: absolute;
-    right: 6px;
+    right: 15px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
@@ -532,15 +334,14 @@ input[type="submit"].btn-new-referral:active {
 /* Explicit arrow element (replaces ::after) */
 .accordion-arrow {
     font-size: 13px;
-    color: #173f5f;
+    color: #444;
     transition: transform 0.3s ease;
     display: inline-block;
     line-height: 1;
 }
 
 .accordion-arrow::before {
-    content: '\25BC';
-    /* ▼ */
+    content: '\25BC'; /* ▼ */
 }
 
 .referral-accordion.active .accordion-arrow {
@@ -551,8 +352,7 @@ input[type="submit"].btn-new-referral:active {
 .referral-accordion-content {
     position: relative;
     flex-grow: 1;
-    padding-right: 76px;
-    /* Space for PDF button + arrow + gaps */
+    padding-right: 85px; /* Space for PDF button + arrow + gaps */
 }
 
 /* Download button specific adjustments */
@@ -563,6 +363,7 @@ input[type="submit"].btn-new-referral:active {
 .download-history-pdf-btn:hover {
     z-index: 3;
 }
+
 .referral-accordion.disabled {
     background-color: #eee;
     cursor: not-allowed;
@@ -570,16 +371,9 @@ input[type="submit"].btn-new-referral:active {
 }
 
 
-/* Panel styling - clean white with neutral borders */
 .referral-panel {
-    padding: 0;
-        background-color: #ffffff;
-        border-left: 1px solid #e5e7eb;
-        border-right: 1px solid #e5e7eb;
-        border-bottom: 1px solid #e5e7eb;
-        border-radius: 0 0 8px 8px;
-        margin-top: -8px;
-        margin-bottom: 0;
+    padding: 0 18px;
+    background-color: white;
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.3s ease-out;
@@ -587,10 +381,6 @@ input[type="submit"].btn-new-referral:active {
     flex-direction: column;
 }
 
-.referral-accordion.active+.referral-panel {
-    padding: 16px 20px;
-    margin-bottom: 8px;
-}
 .list-style-type-disc {
     list-style-type: disc !important;
     padding-left: 1.5em !important;
@@ -750,52 +540,6 @@ input[type="submit"].btn-new-referral:active {
     text-transform: capitalize;
     font-family: 'Inter', sans-serif !important;
     display: inline-block;
-    line-height: 1.3;
-}
-
-/* Priority badges for referral list */
-.referral-tbl .bdg-priority-low,
-.bdg-priority-low {
-    background-color: #4CAF50 !important;  /* Green */
-    color: white !important;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-left: 8px;
-    display: inline-block;
-    text-transform: capitalize;
-    font-family: 'Inter', sans-serif !important;
-    line-height: 1.3;
-}
-
-.referral-tbl .bdg-priority-medium,
-.bdg-priority-medium {
-    background-color: #9C27B0 !important;  /* Purple */
-    color: white !important;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-left: 8px;
-    display: inline-block;
-    text-transform: capitalize;
-    font-family: 'Inter', sans-serif !important;
-    line-height: 1.3;
-}
-
-.referral-tbl .bdg-priority-high,
-.bdg-priority-high {
-    background-color: #DC143C !important;  /* Crimson Red */
-    color: white !important;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-left: 8px;
-    display: inline-block;
-    text-transform: capitalize;
-    font-family: 'Inter', sans-serif !important;
     line-height: 1.3;
 }
 

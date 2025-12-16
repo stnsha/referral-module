@@ -567,8 +567,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Add external badge if referral is external
                 const externalBadge = row.is_external ? '<br><span class="badge-external">External</span>' : '';
 
+                // Priority mapping and defaulting
+                const priorityMap = {
+                    '1': { name: 'Low', class: 'bdg-priority-low' },
+                    '2': { name: 'Medium', class: 'bdg-priority-medium' },
+                    '3': { name: 'High', class: 'bdg-priority-high' }
+                };
+
+                // Default to Medium (2) if priority is null/empty
+                const priorityValue = row.priority || '2';
+                const priorityInfo = priorityMap[priorityValue] || priorityMap['2'];
+                const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name} priority</span>`;
+
                 // Generate PDF button for all referrals (both internal and external)
-                const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Form"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
+                const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}" data-from-sequence="${row.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Form"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
 
                 // Calculate relative time using moment.js
                 const relativeTime = row.ori_created_at ? moment(row.ori_created_at).fromNow() : 'N/A';
@@ -576,7 +588,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 tr.innerHTML = `
                     <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
                     <td style="font-size:14px;width: 35%;text-align:start;">
-                        ${row.reason}
+                        ${row.reason} ${priorityBadge}
                     </td>
                     <td style="font-size:14px;width: 13%;text-align:start;">
                         <span>${row.from_business_unit || 'N/A'}</span>
@@ -676,6 +688,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const referralId = $(this).data('id');
             const refId = $(this).data('ref-id');
             const timestamp = $(this).data('timestamp');
+            const fromSequence = $(this).data('from-sequence');
 
             // Generate filename from ref_id and timestamp
             // Remove # from ref_id and format timestamp
@@ -701,7 +714,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 type: 'POST',
                 data: JSON.stringify({
                     action: 'download-external-form',
-                    referral_id: referralId
+                    referral_id: referralId,
+                    sequence: fromSequence || null
                 }),
                 contentType: 'application/json',
                 xhrFields: {

@@ -1,4 +1,6 @@
 <?php
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
 // Only set JSON header if this file is accessed directly (not included)
 if (!defined('API_JWT_INCLUDED')) {
     header('Content-Type: application/json');
@@ -40,10 +42,69 @@ if (isset($_SESSION["myusername"])) {
 }
 
 /**
- * Get API host based on environment (auto-detect)
- * @return string API host URL
+ * Log JWT API operations for monitoring and debugging
+ * @param string $operation Operation name (e.g., 'getJWTToken', 'searchReferral')
+ * @param string $message Log message describing the event
+ * @param mixed $data Optional context data (will be JSON encoded if array)
+ * @param string $level Log level: INFO, WARNING, ERROR
+ * @return bool Success status of log write operation
  */
-function getApiHost()
+function logJWTOperation($operation, $message, $data = null, $level = 'INFO')
+{
+    $log_dir = __DIR__ . '/logs';
+    $log_file = $log_dir . '/jwt_operations.log';
+
+    // Create logs directory if it doesn't exist
+    if (!is_dir($log_dir)) {
+        if (!@mkdir($log_dir, 0755, true)) {
+            @mkdir($log_dir, 0755);
+        }
+    }
+
+    // Verify logs directory exists
+    if (!is_dir($log_dir)) {
+        return false;
+    }
+
+    // Ensure directory is writable
+    if (!is_writable($log_dir)) {
+        @chmod($log_dir, 0755);
+    }
+
+    // Build log message
+    $timestamp = date('Y-m-d H:i:s');
+    $env = getEnvironment();
+    $log_message = "[$timestamp] [$env.$level] [$operation] $message";
+
+    // Append data if provided
+    if ($data !== null) {
+        if (is_array($data)) {
+            $log_message .= ' | ' . json_encode($data);
+        } else {
+            $log_message .= ' | ' . $data;
+        }
+    }
+
+    $log_message .= "\n";
+
+    // Write to log file with fallback
+    $result = @file_put_contents($log_file, $log_message, FILE_APPEND);
+
+    // If write failed and file doesn't exist, create it
+    if ($result === false && !file_exists($log_file)) {
+        @touch($log_file);
+        @chmod($log_file, 0644);
+        $result = @file_put_contents($log_file, $log_message, FILE_APPEND);
+    }
+
+    return $result !== false;
+}
+
+/**
+ * Get current environment (local or production)
+ * @return string Environment name ('local' or 'production')
+ */
+function getEnvironment()
 {
     // Check if running on localhost (PHP 5.3 compatible)
     $serverName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
@@ -54,7 +115,18 @@ function getApiHost()
         strpos($httpHost, 'localhost') !== false ||
         strpos($httpHost, '127.0.0.1') !== false;
 
-    if ($isLocal) {
+    return $isLocal ? 'local' : 'production';
+}
+
+/**
+ * Get API host based on environment (auto-detect)
+ * @return string API host URL
+ */
+function getApiHost()
+{
+    $env = getEnvironment();
+
+    if ($env === 'local') {
         return 'http://127.0.0.1:8000/api/';
     } else {
         return 'http://mytotalhealth.com.my/referral-api/api/';
@@ -72,15 +144,34 @@ function getStaffAuthData($staff_id)
 
     $staff_id = mysqli_real_escape_string($conn, $staff_id);
 
+    logJWTOperation(
+        'getStaffAuthData',
+        'Retrieving staff authentication data',
+        array('staff_id' => $staff_id),
+        'INFO'
+    );
+
     $query = "SELECT id, department, status_semasa, outlet, referral FROM staff WHERE id = $staff_id";
     $result = mysqli_query($conn, $query);
 
     if (!$result) {
+        logJWTOperation(
+            'getStaffAuthData',
+            'Database query failed',
+            array('staff_id' => $staff_id, 'error' => mysqli_error($conn)),
+            'ERROR'
+        );
         return null;
     }
 
     $row = mysqli_fetch_assoc($result);
     if (!$row) {
+        logJWTOperation(
+            'getStaffAuthData',
+            'Staff not found',
+            array('staff_id' => $staff_id),
+            'WARNING'
+        );
         return null;
     }
 
@@ -93,14 +184,24 @@ function getStaffAuthData($staff_id)
         }
     }
 
-    // Return in the format expected by JWT API
-    return array(
+    // Prepare return data
+    $returnData = array(
         'staff_id' => (int)$row['id'],
         'staff_department_id' => (int)$row['department'],
         'status_semasa' => $row['status_semasa'],
         'outlet' => $outlet,
         'referral' => isset($row['referral']) ? (int)$row['referral'] : 2
     );
+
+    // logJWTOperation(
+    //     'getStaffAuthData',
+    //     'Staff data retrieved successfully',
+    //     $returnData,
+    //     'INFO'
+    // );
+
+    // Return in the format expected by JWT API
+    return $returnData;
 }
 
 /**
@@ -114,6 +215,13 @@ function getStaffAuthData($staff_id)
  */
 function getJWTToken($staff_id, $staff_department_id, $status_semasa, $outlet, $referral)
 {
+    logJWTOperation(
+        'getJWTToken',
+        'Requesting new JWT token',
+        array('staff_id' => $staff_id),
+        'INFO'
+    );
+
     $host = getApiHost();
     $url = $host . 'auth';
 
@@ -140,15 +248,47 @@ function getJWTToken($staff_id, $staff_department_id, $status_semasa, $outlet, $
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
+    // Log the API request
+    logJWTOperation(
+        'getJWTToken',
+        'Calling auth API',
+        array(
+            'endpoint' => $url,
+            'method' => 'POST',
+            'staff_id' => $staff_id
+        ),
+        'INFO'
+    );
+
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
     curl_close($ch);
 
     if ($response === false || $httpCode !== 200) {
+        $error_data = json_decode($response, true);
+        logJWTOperation(
+            'getJWTToken',
+            'Failed to obtain JWT token',
+            array(
+                'httpCode' => $httpCode,
+                'staff_id' => $staff_id,
+                'error' => $error ? $error : (isset($error_data['message']) ? $error_data['message'] : 'Unknown error'),
+                'response' => $response
+            ),
+            'ERROR'
+        );
+
         error_log("JWT Auth failed: HTTP $httpCode, Error: $error, Response: $response");
         return null;
     }
+
+    logJWTOperation(
+        'getJWTToken',
+        'JWT token obtained successfully',
+        array('httpCode' => $httpCode, 'staff_id' => $staff_id),
+        'INFO'
+    );
 
     $decoded = json_decode($response, true);
     return isset($decoded['token']) ? $decoded['token'] : null;
@@ -166,7 +306,20 @@ function getAuthToken($staff_id)
         isset($_SESSION['jwt_token']) && isset($_SESSION['jwt_expires']) &&
         time() < $_SESSION['jwt_expires']
     ) {
+        logJWTOperation(
+            'getAuthToken',
+            'Using cached token',
+            array('staff_id' => $staff_id, 'expiry' => date('Y-m-d H:i:s', $_SESSION['jwt_expires'])),
+            'INFO'
+        );
         return $_SESSION['jwt_token'];
+    } else if (isset($_SESSION['jwt_expires'])) {
+        logJWTOperation(
+            'getAuthToken',
+            'Cached token expired, refreshing',
+            array('staff_id' => $staff_id, 'expired_at' => date('Y-m-d H:i:s', $_SESSION['jwt_expires'])),
+            'WARNING'
+        );
     }
 
     // Get staff data for authentication
@@ -191,6 +344,20 @@ function getAuthToken($staff_id)
         $_SESSION['jwt_token'] = $token;
         $_SESSION['jwt_expires'] = time() + 3600; // 1 hour
         $_SESSION['jwt_staff_id'] = $staff_id;
+
+        logJWTOperation(
+            'getAuthToken',
+            'New token cached',
+            array('staff_id' => $staff_id, 'expiry' => date('Y-m-d H:i:s', $_SESSION['jwt_expires'])),
+            'INFO'
+        );
+    } else {
+        logJWTOperation(
+            'getAuthToken',
+            'Failed to get auth token',
+            array('staff_id' => $staff_id),
+            'ERROR'
+        );
     }
 
     return $token;
@@ -206,12 +373,31 @@ function getAuthToken($staff_id)
  */
 function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id = null)
 {
+    logJWTOperation(
+        'getApiDataWithJWT',
+        'Starting API call',
+        array(
+            'endpoint' => $endpoint,
+            'method' => $method,
+            'staff_id' => $staff_id,
+            'has_data' => $data !== null
+        ),
+        'INFO'
+    );
+
     $host = getApiHost();
     $url = $host . $endpoint;
 
     // Get JWT token
     $token = getAuthToken($staff_id);
     if (!$token) {
+        logJWTOperation(
+            'getApiDataWithJWT',
+            'Authentication failed - no token',
+            array('endpoint' => $endpoint, 'staff_id' => $staff_id),
+            'ERROR'
+        );
+
         return array(
             'success' => false,
             'error' => 'Authentication failed - could not get JWT token',
@@ -254,6 +440,18 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
     }
 
+    // Log the outgoing request
+    logJWTOperation(
+        'getApiDataWithJWT',
+        'Sending request to API',
+        array(
+            'url' => $url,
+            'method' => $method,
+            'data' => $data
+        ),
+        'INFO'
+    );
+
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
@@ -291,6 +489,17 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
 
     // Success codes: 200, 201, 204
     if ($httpCode === 200 || $httpCode === 201 || $httpCode === 204) {
+        logJWTOperation(
+            'getApiDataWithJWT',
+            'API call successful',
+            array(
+                'endpoint' => $endpoint,
+                'httpCode' => $httpCode,
+                'response_length' => strlen($response)
+            ),
+            'INFO'
+        );
+
         return array(
             'success' => true,
             'response' => $response,
@@ -302,6 +511,18 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
     // Handle error codes according to API documentation
     $decodedError = json_decode($response, true);
     $errorMessage = isset($decodedError['message']) ? $decodedError['message'] : 'API Request Failed';
+
+    logJWTOperation(
+        'getApiDataWithJWT',
+        'API call failed',
+        array(
+            'endpoint' => $endpoint,
+            'httpCode' => $httpCode,
+            'message' => $errorMessage,
+            'response' => $response
+        ),
+        'ERROR'
+    );
 
     return array(
         'success' => false,
@@ -533,9 +754,15 @@ function getReferral($referral_id, $staff_id, $view_only = null)
     return isset($decoded) ? $decoded : array();
 }
 
-function getReferralSuccessful($referral_id, $staff_id)
+function getReferralSuccessful($referral_id, $staff_id, $sequence = null)
 {
     $endpoint = 'referral/successful/' . $referral_id;
+
+    // Add sequence parameter if provided
+    if ($sequence !== null) {
+        $endpoint .= '?sequence=' . $sequence;
+    }
+
     $result = getApiDataWithJWT($endpoint, null, 'GET', $staff_id);
 
     if (!$result['success']) {
@@ -658,6 +885,13 @@ function getSummaryReport($staff_id)
  */
 function searchReferralByCustomerId($customer_id, $staff_id, $ref_id = null)
 {
+    logJWTOperation(
+        'searchReferralByCustomerId',
+        'Starting referral search',
+        array('customer_id' => $customer_id, 'ref_id' => $ref_id),
+        'INFO'
+    );
+
     // Build data array based on which parameter is provided
     if ($ref_id !== null) {
         $data = array(
@@ -671,6 +905,13 @@ function searchReferralByCustomerId($customer_id, $staff_id, $ref_id = null)
         );
     }
 
+    logJWTOperation(
+        'searchReferralByCustomerId',
+        'Calling referral search API',
+        array('endpoint' => 'referral/search', 'data' => $data),
+        'INFO'
+    );
+
     $result = getApiDataWithJWT('referral/search', $data, 'POST', $staff_id);
     $httpCode = $result['httpCode'];
     $decoded = json_decode($result['response'], true);
@@ -678,36 +919,84 @@ function searchReferralByCustomerId($customer_id, $staff_id, $ref_id = null)
     // Handle different HTTP status codes according to API documentation
     switch ($httpCode) {
         case 200:
+            $data_count = isset($decoded['data']) ? count($decoded['data']) : 0;
+            logJWTOperation(
+                'searchReferralByCustomerId',
+                'Search successful',
+                array('httpCode' => $httpCode, 'result_count' => $data_count),
+                'INFO'
+            );
+
             return array(
                 'success' => true,
                 'data' => isset($decoded['data']) ? $decoded['data'] : array()
             );
+
         case 401:
+            logJWTOperation(
+                'searchReferralByCustomerId',
+                'Unauthorized',
+                array('httpCode' => $httpCode, 'message' => isset($decoded['message']) ? $decoded['message'] : 'Unauthorized'),
+                'ERROR'
+            );
+
             return array(
                 'success' => false,
                 'message' => isset($decoded['message']) ? $decoded['message'] : 'Unauthorized',
                 'data' => array()
             );
+
         case 404:
+            logJWTOperation(
+                'searchReferralByCustomerId',
+                'Customer not found',
+                array('httpCode' => $httpCode, 'customer_id' => $customer_id, 'ref_id' => $ref_id),
+                'WARNING'
+            );
+
             return array(
                 'success' => false,
                 'message' => isset($decoded['message']) ? $decoded['message'] : 'Customer not found',
                 'data' => array()
             );
+
         case 422:
+            logJWTOperation(
+                'searchReferralByCustomerId',
+                'Validation error',
+                array('httpCode' => $httpCode, 'message' => isset($decoded['message']) ? $decoded['message'] : 'Validation error'),
+                'ERROR'
+            );
+
             return array(
                 'success' => false,
                 'message' => isset($decoded['message']) ? $decoded['message'] : 'Validation error',
                 'data' => array()
             );
+
         case 500:
+            logJWTOperation(
+                'searchReferralByCustomerId',
+                'Internal server error',
+                array('httpCode' => $httpCode, 'error' => isset($decoded['error']) ? $decoded['error'] : 'Unknown error'),
+                'ERROR'
+            );
+
             return array(
                 'success' => false,
                 'message' => isset($decoded['message']) ? $decoded['message'] : 'Internal server error',
                 'error' => isset($decoded['error']) ? $decoded['error'] : 'Unknown error',
                 'data' => array()
             );
+
         default:
+            logJWTOperation(
+                'searchReferralByCustomerId',
+                'Unknown HTTP code',
+                array('httpCode' => $httpCode),
+                'ERROR'
+            );
+
             return array(
                 'success' => false,
                 'message' => 'API request failed with HTTP code: ' . $httpCode,
@@ -1124,6 +1413,9 @@ function downloadAttachment($attachment_id, $staff_id)
         exit;
     }
 
+    // Clear any previously set Content-Type headers (especially the global JSON header)
+    header_remove('Content-Type');
+
     // Set headers for file download
     header('Content-Type: ' . $contentType);
     header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -1138,9 +1430,13 @@ function downloadAttachment($attachment_id, $staff_id)
     exit;
 }
 
-function downloadExternalForm($referral_id, $staff_id)
+function downloadExternalForm($referral_id, $staff_id, $sequence = null)
 {
-    $result = getApiDataWithJWT('referral/download/' . $referral_id, null, 'GET', $staff_id);
+    $endpoint = 'referral/download/' . $referral_id;
+    if ($sequence !== null) {
+        $endpoint .= '?sequence=' . $sequence;
+    }
+    $result = getApiDataWithJWT($endpoint, null, 'GET', $staff_id);
 
     if (!$result['success']) {
         header('Content-Type: application/json');
@@ -1176,6 +1472,9 @@ function downloadExternalForm($referral_id, $staff_id)
         ));
         exit;
     }
+
+    // Clear any previously set Content-Type headers (especially the global JSON header)
+    header_remove('Content-Type');
 
     // Set headers for file download
     header('Content-Type: ' . $contentType);
@@ -1306,8 +1605,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             case 'download-external-form':
                 $referral_id = isset($jsonData['referral_id']) ? $jsonData['referral_id'] : null;
+                $sequence = isset($jsonData['sequence']) ? $jsonData['sequence'] : null;
                 if ($referral_id) {
-                    downloadExternalForm($referral_id, $staff_id);
+                    downloadExternalForm($referral_id, $staff_id, $sequence);
                     return;
                 } else {
                     $response = array('success' => false, 'message' => 'Missing referral_id');
@@ -1354,10 +1654,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $customer_id = isset($jsonData['customer_id']) ? $jsonData['customer_id'] : null;
                 $ref_id = isset($jsonData['ref_id']) ? $jsonData['ref_id'] : null;
 
-                if ($customer_id !== null || $ref_id !== null) {
+                    logJWTOperation(
+                        'search-referral',
+                        'Searching referrals',
+                        array('customer_id' => $customer_id, 'ref_id' => $ref_id, 'staff_id' => $staff_id),
+                        'INFO'
+                    );
+
+                    if ($customer_id !== null || $ref_id !== null) {
                     $response = searchReferralByCustomerId($customer_id, $staff_id, $ref_id);
+
+                        logJWTOperation(
+                            'search-referral',
+                            'Search completed',
+                            array(
+                                'success' => $response['success'],
+                                'result_count' => isset($response['data']) ? count($response['data']) : 0
+                            ),
+                            $response['success'] ? 'INFO' : 'WARNING'
+                        );
                 } else {
-                    $response = array(
+                        logJWTOperation(
+                            'search-referral',
+                            'Missing required parameters',
+                            array('customer_id' => $customer_id, 'ref_id' => $ref_id),
+                            'ERROR'
+                        );
+
+                        $response = array(
                         'success' => false,
                         'message' => 'Customer ID or Referral ID is required',
                         'data' => array()

@@ -1,3 +1,61 @@
+// Global variable to store PDF base64 data from API
+let globalEncodedBase = null;
+// Global variable to store original status value for validation
+let originalStatus = null;
+// Global variable to store referral details for sequence tracking
+let referralDetails = null;
+// Global variable to store status ID to label mapping for confirmation
+let statusMapping = {};
+
+// Show loading overlay during form submission
+function showLoadingOverlay() {
+    // Check if overlay already exists, if not create it
+    if ($('#loading-overlay').length === 0) {
+        const loadingHTML = `
+            <div id="loading-overlay" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            ">
+                <div style="
+                    background-color: white;
+                    padding: 30px 40px;
+                    border-radius: 10px;
+                    text-align: center;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                ">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 18px; font-weight: 500; color: #333;">
+                        Submitting referral...
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                        Please wait, do not close this page
+                    </div>
+                </div>
+            </div>
+        `;
+        $('body').append(loadingHTML);
+    } else {
+        $('#loading-overlay').show();
+    }
+}
+
+// Hide loading overlay
+function hideLoadingOverlay() {
+    $('#loading-overlay').fadeOut(300, function() {
+        $(this).remove();
+    });
+}
+
 $(document).ready(function () {
     console.log(businessUnitId);
     localStorage.clear();
@@ -45,8 +103,11 @@ $(document).ready(function () {
             var data = response.data;
             console.log(data);
 
-            // Referral Details
-            let referralDetails = data.referralDetails;
+            // Store encoded_base globally for PDF downloads
+            globalEncodedBase = data.encoded_base || null;
+
+            // Referral Details - assign to global variable for access in validateForm
+            referralDetails = data.referralDetails;
 
             var assigneeFrom = $('#assignee_from');
             var business_unit_from = $('#business_unit_from');
@@ -323,6 +384,19 @@ $(document).ready(function () {
                             accordionQueue.forEach((accordionData, sortedIndex) => {
                                 const { rd, staff, businessUnit, outlet, contact } = accordionData;
 
+                                // Generate download button HTML
+                                const downloadButtonHtml = `
+                                    <a href="#" class="btn-icon btn-icon-download download-history-pdf-btn"
+                                       data-id="${referral_id}"
+                                       data-sequence="${rd.sequence}"
+                                       data-timestamp="${rd.created_at}"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       data-bs-title="Download PDF">
+                                        <i class="bi bi-file-earmark-arrow-down"></i>
+                                    </a>
+                                `;
+
                                 const accordionHtml = `
                                     <div class="referral-history" data-sequence="${rd.sequence}">
                                         <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
@@ -331,6 +405,10 @@ $(document).ready(function () {
                                                     <span class="referral-title">
                                                         ${businessUnit}, ${staff}, ${outlet}</span>
                                                     <span class="referral-date">${rd.created_at}</span>
+                                                </div>
+                                                <div class="referral-actions">
+                                                    ${downloadButtonHtml}
+                                                    <span class="accordion-arrow"></span>
                                                 </div>
                                             </div>
                                         </button>
@@ -671,7 +749,7 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
             <div class="referral-info-section border-bottom pb-3 mb-3">
                 <p class="r-title">Referral Information</p>
                 <div class="mb-2">
-                    <p class="r-text">Reason of Referral</p>
+                    <p class="r-text">Purpose of Referral</p>
                     <textarea class="form-control form-control-sm" rows="3" readonly>${rd.createForm.referral_reason || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
@@ -704,7 +782,21 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
 
     const referralPic = accordion.find('.referral-pic');
     var whatsapp = 'https://api.whatsapp.com/send?phone=' + contact;
+
+    // Priority mapping and defaulting
+    const priorityMap = {
+        '1': { name: 'Low', class: 'bdg-priority-low' },
+        '2': { name: 'Medium', class: 'bdg-priority-medium' },
+        '3': { name: 'High', class: 'bdg-priority-high' }
+    };
+
+    // Default to Medium (2) if priority is null/empty
+    const priorityValue = rd.priority ? rd.priority.toString() : '2';
+    const priorityInfo = priorityMap[priorityValue] || priorityMap['2'];
+    const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name} priority</span>`;
+
     referralPic.html(`
+        ${priorityBadge}<br><br>
         <span class="r-title">Submitted by</span><br>
         <span class="r-text">Name: ${staff} </span><br>
         <span class="r-text">Contact: ${contact} </span><br>
@@ -1016,8 +1108,16 @@ function loadStatusOptions(selectedStatus, shouldDisableRadios = false, statusNo
                 // Clear existing options
                 statusContainer.innerHTML = '';
 
+                // Store the original status value on first load for validation
+                if (originalStatus === null && selectedStatus) {
+                    originalStatus = String(selectedStatus);
+                }
+
                 // Add status options from object format {"1": "Open", "2": "In Progress", etc.}
                 Object.keys(response.data).forEach(function (key) {
+                    // Store mapping for confirmation dialog
+                    statusMapping[key] = response.data[key];
+
                     const statusDiv = document.createElement('div');
                     statusDiv.className = 'form-check';
 
@@ -1065,6 +1165,18 @@ function loadStatusOptions(selectedStatus, shouldDisableRadios = false, statusNo
                         <label class="form-check-label r-text" for="statusNotPresent">Not Present</label>
                     </div>
                 `;
+                // Store the original status value on first load for validation
+                if (originalStatus === null && selectedStatus) {
+                    originalStatus = String(selectedStatus);
+                }
+                // Set fallback mapping for confirmation dialog
+                statusMapping = {
+                    '1': 'Open',
+                    '2': 'In Progress',
+                    '3': 'Referred',
+                    '4': 'Closed',
+                    '5': 'Not Present'
+                };
                 // Add status_note textarea after fallback options
                 addStatusNoteField(statusContainer, selectedStatus, statusNote);
                 // Add event listeners for status change
@@ -1074,8 +1186,49 @@ function loadStatusOptions(selectedStatus, shouldDisableRadios = false, statusNo
     });
 }
 
+// Load referral priorities from API
+function loadReferralPriorities() {
+    $.ajax({
+        url: 'api-jwt.php',
+        type: 'POST',
+        data: { action: 'referral-priority' },
+        success: function (response) {
+            if (response && response.data) {
+                const priorityContainer = $('.referral-priority');
+
+                // Clear existing priority options
+                priorityContainer.empty();
+
+                // Add new priority options from API
+                $.each(response.data, function (id, name) {
+                    const isChecked = id === '2' ? 'checked' : ''; // Default to Medium priority
+                    const priorityOption = `
+                        <div class="form-check">
+                            <input class="form-check-input border" type="radio" name="priority" value="${id}" ${isChecked}>
+                            <label class="form-check-label r-text">
+                                ${name}
+                            </label>
+                        </div>
+                    `;
+                    priorityContainer.append(priorityOption);
+                });
+            }
+        },
+        error: function () {
+            console.log('Failed to load referral priorities');
+        }
+    });
+}
+
 // Add status_note textarea field
 function addStatusNoteField(container, selectedStatus, statusNote = null) {
+    // Add error message container for status validation
+    const statusErrorDiv = document.createElement('div');
+    statusErrorDiv.id = 'error-status';
+    statusErrorDiv.className = 'error-message';
+    statusErrorDiv.style.cssText = 'color: red; font-size: 12px; margin-top: 8px;';
+    container.appendChild(statusErrorDiv);
+
     const statusNoteDiv = document.createElement('div');
     statusNoteDiv.className = 'mb-3';
     statusNoteDiv.id = 'status-note-container';
@@ -1108,6 +1261,12 @@ function addStatusChangeListeners() {
 
     statusRadios.forEach(function (radio) {
         radio.addEventListener('change', function () {
+            // Clear status validation error when user changes status
+            const statusErrorElement = document.getElementById('error-status');
+            if (statusErrorElement) {
+                statusErrorElement.textContent = '';
+            }
+
             if (statusNoteContainer && statusNoteTextarea) {
                 if (this.value === '5') {
                     // Show status_note textarea when status 5 is selected
@@ -1407,25 +1566,25 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
                 <div class="mb-2">
                     <p class="r-text">Post Diagnosis<span style="color:red;">*</span></p>
                     <textarea name="post_diagnosis" id="post_diagnosis"
-                        class="form-control form-control-sm" rows="5" required></textarea>
+                        class="form-control form-control-sm" rows="5"></textarea>
                     <div id="error-post_diagnosis" class="error-message" style="color: red;font-size:12px;"></div>
                 </div>
             `);
 
             const outcomeWrapper = $(`
                 <div class="mb-2">
-                    <p class="r-text">Outcome<span style="color:red;">*</span></p>
+                    <p class="r-text">Outcome</p>
                     <textarea name="outcome" id="outcome"
-                        class="form-control form-control-sm" rows="5" required></textarea>
+                        class="form-control form-control-sm" rows="5"></textarea>
                     <div id="error-outcome" class="error-message" style="color: red;font-size:12px;"></div>
                 </div>
             `);
 
             const feedbackWrapper = $(`
                 <div class="mb-2">
-                    <p class="r-text">Feedback<span style="color:red;">*</span></p>
+                    <p class="r-text">Feedback</p>
                     <textarea name="feedback" id="feedback"
-                        class="form-control form-control-sm" rows="5" required></textarea>
+                        class="form-control form-control-sm" rows="5"></textarea>
                     <div id="error-feedback" class="error-message" style="color: red;font-size:12px;"></div>
                 </div>
             `);
@@ -1617,6 +1776,97 @@ function referralAccordion() {
     });
 }
 
+// PDF download handler for accordion history
+$(document).on('click', '.download-history-pdf-btn, .download-history-pdf-btn i', function(e) {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent accordion toggle
+
+    // Get the link element (in case user clicked the icon)
+    const $btn = $(this).hasClass('download-history-pdf-btn') ? $(this) : $(this).closest('.download-history-pdf-btn');
+
+    const referralId = $btn.data('id');
+    const sequence = $btn.data('sequence');
+    const timestamp = $btn.data('timestamp');
+
+    // Generate filename: referral_17_seq2_2025-12-15_10-30-45.pdf
+    const formattedTimestamp = timestamp ? timestamp.replace(/[:.]/g, '-').replace('T', '_').split('.')[0] : '';
+    const fileName = `referral_${referralId}_seq${sequence}_${formattedTimestamp}.pdf`;
+
+    // Show loading state with spinning icon
+    const originalHTML = $btn.html();
+    $btn.html('<i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite;"></i>').prop('disabled', true);
+
+    // Add spin animation if not already in CSS
+    if (!document.getElementById('spin-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'spin-animation-style';
+        style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+    }
+
+    $.ajax({
+        url: 'api-jwt.php',
+        type: 'POST',
+        data: JSON.stringify({
+            action: 'download-external-form',
+            referral_id: referralId,
+            sequence: sequence || null
+        }),
+        contentType: 'application/json',
+        xhrFields: {
+            responseType: 'blob'
+        },
+        success: function (response) {
+            try {
+                // Try to read the response as text first to check for JSON error
+                const reader = new FileReader();
+                reader.onload = function () {
+                    try {
+                        // Check if response is JSON (error response)
+                        const jsonResponse = JSON.parse(reader.result);
+                        if (!jsonResponse.success) {
+                            alert(jsonResponse.message || 'Failed to download PDF. Please try again.');
+                            $btn.html(originalHTML).prop('disabled', false);
+                            return;
+                        }
+                    } catch (e) {
+                        // Not JSON - treat as PDF binary
+                        const blob = new Blob([response], { type: 'application/pdf' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+
+                        // Trigger browser download
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+
+                        // Show success message if toast available
+                        if (window.toast) {
+                            toast.success(`PDF downloaded: ${fileName}`);
+                        }
+                    }
+
+                    // Restore button
+                    $btn.html(originalHTML).prop('disabled', false);
+                };
+                reader.readAsText(response);
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Failed to download PDF. Please try again.');
+                $btn.html(originalHTML).prop('disabled', false);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('AJAX error:', status, error);
+            alert('Failed to download PDF. Please try again.');
+            $btn.html(originalHTML).prop('disabled', false);
+        }
+    });
+});
+
 function referAnother() {
     const checkbox = document.getElementById('refer_another');
     const referBusinessUnit = document.getElementById('refer_business_unit');
@@ -1687,6 +1937,7 @@ function toggleReferForm() {
 
     if (isChecked && hasBusinessUnit) {
         $('.refer-form').show();
+        loadReferralPriorities();
     } else {
         $('.refer-form').hide();
         $('.refer-form').find('input[type="text"], textarea').val('');
@@ -1799,31 +2050,48 @@ function validateForm(event) {
         }
     }
 
+    // Removed HTML5 validation - using JavaScript validation with red text errors instead
     const form = document.getElementById('referral-form');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        isValid = false;
+    // if (!form.checkValidity()) {
+    //     form.reportValidity();
+    //     isValid = false;
+    // }
+
+    // Validate that status has been changed from original value
+    const selectedStatus = document.querySelector('input[name="status"]:checked');
+    const statusErrorElement = document.getElementById('error-status');
+
+    // Only validate status change if status radios are not disabled
+    const firstStatusRadio = document.querySelector('input[name="status"]');
+    const statusRadiosDisabled = firstStatusRadio && firstStatusRadio.disabled;
+
+    if (!statusRadiosDisabled && originalStatus !== null) {
+        if (!selectedStatus) {
+            // No status selected at all
+            if (statusErrorElement) {
+                statusErrorElement.textContent = 'Please select a status.';
+            }
+            isValid = false;
+        } else if (String(selectedStatus.value) === originalStatus) {
+            // Status hasn't been changed from original
+            if (statusErrorElement) {
+                statusErrorElement.textContent = 'Please update the referral status before submitting.';
+            }
+            isValid = false;
+        } else {
+            // Status has been changed - clear any error
+            if (statusErrorElement) {
+                statusErrorElement.textContent = '';
+            }
+        }
     }
 
-    // Validate the three compulsory fields when status is not 5
-    const selectedStatus = document.querySelector('input[name="status"]:checked');
+    // Validate Post Diagnosis field when status is not 5
     if (!selectedStatus || selectedStatus.value !== '5') {
         const postDiagnosis = document.getElementById('post_diagnosis');
-        const outcome = document.getElementById('outcome');
-        const feedback = document.getElementById('feedback');
 
         if (postDiagnosis && !postDiagnosis.value.trim()) {
             document.getElementById('error-post_diagnosis').textContent = 'Post Diagnosis is required.';
-            isValid = false;
-        }
-
-        if (outcome && !outcome.value.trim()) {
-            document.getElementById('error-outcome').textContent = 'Outcome is required.';
-            isValid = false;
-        }
-
-        if (feedback && !feedback.value.trim()) {
-            document.getElementById('error-feedback').textContent = 'Feedback is required.';
             isValid = false;
         }
     }
@@ -1869,6 +2137,22 @@ function validateForm(event) {
 
     if (isValid) {
         // form.submit();
+
+        // NEW: Add confirmation dialog for status change
+        const selectedStatus = document.querySelector('input[name="status"]:checked');
+
+        if (selectedStatus && originalStatus !== null && String(selectedStatus.value) !== originalStatus) {
+            // Status has changed - show confirmation
+            const statusName = statusMapping[selectedStatus.value] || 'selected status';
+            const confirmMessage = 'Are you sure you want to change status to ' + statusName + '?';
+
+            if (!confirm(confirmMessage)) {
+                // User cancelled - stop submission
+                return;
+            }
+        }
+        // END NEW CODE
+
         const formData = new FormData(form);
         allUploadedFiles.forEach(file => {
             formData.append('attachments[]', file);
@@ -1883,6 +2167,20 @@ function validateForm(event) {
                 formData.set('location_to', locationValue);
             }
         }
+
+        // Capture status value for conditional redirect
+        const selectedStatusRadio = document.querySelector('input[name="status"]:checked');
+        const statusValue = selectedStatusRadio ? selectedStatusRadio.value : null;
+
+        // Capture referral ID for successful.php redirect
+        const referralIdField = document.querySelector('input[name="referral_id"]');
+        const referralId = referralIdField ? referralIdField.value : null;
+
+        // Show loading overlay
+        showLoadingOverlay();
+
+        // Disable submit button to prevent double submission
+        $('.form-btn-submit').prop('disabled', true);
 
         // for (const [key, value] of formData.entries()) {
         //     if (value instanceof File) {
@@ -1910,14 +2208,53 @@ function validateForm(event) {
                 const successCode = parsed.httpCode;
 
                 if (successCode === 200 || successCode === 201) {
-                    window.location.href = 'index.php';
+                    // Success - redirect (no need to hide overlay, page will redirect)
+                    if (statusValue === '3' && referralId) {
+                        // Status 3 (Referred) - redirect to successful.php with referral ID and sequence
+
+                        // Get the current/latest sequence (the one being submitted)
+                        let sequenceParam = '';
+
+                        if (referralDetails && referralDetails.length > 0) {
+                            // Use the last sequence in the array (the current referral)
+                            const currentSequence = referralDetails[referralDetails.length - 1].sequence;
+                            sequenceParam = '&sequence=' + currentSequence;
+                        }
+
+                        window.location.href = 'successful.php?id=' + referralId + sequenceParam;
+                    } else {
+                        // All other statuses - redirect to index.php
+                        window.location.href = 'index.php';
+                    }
                 } else {
+                    // Error response - hide loading and re-enable button
+                    hideLoadingOverlay();
+                    $('.form-btn-submit').prop('disabled', false);
+
                     console.log('Failed:', inner.message);
+
+                    // Show error message to user
+                    if (window.toast) {
+                        toast.error(inner.message || 'Update failed. Please try again.');
+                    } else {
+                        alert(inner.message || 'Update failed. Please try again.');
+                    }
                 }
 
             })
             .catch(error => {
+                // Network error - hide loading and re-enable button
+                hideLoadingOverlay();
+                $('.form-btn-submit').prop('disabled', false);
+
                 logError(new Error('Form submission error'), { context: 'validateForm', error: error.message });
+
+                // Show error message to user
+                if (window.toast) {
+                    toast.error('An error occurred while updating. Please try again.');
+                } else {
+                    alert('An error occurred while updating. Please try again.');
+                }
             });
     }
 }
@@ -1932,6 +2269,7 @@ function toggleReferExternalReferralSection() {
 
             // Show the referring indication form (referral_reason, referral_condition, medical_history)
             $('.refer-form').show();
+            loadReferralPriorities();
 
             var externalOrganizations = [];
 

@@ -74,30 +74,217 @@ If referring to an external facility:
 
 #### **STEP 3: Enter Customer Information**
 
-**3.1 Search for Existing Customer**
+**3.1 Select Identification Type**
 
-1. Enter the patient's **IC Number** in the I/C No. field
-2. The system will auto-search as you type
-3. If customer exists:
-   - All fields will auto-populate
-   - Verify the information is correct
-4. If customer doesn't exist:
-   - Continue filling the form manually
+**Choose ID Type**:
+- Select **NRIC** (default) for Malaysian Identity Card holders
+- Select **Passport** for foreign nationals or passport holders
 
-**3.2 Fill Customer Details**
+**Visual Indicators**:
+- Both options show red asterisk (*) indicating required field
+- Radio buttons appear at the top of customer information section
+
+---
+
+**3.2 Search for Existing Customer**
+
+**For NRIC Customers**:
+1. Select **NRIC** radio button (selected by default)
+2. Enter the patient's **NRIC number** in the input field
+3. Must be exactly **12 digits**
+4. System validates format automatically
+5. Press Tab or click outside field to trigger search
+
+**For Passport Customers**:
+1. Select **Passport** radio button
+2. Enter the patient's **Passport number** in the input field
+3. Minimum **6 characters** required
+4. No strict format validation
+5. Press Tab or click outside field to trigger search
+
+**Search Results**:
+
+**If customer exists**:
+- ✓ Success message: "Customer found"
+- ✓ All fields auto-populate from database:
+  - Name, Phone, Email
+  - Address
+  - Age and Gender (behavior depends on ID type)
+- ✓ Verify the information is correct
+- ✓ Customer fields become editable (except IC/Passport number)
+
+**If customer doesn't exist**:
+- ✗ Error message: "Customer not found"
+- ✗ **"Create New Customer"** link appears below the input field
+- ✗ Click the link to open customer creation page in new tab
+- ✗ After creating customer, return to referral page and search again
+
+**Important Notes**:
+- You **cannot create customers inline** on this page
+- Must use the dedicated customer creation page via the link
+- IC/Passport number cannot be edited once customer is found
+- All other customer fields can be edited inline (auto-saved)
+
+---
+
+**3.3 Understanding Age and Gender Fields**
+
+**For NRIC Customers**:
+- **Age**: Automatically calculated from IC birth date
+  - Field is **read-only** (gray background)
+  - Cannot be manually edited
+  - Updates automatically based on IC number
+- **Gender**: Extracted from IC number
+  - Field is **read-only** (gray background)
+  - Determined by last digit of IC (odd=Male, even=Female)
+  - Cannot be manually changed
+
+**For Passport Customers**:
+- **Age**: Retrieved from database
+  - Field is **editable** (white background)
+  - Can manually enter if empty
+  - Updates saved to customer database
+- **Gender**: Retrieved from database
+  - Field is **editable** (white background)
+  - Can manually enter Male/Female if empty
+  - Updates saved to customer database
+
+---
+
+**3.4 Fill Customer Details**
 
 **Required Fields** (marked with red asterisk *):
-- **I/C No.**: Identity card number (12 digits)
+- **NRIC/Passport**: Identification number
+  - NRIC: Exactly 12 digits
+  - Passport: Minimum 6 characters
 - **Name**: Full name
 - **Phone No.**: Contact number
 - **Address**: Complete address
 
 **Optional Fields**:
 - **Email**: Email address
-- **Age**: Patient's age
-- **Gender**: Male/Female
+- **Age**: Patient's age (auto-filled for NRIC, editable for Passport)
+- **Gender**: Male/Female (auto-filled for NRIC, editable for Passport)
 
-**Tip**: Use the **"Clear"** button to reset all customer information if you need to start over.
+**Field Validation**:
+- **NRIC**: Must be 12 digits, numeric only
+- **Passport**: Minimum 6 characters, alphanumeric
+- **Email**: Valid email format (if provided)
+- **Phone**: Contact number required
+
+---
+
+**3.5 Edit Customer Information (Inline Editing)**
+
+**Editable Fields**:
+- Name, Phone, Email
+- Age (Passport customers only)
+- Gender (Passport customers only)
+- Address
+
+**How to Edit**:
+1. Click on any editable field
+2. Modify the information
+3. Click outside the field or press Tab
+4. Changes are **automatically saved** to customer database
+5. Green background flash indicates successful save
+6. Red background flash indicates save error
+
+**Protected Field**:
+- **IC/Passport Number**: Cannot be edited
+  - This is the unique identifier
+  - To change IC/Passport, must clear and search for different customer
+
+**Edit Limitations**:
+- Can only edit if customer exists (customer_id > 0)
+- Cannot edit during customer creation mode
+- Changes affect customer database, not just this referral
+
+---
+
+**3.6 Clear Customer Information**
+
+**Use the "Clear" Button to**:
+- Reset all customer fields to empty
+- Remove search results
+- Hide "Create New Customer" link
+- Reset ID type to NRIC (default)
+- Remove read-only restrictions from age/gender fields
+- Start fresh with new customer search
+
+**Steps**:
+1. Click **"Clear"** button next to the input field
+2. Confirmation dialog appears: "Are you sure you want to clear all customer information?"
+3. Click **OK** to confirm or **Cancel** to keep data
+4. If confirmed:
+   - All fields cleared
+   - Radio button resets to NRIC
+   - Focus returns to input field
+   - Success message: "Customer information cleared"
+
+**When to Use Clear**:
+- Wrong customer loaded
+- Need to search for different patient
+- Made errors and want to start over
+- Switching between NRIC and Passport customers
+
+---
+
+**3.7 Customer Not Found - Creating New Customer**
+
+**If Search Returns No Results**:
+
+1. **Error Message Displays**: "Customer not found"
+2. **"Create New Customer" Link Appears**: Blue button below input field
+3. **Click the Link**:
+   - Opens customer creation page in **new tab**
+   - Current referral form data is preserved
+   - Can switch back to referral tab anytime
+
+4. **In Customer Creation Page**:
+   - Fill all customer details
+   - IC/Passport number pre-filled (if URL parameter passed)
+   - Submit to create customer in database
+   - Close tab when done
+
+5. **Return to Referral Page**:
+   - Switch back to referral tab
+   - Search for customer again using same IC/Passport
+   - Customer should now be found
+   - Continue with referral creation
+
+**Important**:
+- Link URL: `../customer/add.php` (opens in new tab)
+- No inline customer creation on referral page
+- Must complete customer creation first
+- Then return to referral to continue
+
+---
+
+**3.8 Validation Errors**
+
+**Common Validation Messages**:
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| "NRIC must be exactly 12 digits" | NRIC too short/long or contains non-numeric characters | Enter valid 12-digit NRIC |
+| "Passport number seems too short" | Passport less than 6 characters | Enter valid passport (min 6 chars) |
+| "Passport number cannot be empty" | Tried to submit with empty passport | Enter passport number |
+| "Please search for a customer before submitting" | customer_id not set | Search for customer or create new one |
+| "Customer not found" | IC/Passport not in database | Click "Create New Customer" link |
+| "Invalid email format" | Email doesn't match pattern | Enter valid email (e.g., user@example.com) |
+
+---
+
+**Tips for Smooth Customer Entry**:
+
+✓ **Always search first** before filling manually
+✓ **Double-check IC/Passport** number before searching
+✓ **Use NRIC for Malaysian citizens** (auto-calculates age/gender)
+✓ **Use Passport for foreigners** (manual age/gender entry)
+✓ **Create customer in separate tab** if not found
+✓ **Inline edits save automatically** - watch for color feedback
+✓ **Clear button resets everything** including ID type selection
 
 ---
 
@@ -127,7 +314,7 @@ If referring to an external facility:
 
 **Required Fields**:
 
-**5.1 Reason of Referral**
+**5.1 Purpose of Referral**
 - Brief summary of why you're referring
 - Example: "Patient requires physiotherapy assessment for lower back pain"
 
@@ -221,7 +408,7 @@ This section shows **dynamic forms** based on the selected recipient department.
 | "Please select business unit" | Select destination department |
 | "IC Number is required" | Enter patient's IC number |
 | "Customer name is required" | Fill in patient's name |
-| "Reason of referral is required" | Describe why you're referring |
+| "Purpose of Referral is required" | Describe why you're referring |
 | "Details of patient's condition is required" | Provide clinical details |
 | "Please select priority" | Choose Low/Medium/High priority |
 | "File size exceeds limit" | Reduce file size or remove files |
@@ -347,7 +534,7 @@ At the top of the referral list, you'll see three radio buttons:
 - Address
 
 **3. Referring Indication**
-- Reason of Referral
+- Purpose of Referral
 - Patient's Condition details
 - Medical History
 - Priority level
