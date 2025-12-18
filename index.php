@@ -8,12 +8,13 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Referral</title>
+    <base href="/odb/">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
-    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css?v=<?php echo time(); ?>" />
-    <link rel="stylesheet" media="screen" type="text/css" href="css/toast.css?v=<?php echo time(); ?>" />
-    <link rel="stylesheet" media="screen" type="text/css" href="css/skeleton.css?v=<?php echo time(); ?>" />
+    <!-- <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" /> -->
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css?v=<?php echo time(); ?>" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/toast.css?v=<?php echo time(); ?>" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/skeleton.css?v=<?php echo time(); ?>" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
@@ -26,14 +27,13 @@ include('../common/index_adv.php');
 ?>
 
 <body>
+    <?php include('navbar.php'); ?>
     <div class="referral-container mb-3">
         <div class="row mb-3">
             <div class="col-12">
                 <div class="d-flex justify-content-start align-items-center px-3">
-                    <span class="fw-bold text-start me-3" style="font-size:20px;">Referral Dashboard</span>
-                    <a href="create.php" type="button" class="btn-new-referral me-2">New Referral</a>
-                    <a href="report.php" type="button" class="btn-referral" id="viewReportbtn">View
-                        Report</a>
+                    <span class="fw-bold text-start me-3" style="font-size:18px;">MyReferral Dashboard</span>
+                    <a href="referral/create.php" type="button" class="btn-new-referral">New Referral</a>
                 </div>
             </div>
         </div>
@@ -48,24 +48,24 @@ include('../common/index_adv.php');
                             class="fw-bold">Referral</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
-                        <span>Open</span>
-                        <span id="referral-open-count">0</span>
+                        <span class="r-text">Open</span>
+                        <span id="referral-open-count" class="r-text">0</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
-                        <span>In Progress</span>
-                        <span id="referral-progress-count">0</span>
+                        <span class="r-text">In Progress</span>
+                        <span id="referral-progress-count" class="r-text">0</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
-                        <span>Referred</span>
-                        <span id="referral-referred-count">0</span>
+                        <span class="r-text">Referred</span>
+                        <span id="referral-referred-count" class="r-text">0</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
-                        <span>Closed</span>
-                        <span id="referral-closed-count">0</span>
+                        <span class="r-text">Closed</span>
+                        <span id="referral-closed-count" class="r-text">0</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
-                        <span>Not Present</span>
-                        <span id="referral-not-present-count">0</span>
+                        <span class="r-text">Not Present</span>
+                        <span id="referral-not-present-count" class="r-text">0</span>
                     </div>
                 </div>
             </div>
@@ -79,16 +79,16 @@ include('../common/index_adv.php');
                             class="fw-bold">Priority</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
-                        <span>Low</span>
-                        <span id="referral-low-count">0</span>
+                        <span class="r-text">Low</span>
+                        <span id="referral-low-count" class="r-text">0</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
-                        <span>Medium</span>
-                        <span id="referral-medium-count">0</span>
+                        <span class="r-text">Medium</span>
+                        <span id="referral-medium-count" class="r-text">0</span>
                     </div>
                     <div class="d-flex justify-content-between w-100">
-                        <span>High</span>
-                        <span id="referral-high-count">0</span>
+                        <span class="r-text">High</span>
+                        <span id="referral-high-count" class="r-text">0</span>
                     </div>
                 </div>
             </div>
@@ -130,14 +130,14 @@ include('../common/index_adv.php');
                         <div class="btn-group" role="group" aria-label="Referral type filter">
                             <input type="radio" class="btn-check" name="referral-type" id="type-all" value="all"
                                 checked>
-                            <label class="btn btn-outline-primary btn-sm" for="type-all">All</label>
+                            <label class="btn btn-outline-primary r-text btn-sm" for="type-all">All</label>
 
                             <input type="radio" class="btn-check" name="referral-type" id="type-sent" value="sent">
-                            <label class="btn btn-outline-primary btn-sm" for="type-sent">Sent</label>
+                            <label class="btn btn-outline-primary r-text btn-sm" for="type-sent">Sent</label>
 
                             <input type="radio" class="btn-check" name="referral-type" id="type-received"
                                 value="received">
-                            <label class="btn btn-outline-primary btn-sm" for="type-received">Received</label>
+                            <label class="btn btn-outline-primary r-text btn-sm" for="type-received">Received</label>
                         </div>
                     </div>
 
@@ -147,6 +147,9 @@ include('../common/index_adv.php');
                                 class="form-select form-select-sm text-capitalize">
                             </select>
                             <select name="filter-status" id="filter-status"
+                                class="form-select form-select-sm text-capitalize">
+                            </select>
+                            <select name="filter-priority" id="filter-priority"
                                 class="form-select form-select-sm text-capitalize">
                             </select>
                             <input type="text" class="form-control form-control-sm" name="filter-date-range"
@@ -184,22 +187,33 @@ include('../common/index_adv.php');
                         style="background-color: transparent !important;">
                         <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
                             <tr>
-                                <th class="sortable" data-column="ref_id" style="font-size:16px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
+                                <th class="sortable" data-column="ref_id"
+                                    style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
                                     Referral ID <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
                                 </th>
-                                <th class="sortable" data-column="reason" style="font-size:16px;width: 35%;text-align:start;cursor:pointer;user-select:none;">
-                                    Referral Reason <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
+                                <th class="sortable" data-column="reason"
+                                    style="font-size:14px;width: 34%;text-align:start;cursor:pointer;user-select:none;">
+                                    Referral Reason <i class="bi bi-arrow-down-up"
+                                        style="font-size:12px;opacity:0.5;"></i>
                                 </th>
-                                <th class="sortable" data-column="from_business_unit" style="font-size:16px;width: 13%;text-align:start;cursor:pointer;user-select:none;">
-                                    Referred From <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
+                                <th class="sortable" data-column="from_business_unit"
+                                    style="font-size:14px;width: 13%;text-align:start;cursor:pointer;user-select:none;">
+                                    Referred From <i class="bi bi-arrow-down-up"
+                                        style="font-size:12px;opacity:0.5;"></i>
                                 </th>
-                                <th class="sortable" data-column="to_business_unit" style="font-size:16px;width: 13%;text-align:start;cursor:pointer;user-select:none;">
+                                <th class="sortable" data-column="to_business_unit"
+                                    style="font-size:14px;width: 13%;text-align:start;cursor:pointer;user-select:none;">
                                     Referred To <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
                                 </th>
-                                <th class="sortable" data-column="status" style="font-size:16px;width: 14%;text-align:start;cursor:pointer;user-select:none;">
+                                <th class="sortable" data-column="status"
+                                    style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
                                     Status <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
                                 </th>
-                                <th style="font-size:16px;width: 15%;text-align:start;">Action</th>
+                                <th class="sortable" data-column="priority"
+                                    style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
+                                    Priority <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
+                                </th>
+                                <th style="font-size:14px;width: 12%;text-align:start;">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -216,16 +230,16 @@ include('../common/index_adv.php');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
     <script>
-        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-        const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-        const staff_outlet =
-            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+    const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+    const staff_outlet =
+        <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
+    const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
     </script>
 
-    <script src="js/toast.js?v=<?php echo time(); ?>"></script>
-    <script src="js/errorLogger.js?v=<?php echo time(); ?>"></script>
-    <script src="js/index.js?v=<?php echo time(); ?>"></script>
+    <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>
+    <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>
+    <script src="referral/js/index.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>

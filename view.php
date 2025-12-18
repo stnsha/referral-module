@@ -6,14 +6,15 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <base href="/odb/">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
-    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
-    <link rel="stylesheet" media="screen" type="text/css" href="css/toast.css?v=<?php echo time(); ?>" />
+    <!-- <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" /> -->
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/toast.css?v=<?php echo time(); ?>" />
 </head>
 <?php
 require_once('../lock_adv.php');
@@ -23,9 +24,11 @@ include('../common/index_adv.php');
 ?>
 
 <body>
-    <div class="text-center bg-white rounded p-2">
+    <?php include('navbar.php'); ?>
+    <div class="referral-container mb-3 text-center">
         <div class="col align-items-center">
-            <span class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></span>
+            <span class="r-main-title text-start px-3">MyReferral
+                #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></span>
         </div>
         <div class="referral-show">
             <div class="row align-items-start text-start py-2 px-4">
@@ -204,8 +207,8 @@ include('../common/index_adv.php');
                     </div>
                     <div class="border-bottom pb-3 mb-3 attachment-container">
                         <p class="r-title">Attachments</p>
-                        <input name="attachments[]" class="form-control mb-2 attachment-input" type="file" multiple
-                            id="attachmentInput">
+                        <input name="attachments[]" class="form-control mb-2 attachment-input r-text" type="file"
+                            multiple id="attachmentInput">
                         <!--png/jpeg/jpg/pdf/word/excel-->
 
                         <div class="col my-4" id="attachmentPreview"></div>
@@ -292,8 +295,8 @@ include('../common/index_adv.php');
                 </div>
             </div> -->
 
-            <form action="update.php" method="POST" id="referral-form" name="referral-form" class="referral-view"
-                onsubmit="validateForm(event)" enctype="multipart/form-data">
+            <form action="referral/update.php" method="POST" id="referral-form" name="referral-form"
+                class="referral-view" onsubmit="validateForm(event)" enctype="multipart/form-data">
                 <input type="hidden" name="updated_recipient_to" id="updated_recipient_to">
                 <input type="hidden" name="referral_id" value="<?php echo $_GET['id']  ?>" readonly>
                 <div class="row align-items-start text-start py-2 px-4 reply-form-container">
@@ -315,7 +318,8 @@ include('../common/index_adv.php');
                             <div class="py-2">
                                 <label class="r-title" style="display: inline-flex; align-items: center; padding: 0;">
                                     Refer Another
-                                    <input type="checkbox" name="refer_another" id="refer_another" style="margin-left: 8px;">
+                                    <input type="checkbox" name="refer_another" id="refer_another"
+                                        style="margin-left: 8px;">
                                 </label>
                             </div>
 
@@ -512,7 +516,8 @@ include('../common/index_adv.php');
                                     <div class="mb-2">
                                         <p class="r-text">Priority <span style="color:red;">*</span></p>
                                         <div class="referral-priority"></div>
-                                        <div class="error-message" id="error-priority" style="color: red;font-size:12px;">
+                                        <div class="error-message" id="error-priority"
+                                            style="color: red;font-size:12px;">
                                         </div>
                                     </div>
                                 </div>
@@ -528,7 +533,7 @@ include('../common/index_adv.php');
 
                         <div class="d-flex justify-content-end gap-2 form-button">
                             <input type="submit" value="Submit" class="btn-new-referral form-btn-submit">
-                            <a href="index.php" class="btn-referral">Back</a>
+                            <a href="referral/index.php" class="btn-referral">Back</a>
                         </div>
                     </div>
                 </div>
@@ -549,14 +554,14 @@ include('../common/index_adv.php');
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
-            const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
-            const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-            const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-            const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
-            const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
-            const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const referral_id = <?php echo json_encode(isset($_GET['id']) ? $_GET['id'] : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
+        const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
         </script>
-        <script src="js/toast.js?v=<?php echo time(); ?>"></script>
-        <script src="js/errorLogger.js"></script>
-        <script src="js/view.js"></script>
+        <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>
+        <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>
+        <script src="referral/js/view.js?v=<?php echo time(); ?>"></script>
 </body>

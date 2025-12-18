@@ -1233,22 +1233,60 @@ function getSingleBusinessUnit($business_unit_id, $staff_id)
 
 /**
  * Create business unit
- * @param array $data Business unit data
+ * @param array $data Business unit data (including ending_code)
  * @param int $staff_id Staff ID for authentication
  * @return array Creation result
  */
 function createBusinessUnit($data, $staff_id)
 {
-    $result = getApiDataWithJWT('business-units', $data, 'POST', $staff_id);
+    global $conn;
+
+    // Prepare API data (exclude ending_code)
+    $apiData = array(
+        'name' => $data['name'],
+        'staff_department_id' => (int)$data['staff_department_id'],
+        'is_active' => isset($data['is_active']) ? (int)$data['is_active'] : 1
+    );
+
+    // Call API first
+    $result = getApiDataWithJWT('business-units', $apiData, 'POST', $staff_id);
     $httpCode = $result['httpCode'];
     $decoded = json_decode($result['response'], true);
 
     if ($httpCode == 201) {
-        return array(
-            'success' => true,
-            'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit created successfully',
-            'data' => $decoded
-        );
+        // Extract API-generated ID
+        $api_bu_id = isset($decoded['data']['id']) ? (int)$decoded['data']['id'] : null;
+
+        if ($api_bu_id) {
+            // Insert into ref_business_unit with API's ID
+            $name = mysqli_real_escape_string($conn, $data['name']);
+            $dept_id = (int)$data['staff_department_id'];
+            $ending_code = mysqli_real_escape_string($conn, $data['ending_code']);
+            $is_active = isset($data['is_active']) ? (int)$data['is_active'] : 1;
+
+            $query = "INSERT INTO ref_business_unit (id, name, staff_department_id, ending_code, is_active)
+                      VALUES ($api_bu_id, '$name', $dept_id, '$ending_code', $is_active)";
+
+            if (mysqli_query($conn, $query)) {
+                return array(
+                    'success' => true,
+                    'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit created successfully'
+                );
+            } else {
+                // Log DB error but return API success since API creation succeeded
+                logJWTOperation('create-business-unit', 'Local DB insert failed', array('error' => mysqli_error($conn)), 'ERROR');
+                return array(
+                    'success' => true,
+                    'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit created successfully',
+                    'warning' => 'Local database sync failed'
+                );
+            }
+        } else {
+            return array(
+                'success' => false,
+                'message' => 'Failed to get business unit ID from API response'
+            );
+        }
     } else {
         return array(
             'success' => false,
@@ -1261,53 +1299,79 @@ function createBusinessUnit($data, $staff_id)
 /**
  * Update business unit
  * @param int $business_unit_id Business unit ID
- * @param array $data Updated business unit data
+ * @param array $data Updated business unit data (including ending_code)
  * @param int $staff_id Staff ID for authentication
  * @return array Update result
  */
 function updateBusinessUnit($business_unit_id, $data, $staff_id)
 {
-    $result = getApiDataWithJWT('business-units/' . $business_unit_id, $data, 'PUT', $staff_id);
-    $httpCode = $result['httpCode'];
-    $decoded = json_decode($result['response'], true);
+    global $conn;
 
-    if ($httpCode == 200) {
+    $bu_id = (int)$business_unit_id;
+
+    // Store current state for potential rollback
+    $query = "SELECT * FROM ref_business_unit WHERE id = $bu_id";
+    $result = mysqli_query($conn, $query);
+    $originalData = mysqli_fetch_assoc($result);
+
+    if (!$originalData) {
+        return array(
+            'success' => false,
+            'message' => 'Business unit not found in local database'
+        );
+    }
+
+    // Update ref_business_unit first
+    $name = mysqli_real_escape_string($conn, $data['name']);
+    $dept_id = (int)$data['staff_department_id'];
+    $ending_code = mysqli_real_escape_string($conn, $data['ending_code']);
+    $is_active = (int)$data['is_active'];
+
+    $updateQuery = "UPDATE ref_business_unit
+                    SET name='$name', staff_department_id=$dept_id, ending_code='$ending_code', is_active=$is_active
+                    WHERE id=$bu_id";
+
+    if (!mysqli_query($conn, $updateQuery)) {
+        return array(
+            'success' => false,
+            'message' => 'Failed to update local database: ' . mysqli_error($conn)
+        );
+    }
+
+    // Prepare API data (exclude ending_code)
+    $apiData = array(
+        'name' => $data['name'],
+        'staff_department_id' => $dept_id,
+        'is_active' => $is_active
+    );
+
+    // Call API (using same ID since they're synced)
+    $apiResult = getApiDataWithJWT('business-units/' . $bu_id, $apiData, 'PUT', $staff_id);
+    $httpCode = $apiResult['httpCode'];
+    $decoded = json_decode($apiResult['response'], true);
+
+    if ($httpCode == 200 || $httpCode == 201) {
         return array(
             'success' => true,
-            'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit updated successfully',
-            'data' => $decoded
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit updated successfully'
         );
     } else {
+        // API call failed, rollback local changes
+        $rollbackQuery = "UPDATE ref_business_unit
+                          SET name='" . mysqli_real_escape_string($conn, $originalData['name']) . "',
+                              staff_department_id=" . (int)$originalData['staff_department_id'] . ",
+                              ending_code='" . mysqli_real_escape_string($conn, $originalData['ending_code']) . "',
+                              is_active=" . (int)$originalData['is_active'] . "
+                          WHERE id=$bu_id";
+
+        mysqli_query($conn, $rollbackQuery);
+
+        logJWTOperation('update-business-unit', 'API update failed, rolled back local changes', array('bu_id' => $bu_id), 'WARNING');
+
         return array(
             'success' => false,
             'error' => true,
             'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update business unit'
-        );
-    }
-}
-
-/**
- * Delete business unit
- * @param int $business_unit_id Business unit ID
- * @param int $staff_id Staff ID for authentication
- * @return array Deletion result
- */
-function deleteBusinessUnit($business_unit_id, $staff_id)
-{
-    $result = getApiDataWithJWT('business-units/' . $business_unit_id, null, 'DELETE', $staff_id);
-    $httpCode = $result['httpCode'];
-    $decoded = json_decode($result['response'], true);
-
-    if ($httpCode == 204) {
-        return array(
-            'success' => true,
-            'message' => 'Business unit deleted successfully'
-        );
-    } else {
-        return array(
-            'success' => false,
-            'error' => true,
-            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to delete business unit'
         );
     }
 }
@@ -1430,6 +1494,9 @@ function downloadAttachment($attachment_id, $staff_id)
     exit;
 }
 
+/**
+ * Download referral letter (malas tukar nama function)
+ */
 function downloadExternalForm($referral_id, $staff_id, $sequence = null)
 {
     $endpoint = 'referral/download/' . $referral_id;
@@ -1698,6 +1765,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'message' => 'Referral ID is required',
                         'data' => array()
                     );
+                }
+                break;
+            case 'create-business-unit':
+                if (isset($jsonData['business_unit_data'])) {
+                    $response = createBusinessUnit($jsonData['business_unit_data'], $staff_id);
+                }
+                break;
+            case 'update-business-unit':
+                if (isset($jsonData['business_unit_id']) && isset($jsonData['business_unit_data'])) {
+                    $response = updateBusinessUnit($jsonData['business_unit_id'], $jsonData['business_unit_data'], $staff_id);
+                }
+                break;
+            case 'delete-business-unit':
+                if (isset($jsonData['business_unit_id'])) {
+                    $response = deleteBusinessUnit($jsonData['business_unit_id'], $staff_id);
                 }
                 break;
         }

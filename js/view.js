@@ -91,7 +91,7 @@ $(document).ready(function () {
     $('.external-referral-text').hide();
 
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         dataType: 'json',
         data: JSON.stringify({
@@ -207,7 +207,7 @@ $(document).ready(function () {
                         // Only show staff name if not in view_only mode
                         if (!viewOnly) {
                             $.ajax({
-                                url: 'backend.php',
+                                url: 'referral/backend.php',
                                 method: 'GET',
                                 data: {
                                     staff_id: staffId,
@@ -226,7 +226,7 @@ $(document).ready(function () {
                         if (toReferral.location === null && fromReferral.staff_id != staffId) {
                             // Location is also null - get staff name, business unit name, and all user locations
                             $.ajax({
-                                url: 'backend.php',
+                                url: 'referral/backend.php',
                                 method: 'GET',
                                 data: {
                                     bu_id: toReferral.business_unit_id,
@@ -241,7 +241,7 @@ $(document).ready(function () {
                             });
 
                             $.ajax({
-                                url: 'backend.php',
+                                url: 'referral/backend.php',
                                 method: 'GET',
                                 data: {
                                     staff_id: staffId,
@@ -475,11 +475,16 @@ $(document).ready(function () {
                 else if (lastSequence.staff_id) {
                     // Check if current user matches the staff_id in last sequence
                     if (lastSequence.staff_id === staffId) {
-                        // Current user is the staff in last sequence - show reply form and populate forms
+                        // Current user is the staff in last sequence
                         window.hasReplyForms = true;
                         window.isLastSequence = true;
-                        $('.reply-form-container').show();
-                        displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                        // Only show reply form if NOT in view_only mode
+                        if (!viewOnly) {
+                            $('.reply-form-container').show();
+                            displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                        } else {
+                            $('.reply-form-container').hide();
+                        }
                     } else {
                         // Current user is not the staff in last sequence - hide reply form
                         window.hasReplyForms = false;
@@ -495,22 +500,28 @@ $(document).ready(function () {
                     // When staff_id is null, check if current session user's department matches
                     getStaffDetails(staffId, lastSequence.location, null, department, function (staffResponse) {
                         if (staffResponse && staffResponse.length > 0 && staffResponse[0].department_id === department) {
-                            // Department matches - show reply form and populate forms
+                            // Department matches
                             window.hasReplyForms = true;
                             window.isLastSequence = true;
-                            $('.reply-form-container').show();
 
-                            // Check if referral_details is empty - show all forms
-                            if (lastSequence.referral_details && lastSequence.referral_details.length === 0) {
-                                displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                            // Only show reply form if NOT in view_only mode
+                            if (!viewOnly) {
+                                $('.reply-form-container').show();
+                                // Check if referral_details is empty - show all forms
+                                if (lastSequence.referral_details && lastSequence.referral_details.length === 0) {
+                                    displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                                } else {
+                                    displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                                }
+                                // Show "Refer Another" container and submit button when department matches
+                                $('.refer-another-container').show();
+                                if (status != 4 && status != 5) {
+                                    $('.form-btn-submit').show();
+                                }
                             } else {
-                                displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
-                            }
-
-                            // Show "Refer Another" container and submit button when department matches
-                            $('.refer-another-container').show();
-                            if (status != 4 && status != 5) {
-                                $('.form-btn-submit').show();
+                                $('.reply-form-container').hide();
+                                $('.refer-another-container').hide();
+                                $('.form-btn-submit').hide();
                             }
                             // Reload status options with correct disable state
                             loadStatusOptions(status, (status == 4 || status == 5), data.status_note);
@@ -535,22 +546,28 @@ $(document).ready(function () {
                     // When staff_id is null, check if current session user's department matches
                     isStaffMatch(staffId, department, function (staffResponse) {
                         if (staffResponse) {
-                            // Department matches - show reply form and populate forms
+                            // Department matches
                             window.hasReplyForms = true;
                             window.isLastSequence = true;
-                            $('.reply-form-container').show();
 
-                            // Check if referral_details is empty - show all forms
-                            if (lastSequence.referral_details && lastSequence.referral_details.length === 0) {
-                                displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                            // Only show reply form if NOT in view_only mode
+                            if (!viewOnly) {
+                                $('.reply-form-container').show();
+                                // Check if referral_details is empty - show all forms
+                                if (lastSequence.referral_details && lastSequence.referral_details.length === 0) {
+                                    displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                                } else {
+                                    displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
+                                }
+                                // Show "Refer Another" container and submit button when department matches
+                                $('.refer-another-container').show();
+                                if (status != 4 && status != 5) {
+                                    $('.form-btn-submit').show();
+                                }
                             } else {
-                                displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
-                            }
-
-                            // Show "Refer Another" container and submit button when department matches
-                            $('.refer-another-container').show();
-                            if (status != 4 && status != 5) {
-                                $('.form-btn-submit').show();
+                                $('.reply-form-container').hide();
+                                $('.refer-another-container').hide();
+                                $('.form-btn-submit').hide();
                             }
                             // Reload status options with correct disable state
                             loadStatusOptions(status, (status == 4 || status == 5), data.status_note);
@@ -681,7 +698,7 @@ $(document).ready(function () {
             toggleReferForm();
 
             $.ajax({
-                url: 'backend.php?action=getLocations',
+                url: 'referral/backend.php?action=getLocations',
                 type: 'POST',
                 data: {
                     ref_bus_id: refBusId
@@ -802,7 +819,7 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
         <span class="r-text">Contact: ${contact} </span><br>
         <span class="r-text">Date: ${createdAt} </span><br>
         <a href="${whatsapp}" target="_blank" style="text-decoration: none;">
-            <img src="img/whatsapp.png" style="width:25px;">
+            <img src="referral/img/whatsapp.png" style="width:25px;">
         </a>
         `);
 
@@ -901,7 +918,7 @@ function displayAttachments(attachments, staff, created_at, accordion) {
 
             // Make AJAX request for download
             $.ajax({
-                url: 'api-jwt.php',
+                url: 'referral/api-jwt.php',
                 method: 'POST',
                 data: JSON.stringify({
                     action: 'download-attachment',
@@ -1099,7 +1116,7 @@ function addStatusChangeListeners() {
 
 function loadStatusOptions(selectedStatus, shouldDisableRadios = false, statusNote = null) {
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'referral-status' },
         success: function (response) {
@@ -1189,7 +1206,7 @@ function loadStatusOptions(selectedStatus, shouldDisableRadios = false, statusNo
 // Load referral priorities from API
 function loadReferralPriorities() {
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'referral-priority' },
         success: function (response) {
@@ -1223,11 +1240,15 @@ function loadReferralPriorities() {
 // Add status_note textarea field
 function addStatusNoteField(container, selectedStatus, statusNote = null) {
     // Add error message container for status validation
-    const statusErrorDiv = document.createElement('div');
-    statusErrorDiv.id = 'error-status';
-    statusErrorDiv.className = 'error-message';
-    statusErrorDiv.style.cssText = 'color: red; font-size: 12px; margin-top: 8px;';
-    container.appendChild(statusErrorDiv);
+    // Check if error div already exists to avoid duplicates
+    let statusErrorDiv = document.getElementById('error-status');
+    if (!statusErrorDiv) {
+        statusErrorDiv = document.createElement('div');
+        statusErrorDiv.id = 'error-status';
+        statusErrorDiv.className = 'error-message';
+        statusErrorDiv.style.cssText = 'color: red; font-size: 12px; margin-top: 8px; display: none;';
+        container.appendChild(statusErrorDiv);
+    }
 
     const statusNoteDiv = document.createElement('div');
     statusNoteDiv.className = 'mb-3';
@@ -1265,6 +1286,7 @@ function addStatusChangeListeners() {
             const statusErrorElement = document.getElementById('error-status');
             if (statusErrorElement) {
                 statusErrorElement.textContent = '';
+                statusErrorElement.style.display = 'none';
             }
 
             if (statusNoteContainer && statusNoteTextarea) {
@@ -1334,7 +1356,7 @@ function toggleReplyFormRequirement(isRequired) {
 
 function getStaffDetails(staffId, locationId, businessUnitId, deptId, callback) {
     $.ajax({
-        url: 'backend.php',
+        url: 'referral/backend.php',
         method: 'GET',
         data: {
             staff_id: staffId,
@@ -1356,7 +1378,7 @@ function getStaffDetails(staffId, locationId, businessUnitId, deptId, callback) 
 
 function getReferredFrom(staffId, locationId, businessUnitId, callback) {
     $.ajax({
-        url: 'backend.php',
+        url: 'referral/backend.php',
         method: 'GET',
         data: {
             staff_id: staffId,
@@ -1377,7 +1399,7 @@ function getReferredFrom(staffId, locationId, businessUnitId, callback) {
 
 function isStaffMatch(staffId, deptId, callback) {
     $.ajax({
-        url: 'backend.php',
+        url: 'referral/backend.php',
         method: 'GET',
         data: {
             staffId: staffId,
@@ -1397,7 +1419,7 @@ function isStaffMatch(staffId, deptId, callback) {
 
 function isLocationMatch(staffId, locationId, businessUnitId, callback) {
     $.ajax({
-        url: 'backend.php',
+        url: 'referral/backend.php',
         method: 'GET',
         data: {
             staffId: staffId,
@@ -1418,7 +1440,7 @@ function isLocationMatch(staffId, locationId, businessUnitId, callback) {
 
 function getRecipientDetails(location, businessUnit, callback) {
     $.ajax({
-        url: 'backend.php',
+        url: 'referral/backend.php',
         method: 'GET',
         data: {
             location: location,
@@ -1438,7 +1460,7 @@ function getRecipientDetails(location, businessUnit, callback) {
 
 function displayContent(businessUnitId, targetSelector, referralDetails = null) {
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: {
             action: 'form-details',
@@ -1610,7 +1632,7 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
 
 function getCustomer(custid, callback) {
     $.ajax({
-        url: 'backend.php?action=searchCustomer',
+        url: 'referral/backend.php?action=searchCustomer',
         method: 'POST',
         data: {
             customer_id: custid,
@@ -1805,7 +1827,7 @@ $(document).on('click', '.download-history-pdf-btn, .download-history-pdf-btn i'
     }
 
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: JSON.stringify({
             action: 'download-external-form',
@@ -1906,16 +1928,17 @@ function referAnother() {
 
 function getBusinessUnits() {
     $.ajax({
-        url: 'backend.php',
-        type: 'GET',
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        contentType: 'application/json',
         dataType: 'json',
-        data: {
-            action: 'getBusinessUnits'
-        },
+        data: JSON.stringify({
+            action: 'business-units'
+        }),
         success: function (response) {
             var referBusinessUnit = $('#refer_business_unit');
 
-            $.each(response, function (index, businessUnit) {
+            $.each(response.data, function (index, businessUnit) {
                 referBusinessUnit.append(
                     '<option value="' + businessUnit.staff_department_id + '" data-id="' + businessUnit.id + '" ' + '>' +
                     businessUnit.name + '</option>'
@@ -1925,7 +1948,8 @@ function getBusinessUnits() {
             referBusinessUnit.trigger('change');
 
         },
-        error: function () {
+        error: function (xhr, status, error) {
+            console.error('Error loading business units:', error);
             alert('Error loading business units');
         }
     });
@@ -2065,23 +2089,44 @@ function validateForm(event) {
     const firstStatusRadio = document.querySelector('input[name="status"]');
     const statusRadiosDisabled = firstStatusRadio && firstStatusRadio.disabled;
 
+    console.log('=== STATUS VALIDATION DEBUG ===');
+    console.log('statusRadiosDisabled:', statusRadiosDisabled);
+    console.log('originalStatus:', originalStatus);
+    console.log('selectedStatus:', selectedStatus);
+    console.log('selectedStatus.value:', selectedStatus ? selectedStatus.value : 'null');
+    console.log('statusErrorElement exists:', !!statusErrorElement);
+    console.log('Condition check:', !statusRadiosDisabled && originalStatus !== null);
+
     if (!statusRadiosDisabled && originalStatus !== null) {
         if (!selectedStatus) {
             // No status selected at all
             if (statusErrorElement) {
                 statusErrorElement.textContent = 'Please select a status.';
+                statusErrorElement.style.display = 'block';
+                // Scroll to error for visibility
+                const statusContainer = document.getElementById('status-options');
+                if (statusContainer) {
+                    statusContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
             isValid = false;
         } else if (String(selectedStatus.value) === originalStatus) {
             // Status hasn't been changed from original
             if (statusErrorElement) {
                 statusErrorElement.textContent = 'Please update the referral status before submitting.';
+                statusErrorElement.style.display = 'block';
+                // Scroll to error for visibility
+                const statusContainer = document.getElementById('status-options');
+                if (statusContainer) {
+                    statusContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
             isValid = false;
         } else {
             // Status has been changed - clear any error
             if (statusErrorElement) {
                 statusErrorElement.textContent = '';
+                statusErrorElement.style.display = 'none';
             }
         }
     }
@@ -2140,8 +2185,11 @@ function validateForm(event) {
 
         // NEW: Add confirmation dialog for status change
         const selectedStatus = document.querySelector('input[name="status"]:checked');
+        const firstStatusRadio = document.querySelector('input[name="status"]');
+        const statusRadiosDisabled = firstStatusRadio && firstStatusRadio.disabled;
 
-        if (selectedStatus && originalStatus !== null && String(selectedStatus.value) !== originalStatus) {
+        // Check if status radios are enabled (validation should apply)
+        if (!statusRadiosDisabled && selectedStatus && originalStatus !== null && String(selectedStatus.value) !== originalStatus) {
             // Status has changed - show confirmation
             const statusName = statusMapping[selectedStatus.value] || 'selected status';
             const confirmMessage = 'Are you sure you want to change status to ' + statusName + '?';
@@ -2194,7 +2242,7 @@ function validateForm(event) {
         //     }
         // }
 
-        fetch('update.php', {
+        fetch('referral/update.php', {
             method: 'POST',
             body: formData
         })
@@ -2221,10 +2269,10 @@ function validateForm(event) {
                             sequenceParam = '&sequence=' + currentSequence;
                         }
 
-                        window.location.href = 'successful.php?id=' + referralId + sequenceParam;
+                        window.location.href = 'referral/successful.php?id=' + referralId + sequenceParam;
                     } else {
                         // All other statuses - redirect to index.php
-                        window.location.href = 'index.php';
+                        window.location.href = 'referral/index.php';
                     }
                 } else {
                     // Error response - hide loading and re-enable button
@@ -2274,7 +2322,7 @@ function toggleReferExternalReferralSection() {
             var externalOrganizations = [];
 
             $.ajax({
-                url: 'api-jwt.php',
+                url: 'referral/api-jwt.php',
                 type: 'POST',
                 dataType: 'json',
                 data: {
@@ -2447,7 +2495,7 @@ function handleTakeoverReferral(toReferral, referralDetails) {
 
     // 1. Update recipient_to field to current user's name
     $.ajax({
-        url: 'backend.php',
+        url: 'referral/backend.php',
         method: 'GET',
         data: {
             staff_id: staffId,
@@ -2468,7 +2516,7 @@ function handleTakeoverReferral(toReferral, referralDetails) {
 
     // Get staff locations and create select dropdown
     $.ajax({
-        url: 'backend.php',
+        url: 'referral/backend.php',
         method: 'GET',
         data: {
             staff_id: staffId,
@@ -2541,20 +2589,25 @@ function handleTakeoverReferral(toReferral, referralDetails) {
     $('.refer-another-container').show();
     $('.form-btn-submit').show();
 
-    // 7. Reload status options
+    // 7. Enable status radios IMMEDIATELY (don't wait for AJAX)
+    $('input[name="status"]').prop('disabled', false);
+
+    // 8. Reload status options
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'get-referral', referral_id: referral_id, view_only: viewOnly },
         dataType: 'json',
         success: function (response) {
             if (response && response.data) {
+                // Update originalStatus immediately for validation baseline
+                originalStatus = String(response.data.status);
                 loadStatusOptions(response.data.status, false, response.data.status_note);
             }
         }
     });
 
-    // 8. Hide takeover button after takeover
+    // 9. Hide takeover button after takeover
     $('#takeover-button-container').hide();
 
     if (window.toast) {

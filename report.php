@@ -8,10 +8,11 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Referral</title>
+    <base href="/odb/">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
-    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
+    <!-- <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" /> -->
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
@@ -23,12 +24,12 @@ include('../common/index_adv.php');
 ?>
 
 <body>
+    <?php include('navbar.php'); ?>
     <div class="referral-container mb-3">
         <div class="row mb-1">
             <div class="col-12">
-                <div class="d-flex justify-content-start align-items-end px-3">
-                    <span class="fw-bold text-start me-3" style="font-size:20px;">Referral Report</span>
-                    <a href="index.php" class="btn-referral">Back</a>
+                <div class="d-flex justify-content-start align-items-center px-3">
+                    <span class="fw-bold text-start me-3" style="font-size:18px;">Report</span>
                 </div>
             </div>
         </div>
@@ -64,7 +65,7 @@ include('../common/index_adv.php');
                         </div>
                         <div class="d-inline-flex align-items-center mt-2">
                             <?php if (!isset($referral) || $referral != 0): ?>
-                            <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Download Report</a>
+                                <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Download Report</a>
                             <?php endif; ?>
                             <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
                                 aria-expanded="false" aria-controls="generate-report">
@@ -156,16 +157,16 @@ include('../common/index_adv.php');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
     <script>
-    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-    const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-    const staff_outlet =
-        <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
-    const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-    const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staff_outlet =
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
+        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
     </script>
 
-    <script src="js/errorLogger.js"></script>
-    <script src="js/report.js"></script>
+    <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>
+    <script src="referral/js/report.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>

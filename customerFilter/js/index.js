@@ -189,7 +189,7 @@ $(document).ready(function () {
             const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name} priority</span>`;
 
             // Generate PDF button for all referrals (both internal and external)
-            const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${item.id}" data-ref-id="${item.ref_id}" data-timestamp="${item.ori_created_at}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Form"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
+            const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${item.id}" data-ref-id="${item.ref_id}" data-timestamp="${item.ori_created_at}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Referral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
 
             // Calculate relative time (using plain JavaScript since we may not have moment.js)
             const relativeTime = item.ori_created_at ? getRelativeTime(item.ori_created_at) : 'N/A';
@@ -209,7 +209,7 @@ $(document).ready(function () {
                         <br><span style="color: #6c757d; font-size: 13px; margin-top: 4px; display: inline-block;">${relativeTime}</span>
                     </td>
                     <td style="font-size:14px;width: 15%;text-align:start;">
-                        <a href="referral/view.php?id=${item.id}&view_only=true" class="btn-icon btn-icon-edit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View"><i class="bi bi-pencil-square"></i></a>
+                        <a href="referral/view.php?id=${item.id}&view_only=true" class="btn-icon btn-icon-edit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View/Edit Referral"><i class="bi bi-pencil-square"></i></a>
                         ${secondButton}
                     </td>
                 </tr>

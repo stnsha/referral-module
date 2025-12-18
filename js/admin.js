@@ -1,7 +1,7 @@
 $(document).ready(function () {
     // Load business units
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         dataType: 'json',
         data: {
@@ -70,7 +70,7 @@ $(document).ready(function () {
 
         if (confirm(confirmMessage)) {
             $.ajax({
-                url: 'api-jwt.php',
+                url: 'referral/api-jwt.php',
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json',
@@ -99,7 +99,7 @@ $(document).ready(function () {
 // Function to load all forms
 function loadAllForms() {
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         dataType: 'json',
         contentType: 'application/json',
@@ -163,11 +163,11 @@ function loadAllForms() {
                     var buttonClass = form.is_hidden ? 'btn-primary' : 'btn-warning';
 
                     var row = '<tr>' +
-                        '<td>' + rowNumber + '</td>' +
-                        '<td>' + form.label_name + '</td>' +
-                        '<td>' + isHidden + '</td>' +
-                        '<td>' + detailsHtml + '</td>' +
-                        '<td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' + rowNumber + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' + form.label_name + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' + isHidden + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' + detailsHtml + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' +
                         '<button class="btn btn-sm ' + buttonClass + ' btn-toggle-form" data-id="' + form.form_id + '" data-hidden="' + form.is_hidden + '">' + buttonText + '</button>' +
                         '</td>' +
                         '</tr>';
@@ -328,7 +328,7 @@ function validateForm(e) {
         // Send custom data array via AJAX
         e.preventDefault(); // Prevent traditional form submission
         $.ajax({
-            url: 'api-jwt.php',
+            url: 'referral/api-jwt.php',
             type: 'POST',
             dataType: 'json',
             contentType: 'application/json',
@@ -370,7 +370,7 @@ function validateForm(e) {
 
                     // Reload business units to restore selection
                     $.ajax({
-                        url: 'api-jwt.php',
+                        url: 'referral/api-jwt.php',
                         type: 'POST',
                         dataType: 'json',
                         data: {

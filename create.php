@@ -3,15 +3,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href="/odb/">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" /> -->
-    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
-    <link rel="stylesheet" media="screen" type="text/css" href="css/toast.css?v=<?php echo time(); ?>" />
+    <!-- <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" /> -->
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/toast.css?v=<?php echo time(); ?>" />
 </head>
 <?php
 require_once('../lock_adv.php');
@@ -20,10 +22,11 @@ include('../common/index_adv.php');
 ?>
 
 <body>
-    <div class="text-center bg-white rounded p-2">
-        <p class="r-main-title">New Referral</p>
-        <form action="post.php" method="POST" id="referral-form" name="referral-form" onsubmit="validateForm(event)"
-            enctype="multipart/form-data">
+    <?php include('navbar.php'); ?>
+    <div class="referral-container mb-3 text-center">
+        <p class="r-main-title text-start px-3">New MyReferral</p>
+        <form action="referral/post.php" method="POST" id="referral-form" name="referral-form"
+            onsubmit="validateForm(event)" enctype="multipart/form-data">
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
                     <div class="border-bottom pb-3 mb-3">
@@ -232,12 +235,12 @@ include('../common/index_adv.php');
                                 <!-- Radio buttons for ID type selection -->
                                 <div class="mb-2">
                                     <label class="me-3 r-text" style="display: inline-flex; align-items: center;">
-                                        <input type="radio" name="id_type" value="nric" checked style="margin-right: 5px;"> NRIC<span
-                                            style="color:red;">*</span>
+                                        <input type="radio" name="id_type" value="nric" checked
+                                            style="margin-right: 5px;"> NRIC<span style="color:red;">*</span>
                                     </label>
                                     <label class="r-text" style="display: inline-flex; align-items: center;">
-                                        <input type="radio" name="id_type" value="passport" style="margin-right: 5px;"> Passport<span
-                                            style="color:red;">*</span>
+                                        <input type="radio" name="id_type" value="passport" style="margin-right: 5px;">
+                                        Passport<span style="color:red;">*</span>
                                     </label>
                                 </div>
 
@@ -318,7 +321,7 @@ include('../common/index_adv.php');
                         </div>
                         <div class="mb-3">
                             <p class="r-title">Attachments</p>
-                            <input name="attachments[]" class="form-control mb-2" type="file" multiple
+                            <input name="attachments[]" class="form-control mb-2 r-text" type="file" multiple
                                 id="attachmentInput">
                             <!--png/jpeg/jpg/pdf/word/excel-->
 
@@ -398,7 +401,7 @@ include('../common/index_adv.php');
                 <div class="d-flex justify-content-center align-items-center">
                     <button type="submit" id="real-submit" style="display: none;"></button>
                     <input type="submit" value="Submit" class="btn-new-referral me-2">
-                    <a href="index.php" class="btn-referral">Back</a>
+                    <a href="referral/index.php" class="btn-referral">Back</a>
                 </div>
             </div>
         </form>
@@ -409,14 +412,14 @@ include('../common/index_adv.php');
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+    const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+    const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+    const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
     </script>
-    <script src="js/toast.js?v=<?php echo time(); ?>"></script>
-    <script src="js/errorLogger.js"></script>
-    <script src="js/create.js"></script>
+    <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>
+    <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>
+    <script src="referral/js/create.js?v=<?php echo time(); ?>"></script>
 
 
 </body>

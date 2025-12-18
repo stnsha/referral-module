@@ -31,12 +31,13 @@ if ($referral_id) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href="/odb/">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" />
-    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css" />
 </head>
 <?php
 require_once('../lock_adv.php');
@@ -55,71 +56,71 @@ include('../common/index_adv.php');
             </div>
 
             <?php if ($pdfBase64): ?>
-                <a href="#"
-                    onclick="downloadPDF('<?php echo $pdfBase64; ?>', 'Referral_#REF<?php echo str_pad($referral_id, 4, 0, STR_PAD_LEFT); ?>.pdf'); return false;"
-                    class="btn-new-referral mt-2">
-                    <i class="bi bi-download"></i> Download PDF Referral
-                </a>
+            <a href="#"
+                onclick="downloadPDF('<?php echo $pdfBase64; ?>', 'Referral_#REF<?php echo str_pad($referral_id, 4, 0, STR_PAD_LEFT); ?>.pdf'); return false;"
+                class="btn-new-referral mt-2">
+                <i class="bi bi-download"></i> Download PDF Referral
+            </a>
             <?php endif; ?>
 
             <?php if ($patientPhone): ?>
-                <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $patientPhone); ?>?text=<?php echo urlencode('Dear Patient, your healthcare referral document has been issued. Kindly review the attached PDF for further instructions. https://mytotalhealth.com.my/referral-api/view/' . $referral_id); ?>"
-                    target="_blank" class="btn-new-referral mt-2">
-                    <i class="bi bi-whatsapp"></i> Send WhatsApp to Patient
-                </a>
+            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $patientPhone); ?>?text=<?php echo urlencode('Dear Patient, your healthcare referral document has been issued. Kindly review the attached PDF for further instructions. https://mytotalhealth.com.my/referral-api/view/' . $referral_id); ?>"
+                target="_blank" class="btn-new-referral mt-2">
+                <i class="bi bi-whatsapp"></i> Send WhatsApp to Patient
+            </a>
             <?php endif; ?>
 
             <?php if ($outletPhone): ?>
-                <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $outletPhone); ?>?text=<?php echo urlencode('New referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been created. http://octopusdb.info:8080/odb/referral/view.php?id=' . $referral_id); ?>"
-                    target="_blank" class="btn-new-referral mt-2">
-                    <i class="bi bi-whatsapp"></i> Send WhatsApp to Outlet
-                </a>
+            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $outletPhone); ?>?text=<?php echo urlencode('New referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been created. http://octopusdb.info:8080/odb/referral/view.php?id=' . $referral_id); ?>"
+                target="_blank" class="btn-new-referral mt-2">
+                <i class="bi bi-whatsapp"></i> Send WhatsApp to Outlet
+            </a>
             <?php endif; ?>
 
             <?php if ($organizationPhone): ?>
-                <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $organizationPhone); ?>?text=<?php echo urlencode('External referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been created.'); ?>"
-                    target="_blank" class="btn-new-referral mt-2">
-                    <i class="bi bi-whatsapp"></i> Send WhatsApp to Organization
-                </a>
+            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $organizationPhone); ?>?text=<?php echo urlencode('External referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been created.'); ?>"
+                target="_blank" class="btn-new-referral mt-2">
+                <i class="bi bi-whatsapp"></i> Send WhatsApp to Organization
+            </a>
             <?php endif; ?>
 
             <?php if ($refereePhone): ?>
-                <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $refereePhone); ?>?text=<?php echo urlencode('External referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been created.'); ?>"
-                    target="_blank" class="btn-new-referral mt-2">
-                    <i class="bi bi-whatsapp"></i> Send WhatsApp to Referee
-                </a>
+            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $refereePhone); ?>?text=<?php echo urlencode('External referral #REF' . str_pad($referral_id, 4, 0, STR_PAD_LEFT) . ' has been created.'); ?>"
+                target="_blank" class="btn-new-referral mt-2">
+                <i class="bi bi-whatsapp"></i> Send WhatsApp to Referee
+            </a>
             <?php endif; ?>
 
-            <a href="index.php" class="btn-referral mt-3">
+            <a href="referral/index.php" class="btn-referral mt-3">
                 <i class="bi bi-house-fill"></i> Back to Home
             </a>
         </div>
 
         <script>
-            function downloadPDF(base64String, filename) {
-                // Convert base64 to blob
-                const byteCharacters = atob(base64String);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], {
-                    type: 'application/pdf'
-                });
-
-                // Create download link
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-
-                // Cleanup
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
+        function downloadPDF(base64String, filename) {
+            // Convert base64 to blob
+            const byteCharacters = atob(base64String);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], {
+                type: 'application/pdf'
+            });
+
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+
+            // Cleanup
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
         </script>
     </div>
 </body>

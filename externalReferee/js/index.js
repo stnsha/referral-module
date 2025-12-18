@@ -45,12 +45,12 @@ $(document).ready(function () {
                     var email = referee.email || '';
 
                     var row = '<tr data-id="' + referee.id + '">' +
-                        '<td data-field="name">' + referee.name + '</td>' +
-                        '<td data-field="email">' + (email || 'N/A') + '</td>' +
-                        '<td data-field="phone">' + referee.phone + '</td>' +
-                        '<td data-field="organization" data-org-id="' + orgId + '">' + orgName + '</td>' +
-                        '<td data-field="position">' + referee.position + '</td>' +
-                        '<td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;" data-field="name">' + referee.name + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;" data-field="email">' + (email || 'N/A') + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;" data-field="phone">' + referee.phone + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;" data-field="organization" data-org-id="' + orgId + '">' + orgName + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;" data-field="position">' + referee.position + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' +
                         '<button class="btn btn-sm btn-primary btn-edit" data-id="' + referee.id + '">Edit</button> ' +
                         '<button class="btn btn-sm btn-danger btn-delete" data-id="' + referee.id + '">Delete</button>' +
                         '</td>' +

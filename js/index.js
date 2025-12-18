@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Create loading row with spinner
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 40px;">
+                <td colspan="7" style="text-align: center; padding: 40px;">
                     <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                         <span class="visually-hidden">Loading...</span>
                     </div>
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // First, fetch status mapping from getReferralStatus API
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'referral-status' },
         success: function (response) {
@@ -131,11 +131,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchDashboardData() {
         $.ajax({
-            url: 'api-jwt.php',
+            url: 'referral/api-jwt.php',
             type: 'POST',
             data: { action: 'report-dashboard' },
             success: function (response) {
-                // console.log(response.data);
+                console.log(response.data);
                 if (typeof response.data === 'object' && response.data !== null) {
                     if (Object.keys(response.data).length != 0) {
                         dashboardData = response.data;
@@ -278,9 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to filter table by priority
     function filterTableByPriority(priorityId) {
-        // console.log('DEBUG filterTableByPriority: Called with priorityId:', priorityId);
-
-        // Reset other filters and switch to All view - same pattern as filterTableByStatus
+        // Reset other filters
         if (document.getElementById('filter-referral-id')) {
             document.getElementById('filter-referral-id').value = '';
         }
@@ -291,28 +289,32 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('filter-status').value = '';
         }
 
+        // Set priority filter to clicked priority
+        if (document.getElementById('filter-priority')) {
+            document.getElementById('filter-priority').value = priorityId;
+        }
+
         // Switch to "All" view and use all data
         document.getElementById('type-all').checked = true;
         window.currentReferralType = 'all';
 
-        // Use ALL data from API response
         if (window.referralApiData && window.referralApiData.all) {
             originalData = [...window.referralApiData.all];
-            // console.log('DEBUG filterTableByPriority: Switched to All view, data length:', originalData.length);
+        }
 
-            // Filter by priority
-            let filteredData = originalData.filter(function (row) {
-                return String(row.priority) === String(priorityId);
-            });
-
-            // Update the displayed data
-            allData = filteredData;
-            currentPage = 1;
-            if (typeof displayPage === 'function') {
-                displayPage(currentPage);
-            }
-
-            // console.log('DEBUG filterTableByPriority: Priority filter applied:', priorityId, 'Results:', filteredData.length);
+        // Apply filters using unified logic
+        if (typeof globalApplyFilters === 'function') {
+            globalApplyFilters();
+        } else {
+            const checkAndApply = setInterval(function () {
+                if (typeof globalApplyFilters === 'function') {
+                    globalApplyFilters();
+                    clearInterval(checkAndApply);
+                }
+            }, 100);
+            setTimeout(function () {
+                clearInterval(checkAndApply);
+            }, 5000);
         }
     }
 
@@ -329,8 +331,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const marginClass = index === businessUnits.length - 1 ? '' : 'mb-1';
                 $('#business-units-list').append(
                     '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
-                    '<span>' + unit.name + '</span>' +
-                    '<span>' + unit.count + '</span>' +
+                    '<span class="r-text">' + unit.name + '</span>' +
+                    '<span class="r-text">' + unit.count + '</span>' +
                     '</div>'
                 );
             });
@@ -340,8 +342,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const marginClass = i === maxVisible - 1 ? '' : 'mb-1';
                 $('#business-units-list').append(
                     '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
-                    '<span>&nbsp;</span>' +
-                    '<span>&nbsp;</span>' +
+                    '<span class="r-text">&nbsp;</span>' +
+                    '<span class="r-text">&nbsp;</span>' +
                     '</div>'
                 );
             }
@@ -353,8 +355,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const marginClass = i === maxVisible - 1 ? '' : 'mb-1';
                 $('#business-units-list').append(
                     '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
-                    '<span>' + businessUnits[i].name + '</span>' +
-                    '<span>' + businessUnits[i].count + '</span>' +
+                    '<span class="r-text">' + businessUnits[i].name + '</span>' +
+                    '<span class="r-text">' + businessUnits[i].count + '</span>' +
                     '</div>'
                 );
             }
@@ -364,8 +366,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const marginClass = i === businessUnits.length - 1 ? '' : 'mb-1';
                 $('#businessUnitsCollapse').append(
                     '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
-                    '<span>' + businessUnits[i].name + '</span>' +
-                    '<span>' + businessUnits[i].count + '</span>' +
+                    '<span class="r-text">' + businessUnits[i].name + '</span>' +
+                    '<span class="r-text">' + businessUnits[i].count + '</span>' +
                     '</div>'
                 );
             }
@@ -380,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Get business units from API and display with 0 counts
         $.ajax({
-            url: 'api-jwt.php',
+            url: 'referral/api-jwt.php',
             type: 'POST',
             data: { action: 'business-units' },
             success: function (response) {
@@ -429,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     //display business unit
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'business-units' },
         success: function (response) {
@@ -546,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (allData.length === 0) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td colspan="6" style="text-align: center; padding: 20px; color: #666; font-style: italic;">No data available</td>
+                    <td colspan="7" style="text-align: center; padding: 20px; color: #666; font-style: italic;">No data available</td>
                 `;
                 document.querySelector('#referral-tbl tbody').appendChild(tr);
                 updatePagination();
@@ -577,31 +579,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Default to Medium (2) if priority is null/empty
                 const priorityValue = row.priority || '2';
                 const priorityInfo = priorityMap[priorityValue] || priorityMap['2'];
-                const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name} priority</span>`;
+                const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name}</span>`;
 
                 // Generate PDF button for all referrals (both internal and external)
-                const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}" data-from-sequence="${row.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Form"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
+                const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}" data-from-sequence="${row.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download MyReferral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
 
                 // Calculate relative time using moment.js
-                const relativeTime = row.ori_created_at ? moment(row.ori_created_at).fromNow() : 'N/A';
+                // Remove 'Z' suffix and treat as Malaysia time (UTC+8)
+                const relativeTime = row.ori_created_at ? moment(row.ori_created_at.replace('Z', '')).utcOffset(8, true).fromNow() : 'N/A';
 
                 tr.innerHTML = `
-                    <td style="font-size:14px;width: 10%;text-align:start;">${row.ref_id}</td>
-                    <td style="font-size:14px;width: 35%;text-align:start;">
-                        ${row.reason} ${priorityBadge}
+                    <td style="font-size:13px;width: 8%;text-align:start;">${row.ref_id}</td>
+                    <td style="font-size:13px;width: 34%;text-align:start;">
+                        ${row.reason}
                     </td>
-                    <td style="font-size:14px;width: 13%;text-align:start;">
-                        <span>${row.from_business_unit || 'N/A'}</span>
+                    <td style="font-size:13px;width: 13%;text-align:start;">
+                        <span style="font-size:13px;">${row.from_business_unit || 'N/A'}</span>
                     </td>
-                    <td style="font-size:14px;width: 13%;text-align:start;">
-                        <span>${row.to_business_unit || 'N/A'}</span>${externalBadge}
+                    <td style="font-size:13px;width: 13%;text-align:start;">
+                        <span style="font-size:13px;">${row.to_business_unit || 'N/A'}</span>${externalBadge}
                     </td>
-                    <td style="font-size:14px;width: 14%;text-align:start;">
+                    <td style="font-size:13px;width: 10%;text-align:start;">
                         <span class="bdg-${statusClass}">${statusText}</span>
                         <br><span style="color: #6c757d; font-size: 13px; margin-top: 4px; display: inline-block;">${relativeTime}</span>
                     </td>
-                    <td style="font-size:14px;width: 15%;text-align:start;">
-                        <a href="view.php?id=${row.id}" class="btn-icon btn-icon-edit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View"><i class="bi bi-pencil-square"></i></a>
+                    <td style="font-size:13px;width: 10%;text-align:start;">
+                        ${priorityBadge}
+                    </td>
+                    <td style="font-size:13px;width: 12%;text-align:start;">
+                        <a href="referral/view.php?id=${row.id}" class="btn-icon btn-icon-edit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View/Edit MyReferral"><i class="bi bi-pencil-square"></i></a>
                         ${secondButton}
                     </td>
                 `;
@@ -710,7 +716,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             $.ajax({
-                url: 'api-jwt.php',
+                url: 'referral/api-jwt.php',
                 type: 'POST',
                 data: JSON.stringify({
                     action: 'download-external-form',
@@ -772,7 +778,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Load status options from API
         $.ajax({
-            url: 'api-jwt.php',
+            url: 'referral/api-jwt.php',
             type: 'POST',
             data: { action: 'referral-status' },
             success: function (response) {
@@ -796,8 +802,33 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // Load priority options from API
         $.ajax({
-            url: 'api-jwt.php',
+            url: 'referral/api-jwt.php',
+            type: 'POST',
+            data: { action: 'referral-priority' },
+            success: function (response) {
+                const prioritySelect = document.getElementById('filter-priority');
+                if (prioritySelect && response && response.data) {
+                    // Clear existing options
+                    prioritySelect.innerHTML = '<option value="">All Priority</option>';
+
+                    // Add priority options from object format {"1": "Low", "2": "Medium", "3": "High"}
+                    Object.keys(response.data).forEach(function (key) {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = response.data[key];
+                        prioritySelect.appendChild(option);
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                logError(new Error('Error loading priority options'), { context: 'loadPriorityOptions', status: status, error: error, responseText: xhr.responseText });
+            }
+        });
+
+        $.ajax({
+            url: 'referral/api-jwt.php',
             type: 'POST',
             data: { action: 'all-referral' },
             success: function (response) {
@@ -829,7 +860,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (false && department && department !== '') { // Temporarily disabled
                     // Get business units to find the department name
                     $.ajax({
-                        url: 'api-jwt.php',
+                        url: 'referral/api-jwt.php',
                         type: 'POST',
                         data: { action: 'business-units' },
                         success: function (busResponse) {
@@ -882,6 +913,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
 
+                // Add filter functionality for priority
+                const priorityFilter = document.getElementById('filter-priority');
+                if (priorityFilter) {
+                    priorityFilter.addEventListener('change', function () {
+                        applyFilters();
+                    });
+                }
+
                 // Add referral type filter functionality
                 const referralTypeFilters = document.querySelectorAll('input[name="referral-type"]');
                 referralTypeFilters.forEach(function (radio) {
@@ -901,6 +940,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     document.getElementById('filter-referral-id').value = '';
                                     document.getElementById('filter-business-unit').value = 'all';
                                     document.getElementById('filter-status').value = '';
+                                    document.getElementById('filter-priority').value = '';
                                     if (document.getElementById('filter-date-range')) {
                                         document.getElementById('filter-date-range').value = '';
                                     }
@@ -938,6 +978,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         document.getElementById('filter-status').value = '';
+                        document.getElementById('filter-priority').value = '';
                         document.getElementById('filter-date-range').value = '';
 
                         // Clear date range picker
@@ -964,6 +1005,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const referralId = document.getElementById('filter-referral-id').value.trim().toLowerCase();
                     const selectedBusinessUnit = document.getElementById('filter-business-unit').value;
                     const selectedStatus = document.getElementById('filter-status').value;
+                    const selectedPriority = document.getElementById('filter-priority').value;
                     const dateRange = document.getElementById('filter-date-range').value;
 
                     // console.log('Applying filters:', {
@@ -977,6 +1019,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const hasActiveFilters = referralId !== '' ||
                         (selectedBusinessUnit !== '' && selectedBusinessUnit !== 'all') ||
                         selectedStatus !== '' ||
+                        selectedPriority !== '' ||
                         dateRange !== '';
 
                     // console.log('DEBUG applyFilters: hasActiveFilters:', hasActiveFilters);
@@ -1004,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Use department-filtered data by getting current user's business unit
                         if (department && department !== '') {
                             $.ajax({
-                                url: 'api-jwt.php',
+                                url: 'referral/api-jwt.php',
                                 type: 'POST',
                                 async: false, // Make synchronous to get data immediately
                                 data: { action: 'business-units' },
@@ -1095,6 +1138,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                         // console.log('=== END STATUS FILTER DEBUG ===');
                         // console.log('After status filter:', filteredData.length);
+                    }
+
+                    // Filter by priority
+                    if (selectedPriority !== '') {
+                        filteredData = filteredData.filter(function (row) {
+                            const matches = String(row.priority) === String(selectedPriority);
+                            return matches;
+                        });
                     }
 
                     // Filter by date range
@@ -1430,6 +1481,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (column === 'status') {
                 const numA = parseInt(valueA) || 0;
                 const numB = parseInt(valueB) || 0;
+                return direction === 'asc' ? numA - numB : numB - numA;
+            }
+
+            // For priority, sort by priority ID number (1=Low, 2=Medium, 3=High)
+            if (column === 'priority') {
+                const numA = parseInt(valueA) || 2; // Default to Medium if null
+                const numB = parseInt(valueB) || 2;
                 return direction === 'asc' ? numA - numB : numB - numA;
             }
 

@@ -110,7 +110,7 @@ $(document).ready(function () {
 
     // Display business unit
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'business-units' },
         success: function (response) {
@@ -217,7 +217,7 @@ $(document).ready(function () {
                     locationFrom.trigger('change.select2');
                 } else {
                     $.ajax({
-                        url: 'backend.php?action=getLocations',
+                        url: 'referral/backend.php?action=getLocations',
                         type: 'POST',
                         data: {
                             ref_bus_id: businessUnitId
@@ -268,7 +268,7 @@ $(document).ready(function () {
     // For Referred From
     function getStaffLocation(staffId, callback) {
         $.ajax({
-            url: 'backend.php',
+            url: 'referral/backend.php',
             method: 'GET',
             data: {
                 staff_id: staffId,
@@ -289,7 +289,7 @@ $(document).ready(function () {
     // Function to display content based on business unit ID
     function displayContent(businessUnitId) {
         $.ajax({
-            url: 'api-jwt.php',
+            url: 'referral/api-jwt.php',
             type: 'POST',
             dataType: 'json',
             data: {
@@ -420,7 +420,7 @@ $(document).ready(function () {
 
             // Get locations for the selected business unit
             $.ajax({
-                url: 'backend.php?action=getLocations',
+                url: 'referral/backend.php?action=getLocations',
                 type: 'POST',
                 data: {
                     ref_bus_id: refBusId
@@ -532,7 +532,7 @@ $(document).ready(function () {
         // AJAX search for customer
         $.ajax({
             type: 'POST',
-            url: 'backend.php?action=searchCustomer',
+            url: 'referral/backend.php?action=searchCustomer',
             data: {
                 icno: idNumber,
                 id_type: idType  // Send ID type to backend
@@ -685,7 +685,7 @@ $(document).ready(function () {
 
                 $.ajax({
                     type: 'POST',
-                    url: 'backend.php?action=updateCustomer',
+                    url: 'referral/backend.php?action=updateCustomer',
                     data: {
                         customer_id: customerId,
                         field: fieldName,
@@ -793,7 +793,7 @@ $(document).ready(function () {
                 var externalOrganizations = [];
 
                 $.ajax({
-                    url: 'api-jwt.php',
+                    url: 'referral/api-jwt.php',
                     type: 'POST',
                     dataType: 'json',
                     data: {
@@ -948,7 +948,7 @@ $(document).ready(function () {
     // Load referral priorities from API
     function loadReferralPriorities() {
         $.ajax({
-            url: 'api-jwt.php',
+            url: 'referral/api-jwt.php',
             type: 'POST',
             data: { action: 'referral-priority' },
             success: function (response) {
@@ -1353,7 +1353,7 @@ function validateForm(event) {
         // Disable submit button to prevent double submission
         $('input[type="submit"]').prop('disabled', true);
 
-        fetch('post.php', {
+        fetch('referral/post.php', {
             method: 'POST',
             body: formData
         })
@@ -1372,7 +1372,7 @@ function validateForm(event) {
                     allUploadedFiles = [];
                     $('#attachmentPreview').empty();
 
-                    window.location.href = 'successful.php?id=' + inner.id;
+                    window.location.href = 'referral/successful.php?id=' + inner.id + '&sequence=1';
 
                 } else {
                     // Hide loading overlay on validation error

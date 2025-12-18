@@ -13,6 +13,77 @@ body {
     box-shadow: 0 2px 10px rgba(19, 92, 170, 0.1);
 }
 
+/* Navbar Styling */
+.referral-nav {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(19, 92, 170, 0.1);
+    padding: 12px 20px;
+}
+
+.referral-nav .navbar-nav {
+    gap: 8px;
+}
+
+.referral-nav .nav-link {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #173F5F;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.referral-nav .nav-link:hover {
+    background-color: #173F5F;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(23, 63, 95, 0.2);
+}
+
+.referral-nav .nav-link.active {
+    background-color: #20639b;
+    color: white;
+}
+
+.referral-nav .navbar-toggler {
+    border: 1px solid #173F5F;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.referral-nav .navbar-toggler:hover {
+    background-color: #173F5F;
+}
+
+.referral-nav .navbar-toggler:hover i {
+    color: white;
+}
+
+.referral-nav .navbar-toggler i {
+    font-size: 24px;
+    color: #173F5F;
+    transition: all 0.3s ease;
+}
+
+.referral-nav .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(23, 63, 95, 0.25);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 991px) {
+    .referral-nav .navbar-nav {
+        padding-top: 12px;
+        gap: 4px;
+    }
+
+    .referral-nav .nav-link {
+        padding: 10px 12px;
+    }
+}
 .referral_header {
     /* background-color: #DBE5EE; */
     padding-top: 2px;
@@ -118,7 +189,6 @@ input[type="submit"].btn-new-referral {
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: 600;
     font-size: 14px;
     text-transform: capitalize;
     font-family: 'Inter', sans-serif;
@@ -689,10 +759,10 @@ input[type="submit"].btn-new-referral:active {
 .referral-tbl .bdg-open {
     background-color: green !important;
     color: white !important;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 4px;
     text-align: center;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     text-transform: capitalize;
     font-family: 'Inter', sans-serif !important;
@@ -703,10 +773,10 @@ input[type="submit"].btn-new-referral:active {
 .referral-tbl .bdg-referred {
     background-color: orange !important;
     color: white !important;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 4px;
     text-align: center;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     text-transform: capitalize;
     font-family: 'Inter', sans-serif !important;
@@ -717,9 +787,9 @@ input[type="submit"].btn-new-referral:active {
 .referral-tbl .bdg-closed {
     background-color: #434e6c !important;
     color: white !important;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     text-transform: capitalize;
     font-family: 'Inter', sans-serif !important;
@@ -730,9 +800,9 @@ input[type="submit"].btn-new-referral:active {
 .referral-tbl .bdg-in-progress {
     background-color: yellowgreen !important;
     color: white !important;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     text-transform: capitalize;
     font-family: 'Inter', sans-serif !important;
@@ -743,9 +813,9 @@ input[type="submit"].btn-new-referral:active {
 .referral-tbl .bdg-not-present {
     background-color: crimson !important;
     color: white !important;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     text-transform: capitalize;
     font-family: 'Inter', sans-serif !important;
@@ -993,3 +1063,12 @@ input[type="submit"].btn-new-referral:active {
 }
 
 
+.referral-nav {
+    display: flex;
+    flex-direction: row;
+    padding: 15px 25px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(19, 92, 170, 0.1);
+    
+}

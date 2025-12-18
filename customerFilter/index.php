@@ -22,11 +22,12 @@ include('../../common/index_adv.php');
 ?>
 
 <body>
+    <?php include('../navbar.php'); ?>
     <div class="referral-container mb-3">
         <div class="row mb-3">
             <div class="col-12">
                 <div class="d-flex justify-content-start align-items-center px-3">
-                    <span class="fw-bold text-start me-3" style="font-size:20px;">Search Referral by Customer</span>
+                    <span class="fw-bold text-start me-3" style="font-size:18px;">Search by Customer</span>
                 </div>
             </div>
         </div>

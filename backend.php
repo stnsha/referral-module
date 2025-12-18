@@ -10,8 +10,6 @@ if (!isset($conn)) {
     die(json_encode(array("status" => 500, "message" => "Database connection error")));
 }
 
-
-
 function normalizeCompName($comp_name)
 {
     $comp_name = ucwords(strtolower($comp_name));
@@ -25,15 +23,94 @@ function normalizeCompName($comp_name)
 function getBusinessUnits()
 {
     global $conn;
-    $department_results = mysqli_query($conn, "SELECT * FROM ref_business_unit");
+    $department_results = mysqli_query($conn, "SELECT * FROM ref_business_unit ORDER BY name ASC");
 
     $departments = array();
 
     while ($row = mysqli_fetch_assoc($department_results)) {
-        $departments[] = $row;
+        $departments[] = array(
+            'id' => $row['id'],
+            'name' => $row['name'],
+            'staff_department_id' => $row['staff_department_id'],
+            'ending_code' => $row['ending_code'],
+            'is_active' => isset($row['is_active']) ? (int)$row['is_active'] : 1
+        );
     }
 
     return $departments;
+}
+
+function getDepartments()
+{
+    global $conn;
+
+    $query = "SELECT id, depart_name FROM staff_department
+              WHERE id IS NOT NULL
+              ORDER BY depart_name ASC";
+    $result = mysqli_query($conn, $query);
+
+    $departments = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $departments[] = array(
+            'id' => $row['id'],
+            'name' => $row['depart_name']
+        );
+    }
+
+    return $departments;
+}
+
+function searchDepartments($search_term)
+{
+    global $conn;
+
+    if (empty($search_term)) {
+        return getDepartments();
+    }
+
+    $search_term = mysqli_real_escape_string($conn, $search_term);
+
+    $query = "SELECT id, depart_name FROM staff_department
+              WHERE depart_name LIKE '%$search_term%'
+              ORDER BY depart_name ASC
+              LIMIT 10";
+
+    $result = mysqli_query($conn, $query);
+
+    $departments = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $departments[] = array(
+            'id' => $row['id'],
+            'name' => $row['depart_name']
+        );
+    }
+
+    return $departments;
+}
+
+function toggleBusinessUnitStatus($business_unit_id, $is_active)
+{
+    global $conn;
+
+    if (!$business_unit_id) {
+        return array('success' => false, 'message' => 'Business unit ID is required');
+    }
+
+    $business_unit_id = (int)$business_unit_id;
+    $is_active = (int)$is_active;
+
+    if (!in_array($is_active, array(0, 1))) {
+        return array('success' => false, 'message' => 'Invalid status value');
+    }
+
+    $query = "UPDATE ref_business_unit SET is_active = $is_active WHERE id = $business_unit_id";
+    $result = mysqli_query($conn, $query);
+
+    if ($result) {
+        $status_text = $is_active ? 'active' : 'inactive';
+        return array('success' => true, 'message' => 'Business unit marked as ' . $status_text);
+    }
+    return array('success' => false, 'message' => 'Database error: ' . mysqli_error($conn));
 }
 
 function getLocations($ref_bus_id)
@@ -632,6 +709,118 @@ function getRecipientDetails($location, $business_unit)
     return $row ? array('outlet_name' => $row['outlet_name'], 'business_unit_name' => $row['business_unit_name']) : null;
 }
 
+/**
+ * Get distinct department IDs from staff table
+ */
+function getDistinctDepartments()
+{
+    global $conn;
+
+    $query = "SELECT DISTINCT department FROM staff
+              WHERE department IS NOT NULL AND department != ''
+              ORDER BY department ASC";
+    $result = mysqli_query($conn, $query);
+
+    $departments = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $departments[] = array(
+            'id' => $row['department'],
+            'name' => 'Department ' . $row['department']
+        );
+    }
+
+    return $departments;
+}
+
+/**
+ * Search staff by name for autocomplete (max 5 results)
+ */
+function searchStaff($search_term)
+{
+    global $conn;
+
+    if (empty($search_term)) {
+        return array();
+    }
+
+    $search_term = mysqli_real_escape_string($conn, $search_term);
+
+    $query = "SELECT id, nama_staff, department, outlet, referral
+              FROM staff
+              WHERE nama_staff LIKE '%$search_term%'
+              ORDER BY nama_staff ASC
+              LIMIT 5";
+
+    $result = mysqli_query($conn, $query);
+
+    $staff_list = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $staff_list[] = array(
+            'id' => $row['id'],
+            'nama_staff' => $row['nama_staff'],
+            'department' => $row['department'],
+            'outlet' => $row['outlet'],
+            'referral' => (int)$row['referral']
+        );
+    }
+
+    return $staff_list;
+}
+
+/**
+ * Update staff referral permission (0, 1, or 2)
+ */
+function updateStaffReferral($staff_id, $referral_value)
+{
+    global $conn;
+
+    if (!$staff_id || !isset($referral_value)) {
+        return array('success' => false, 'message' => 'Missing required parameters');
+    }
+
+    $referral_value = (int)$referral_value;
+    if (!in_array($referral_value, array(0, 1, 2))) {
+        return array('success' => false, 'message' => 'Invalid referral permission value');
+    }
+
+    $staff_id = mysqli_real_escape_string($conn, $staff_id);
+
+    $query = "UPDATE staff SET referral = $referral_value WHERE id = $staff_id";
+    $result = mysqli_query($conn, $query);
+
+    if ($result) {
+        return array('success' => true, 'message' => 'Staff access updated successfully');
+    } else {
+        return array('success' => false, 'message' => 'Database error: ' . mysqli_error($conn));
+    }
+}
+
+/**
+ * Get outlet names from CSV string of IDs
+ */
+function getOutletNames($outlet_csv)
+{
+    global $conn;
+
+    if (empty($outlet_csv)) {
+        return 'None';
+    }
+
+    $outlet_ids = explode(',', $outlet_csv);
+    $outlet_ids = array_map('intval', $outlet_ids);
+    $outlet_ids_str = implode(',', $outlet_ids);
+
+    $query = "SELECT code FROM outlet WHERE id IN ($outlet_ids_str) ORDER BY code ASC";
+    $result = mysqli_query($conn, $query);
+
+    $outlet_names = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $outlet_names[] = $row['code'];
+    }
+
+    return empty($outlet_names) ? 'None' : implode(', ', $outlet_names);
+}
+
 if (isset($_GET['action']) && $_GET['action'] == 'getLocations' && isset($_POST['ref_bus_id'])) {
     header('Content-Type: application/json');
     echo json_encode(getLocations($_POST['ref_bus_id']));
@@ -749,5 +938,60 @@ if (isset($_GET['action']) && $_GET['action'] == 'searchCustomerByIc' && isset($
     } else {
         echo json_encode(array('success' => false, 'message' => 'Customer not found'));
     }
+    exit;
+}
+
+// Get all business units
+if (isset($_GET['action']) && $_GET['action'] == 'getBusinessUnits') {
+    header('Content-Type: application/json');
+    echo json_encode(getBusinessUnits());
+    exit;
+}
+
+// Get distinct departments
+if (isset($_GET['action']) && $_GET['action'] == 'getDistinctDepartments') {
+    header('Content-Type: application/json');
+    echo json_encode(getDistinctDepartments());
+    exit;
+}
+
+// Get all departments FROM staff_department table
+if (isset($_GET['action']) && $_GET['action'] == 'getDepartments') {
+    header('Content-Type: application/json');
+    echo json_encode(getDepartments());
+    exit;
+}
+
+// Search departments by name for autocomplete
+if (isset($_GET['action']) && $_GET['action'] == 'searchDepartments' && isset($_POST['search_term'])) {
+    header('Content-Type: application/json');
+    echo json_encode(searchDepartments($_POST['search_term']));
+    exit;
+}
+
+// Toggle business unit active/inactive status
+if (
+    isset($_GET['action']) && $_GET['action'] == 'toggleBusinessUnitStatus' &&
+    isset($_POST['business_unit_id']) && isset($_POST['is_active'])
+) {
+    header('Content-Type: application/json');
+    echo json_encode(toggleBusinessUnitStatus($_POST['business_unit_id'], $_POST['is_active']));
+    exit;
+}
+
+// Search staff by name
+if (isset($_GET['action']) && $_GET['action'] == 'searchStaff' && isset($_POST['search_term'])) {
+    header('Content-Type: application/json');
+    echo json_encode(searchStaff($_POST['search_term']));
+    exit;
+}
+
+// Update staff referral permission
+if (
+    isset($_GET['action']) && $_GET['action'] == 'updateStaffReferral' &&
+    isset($_POST['staff_id']) && isset($_POST['referral_value'])
+) {
+    header('Content-Type: application/json');
+    echo json_encode(updateStaffReferral($_POST['staff_id'], $_POST['referral_value']));
     exit;
 }

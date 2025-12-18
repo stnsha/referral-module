@@ -1,0 +1,146 @@
+/* Business Units Page Custom Styles */
+
+/* Selected Staff Info Animation */
+#selected-staff-info {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Select2 Custom Styling for Staff Search */
+.select2-container--default .select2-results__option {
+    font-size: 13px;
+    font-family: Inter, sans-serif;
+    padding: 8px 12px;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #20639b;
+}
+
+.select2-container--default .select2-selection--single {
+    height: auto !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 1.5 !important;
+    padding: 5px 8px !important;
+    font-size: 13px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+}
+
+/* Table Hover Effect */
+#business-units-table tbody tr:hover {
+    background-color: rgba(23, 63, 95, 0.05);
+}
+
+/* Remove default button border for icon buttons */
+button.btn-icon {
+    border: none !important;
+    outline: none !important;
+}
+
+button.btn-icon:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Button Hover Effects - Swapped default and hover states */
+.toggle-status-bu.btn-outline-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+    border-color: #ffc107 !important;
+}
+
+.toggle-status-bu.btn-outline-warning:hover {
+    background-color: transparent !important;
+    color: #ffc107 !important;
+    border-color: #ffc107 !important;
+}
+
+.toggle-status-bu.btn-outline-success {
+    background-color: #198754 !important;
+    color: white !important;
+    border-color: #198754 !important;
+}
+
+.toggle-status-bu.btn-outline-success:hover {
+    background-color: transparent !important;
+    color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+.delete-bu:hover {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+/* Form Radio Button Styling */
+.form-check-input:checked {
+    background-color: #173F5F;
+    border-color: #173F5F;
+}
+
+.form-check-input:focus {
+    border-color: #20639b;
+    box-shadow: 0 0 0 0.25rem rgba(32, 99, 155, 0.25);
+}
+
+/* Staff Info Card */
+#selected-staff-info .p-2 {
+    transition: all 0.2s ease-in-out;
+}
+
+#selected-staff-info .p-2:hover {
+    box-shadow: 0 2px 4px rgba(23, 63, 95, 0.1);
+}
+
+/* Status Badge Styling */
+.badge {
+    font-weight: 500;
+}
+
+/* Inactive row styling */
+tr:has(.badge.bg-secondary) {
+    opacity: 0.7;
+    background-color: rgba(108, 117, 125, 0.05);
+}
+
+/* Radio button FORCE LEFT alignment */
+.form-check {
+    text-align: left !important;
+    display: block !important;
+    padding-left: 0px !important;
+}
+
+.form-check-label {
+    text-align: left !important;
+    display: inline-block !important;
+}
+
+.form-check-label.r-text {
+    text-align: left !important;
+    display: inline-block !important;
+}
+
+.form-check-input {
+    float: none !important;
+    margin-left: 0 !important;
+}

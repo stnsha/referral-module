@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     loadYears();
 
     $.ajax({
-        url: 'backend.php?action=getBusinessUnit',
+        url: 'referral/backend.php?action=getBusinessUnit',
         type: 'GET',
         dataType: 'json',
         data: {
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function loadBusinessUnits() {
     //display business unit
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'business-units' },
         success: function (response) {
@@ -118,7 +118,7 @@ function loadBusinessUnits() {
 // Function to load locations based on business unit ID
 function loadLocations(businessUnitId) {
     $.ajax({
-        url: 'backend.php?action=getLocations',
+        url: 'referral/backend.php?action=getLocations',
         type: 'POST',
         data: {
             ref_bus_id: businessUnitId
@@ -149,7 +149,7 @@ function loadLocations(businessUnitId) {
 // Load status options from API
 function loadStatus() {
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'referral-status' },
         success: function (response) {
@@ -175,7 +175,7 @@ function loadStatus() {
 // Load referral priorities from API
 function loadReferralPriorities() {
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'referral-priority' },
         success: function (response) {
@@ -340,7 +340,7 @@ function generateReport() {
     // Alternative server-side download function
     function downloadBase64FileServerSide(base64Data, filename, mimeType) {
         $.ajax({
-            url: 'download-file.php',
+            url: 'referral/download-file.php',
             type: 'POST',
             data: JSON.stringify({
                 base64: base64Data,
@@ -377,7 +377,7 @@ function generateReport() {
 
     // Make API call to fetch report data
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: {
             action: 'get-report',
@@ -459,7 +459,7 @@ function generateReport() {
 // Function to display report data
 function loadSummary(businessUnitId) {
     $.ajax({
-        url: 'api-jwt.php',
+        url: 'referral/api-jwt.php',
         type: 'POST',
         data: {
             action: 'get-summary-report',
