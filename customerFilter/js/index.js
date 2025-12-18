@@ -58,7 +58,7 @@ $(document).ready(function () {
         // Show loading state
         $('#customer-filter-tbody').html(`
             <tr>
-                <td colspan="6" class="text-center" style="padding: 20px;">
+                <td colspan="7" class="text-center" style="padding: 20px;">
                     <span style="color: #6c757d;">Searching...</span>
                 </td>
             </tr>
@@ -158,7 +158,7 @@ $(document).ready(function () {
         if (!data || data.length === 0) {
             $('#customer-filter-tbody').html(`
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px; color: #666; font-style: italic;">No data available</td>
+                    <td colspan="7" style="text-align: center; padding: 20px; color: #666; font-style: italic;">No data available</td>
                 </tr>
             `);
             return;
@@ -170,8 +170,8 @@ $(document).ready(function () {
             const statusText = getStatusText(item.status);
 
             // Display from and to business units separately
-            const fromBusinessUnit = item.from_business_unit || '-';
-            const toBusinessUnit = item.to_business_unit || '-';
+            const fromBusinessUnit = item.from_business_unit || 'N/A';
+            const toBusinessUnit = item.to_business_unit || 'N/A';
 
             // Add external badge if referral is external
             const externalBadge = item.is_external ? '<br><span class="badge-external">External</span>' : '';
@@ -184,32 +184,37 @@ $(document).ready(function () {
             };
 
             // Default to Medium (2) if priority is null/empty
-            const priorityValue = item.priority ? item.priority.toString() : '2';
+            const priorityValue = item.priority || '2';
             const priorityInfo = priorityMap[priorityValue] || priorityMap['2'];
-            const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name} priority</span>`;
+            const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name}</span>`;
 
             // Generate PDF button for all referrals (both internal and external)
-            const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${item.id}" data-ref-id="${item.ref_id}" data-timestamp="${item.ori_created_at}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download Referral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
+            const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${item.id}" data-ref-id="${item.ref_id}" data-timestamp="${item.ori_created_at}" data-from-sequence="${item.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download MyReferral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
 
             // Calculate relative time (using plain JavaScript since we may not have moment.js)
             const relativeTime = item.ori_created_at ? getRelativeTime(item.ori_created_at) : 'N/A';
 
             rows += `
                 <tr>
-                    <td style="font-size:14px;width: 10%;text-align:start;">${item.ref_id || ''}</td>
-                    <td style="font-size:14px;width: 35%;text-align:start;">${item.reason || ''} ${priorityBadge}</td>
-                    <td style="font-size:14px;width: 13%;text-align:start;">
-                        <span>${fromBusinessUnit}</span>
+                    <td style="font-size:13px;width: 8%;text-align:start;">${item.ref_id}</td>
+                    <td style="font-size:13px;width: 34%;text-align:start;">
+                        ${item.reason}
                     </td>
-                    <td style="font-size:14px;width: 13%;text-align:start;">
-                        <span>${toBusinessUnit}</span>${externalBadge}
+                    <td style="font-size:13px;width: 13%;text-align:start;">
+                        <span style="font-size:13px;">${fromBusinessUnit}</span>
                     </td>
-                    <td style="font-size:14px;width: 14%;text-align:start;">
+                    <td style="font-size:13px;width: 13%;text-align:start;">
+                        <span style="font-size:13px;">${toBusinessUnit}</span>${externalBadge}
+                    </td>
+                    <td style="font-size:13px;width: 10%;text-align:start;">
                         <span class="bdg-${statusClass}">${statusText}</span>
                         <br><span style="color: #6c757d; font-size: 13px; margin-top: 4px; display: inline-block;">${relativeTime}</span>
                     </td>
-                    <td style="font-size:14px;width: 15%;text-align:start;">
-                        <a href="referral/view.php?id=${item.id}&view_only=true" class="btn-icon btn-icon-edit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View/Edit Referral"><i class="bi bi-pencil-square"></i></a>
+                    <td style="font-size:13px;width: 10%;text-align:start;">
+                        ${priorityBadge}
+                    </td>
+                    <td style="font-size:13px;width: 12%;text-align:start;">
+                        <a href="referral/view.php?id=${item.id}" class="btn-icon btn-icon-edit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View/Edit MyReferral"><i class="bi bi-pencil-square"></i></a>
                         ${secondButton}
                     </td>
                 </tr>
@@ -273,7 +278,7 @@ $(document).ready(function () {
     function showError(message) {
         $('#customer-filter-tbody').html(`
             <tr>
-                <td colspan="6" class="text-center" style="padding: 20px;">
+                <td colspan="7" class="text-center" style="padding: 20px;">
                     <span style="color: #dc3545;">${message}</span>
                 </td>
             </tr>
@@ -283,7 +288,7 @@ $(document).ready(function () {
     function resetTable() {
         $('#customer-filter-tbody').html(`
             <tr>
-                <td colspan="6" class="text-center" style="padding: 20px;">
+                <td colspan="7" class="text-center" style="padding: 20px;">
                     <span style="color: #6c757d;">Enter search criteria to find referrals</span>
                 </td>
             </tr>
@@ -322,6 +327,7 @@ $(document).ready(function () {
         const referralId = $(this).data('id');
         const refId = $(this).data('ref-id');
         const timestamp = $(this).data('timestamp');
+        const fromSequence = $(this).data('from-sequence');
 
         // Generate filename from ref_id and timestamp
         // Remove # from ref_id and format timestamp
@@ -347,7 +353,8 @@ $(document).ready(function () {
             type: 'POST',
             data: JSON.stringify({
                 action: 'download-external-form',
-                referral_id: referralId
+                referral_id: referralId,
+                sequence: fromSequence || null
             }),
             contentType: 'application/json',
             xhrFields: {

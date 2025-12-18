@@ -56,17 +56,38 @@ include('../../common/index_adv.php');
                         style="background-color: transparent !important;">
                         <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
                             <tr>
-                                <th style="font-size:16px;width: 10%;text-align:start;">Referral ID</th>
-                                <th style="font-size:16px;width: 35%;text-align:start;">Referral Reason</th>
-                                <th style="font-size:16px;width: 13%;text-align:start;">Referred From</th>
-                                <th style="font-size:16px;width: 13%;text-align:start;">Referred To</th>
-                                <th style="font-size:16px;width: 14%;text-align:start;">Status</th>
-                                <th style="font-size:16px;width: 15%;text-align:start;">Action</th>
+                                <th class="sortable" data-column="ref_id"
+                                    style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
+                                    Referral ID <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
+                                </th>
+                                <th class="sortable" data-column="reason"
+                                    style="font-size:14px;width: 34%;text-align:start;cursor:pointer;user-select:none;">
+                                    Referral Reason <i class="bi bi-arrow-down-up"
+                                        style="font-size:12px;opacity:0.5;"></i>
+                                </th>
+                                <th class="sortable" data-column="from_business_unit"
+                                    style="font-size:14px;width: 13%;text-align:start;cursor:pointer;user-select:none;">
+                                    Referred From <i class="bi bi-arrow-down-up"
+                                        style="font-size:12px;opacity:0.5;"></i>
+                                </th>
+                                <th class="sortable" data-column="to_business_unit"
+                                    style="font-size:14px;width: 13%;text-align:start;cursor:pointer;user-select:none;">
+                                    Referred To <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
+                                </th>
+                                <th class="sortable" data-column="status"
+                                    style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
+                                    Status <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
+                                </th>
+                                <th class="sortable" data-column="priority"
+                                    style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
+                                    Priority <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
+                                </th>
+                                <th style="font-size:14px;width: 12%;text-align:start;">Action</th>
                             </tr>
                         </thead>
                         <tbody id="customer-filter-tbody">
                             <tr>
-                                <td colspan="6" class="text-center" style="padding: 20px;">
+                                <td colspan="7" class="text-center" style="padding: 20px;">
                                     <span style="color: #6c757d;">Enter search criteria to find referrals</span>
                                 </td>
                             </tr>
