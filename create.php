@@ -11,9 +11,10 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" /> -->
-    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css?v=<?php echo time(); ?>" />
     <link rel="stylesheet" media="screen" type="text/css" href="referral/css/toast.css?v=<?php echo time(); ?>" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 <?php
 require_once('../lock_adv.php');
@@ -412,10 +413,10 @@ include('../common/index_adv.php');
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-    const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-    const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-    const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
     </script>
     <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>
     <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>
