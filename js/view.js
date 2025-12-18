@@ -852,9 +852,9 @@ function displayAttachments(attachments, staff, created_at, accordion) {
 
         const downloadButtonHtml = isDownloadableClientSide ?
             `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-encoded="${attachment.encoded}">
-                    <img src="img/download.png" style="width:25px;"/>
+                    <img src="referral/img/download.png" style="width:25px;"/>
                 </button>` :
-            `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.attachment_id}"> <img src="img/download.png" style="width:25px;"/>
+            `<button class="btn btn-sm btn-link text-decoration-none download-btn" title="Download" data-filename="${attachment.name}" data-attachment-id="${attachment.attachment_id}"> <img src="referral/img/download.png" style="width:25px;"/>
                 </button>`;
 
         const attachmentItem = `
