@@ -338,6 +338,9 @@ include('../common/index_adv.php');
                             <textarea name="referral_reason" class="form-control form-control-sm" rows="5"></textarea>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
+                            <small class="form-text text-muted">
+                                Only state the purpose of referral. Do not include greetings such as “Dear Doctor”.
+                            </small>
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
