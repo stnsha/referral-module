@@ -6,7 +6,7 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
 // Determine active class for each nav item
 $dashboard_active = ($current_page == 'index.php' && $current_dir == 'referral') ? 'active' : '';
 $admin_active = ($current_page == 'admin.php') ? 'active' : '';
-$external_active = ($current_dir == 'externalReferee') ? 'active' : '';
+$external_active = ($current_dir == 'externalOrganization') ? 'active' : '';
 $customer_active = ($current_dir == 'customerFilter') ? 'active' : '';
 $business_units_active = ($current_page == 'index.php' && $current_dir == 'businessUnit') ? 'active' : '';
 $report_active = ($current_page == 'report.php') ? 'active' : '';
@@ -33,7 +33,7 @@ $report_active = ($current_page == 'report.php') ? 'active' : '';
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo $external_active; ?>"
-                            href="referral/externalReferee/index.php">External Referees</a>
+                            href="referral/externalOrganization/index.php">External Organization</a>
                     </li>
                 <?php } ?>
                 <li class="nav-item">

@@ -1121,6 +1121,125 @@ function deleteExternalReferee($referee_id, $staff_id)
 }
 
 /**
+ * Create external organization
+ * @param array $data Organization data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Creation result
+ */
+function createExternalOrganization($data, $staff_id)
+{
+    $result = getApiDataWithJWT('external-organizations', $data, 'POST', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 201 || $httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'External organization created successfully',
+            'data' => $decoded
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to create external organization'
+        );
+    }
+}
+
+/**
+ * Update external organization
+ * @param int $org_id Organization ID
+ * @param array $data Updated organization data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Update result
+ */
+function updateExternalOrganization($org_id, $data, $staff_id)
+{
+    $result = getApiDataWithJWT('external-organizations/' . $org_id, $data, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200 || $httpCode == 204) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'External organization updated successfully',
+            'data' => $decoded
+        );
+    } else {
+        $errorMessage = isset($decoded['message']) ? $decoded['message'] : 'Failed to update external organization';
+        if (isset($decoded['error'])) {
+            $errorMessage .= ' - ' . $decoded['error'];
+        }
+
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => $errorMessage,
+            'httpCode' => $httpCode,
+            'response' => $result['response']
+        );
+    }
+}
+
+/**
+ * Delete external organization
+ * @param int $org_id Organization ID
+ * @param int $staff_id Staff ID for authentication
+ * @return array Deletion result
+ */
+function deleteExternalOrganization($org_id, $staff_id)
+{
+    $result = getApiDataWithJWT('external-organizations/' . $org_id, null, 'DELETE', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 204 || $httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'External organization deleted successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to delete external organization'
+        );
+    }
+}
+
+/**
+ * Create external referee for a specific organization
+ * @param int $org_id Organization ID
+ * @param array $data Referee data
+ * @param int $staff_id Staff ID for authentication
+ * @return array Creation result
+ */
+function createExternalRefereeForOrg($org_id, $data, $staff_id)
+{
+    // Add organization ID to referee data
+    $data['external_organization_id'] = (int)$org_id;
+
+    $result = getApiDataWithJWT('external-referees', $data, 'POST', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 201 || $httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'External referee created successfully',
+            'data' => $decoded
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to create external referee'
+        );
+    }
+}
+
+/**
  * Create form details
  * @param array $data Form details data containing form_id and form_details array
  * @param int $staff_id Staff ID for authentication
@@ -1702,6 +1821,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = deleteExternalReferee($referee_id, $staff_id);
                 } else {
                     $response = array('success' => false, 'error' => true, 'message' => 'Missing referee_id');
+                }
+                break;
+            case 'create-external-organization':
+                if ($jsonData) {
+                    $response = createExternalOrganization($jsonData, $staff_id);
+                } else {
+                    $response = array('success' => false, 'error' => true, 'message' => 'Missing organization data');
+                }
+                break;
+            case 'update-external-organization':
+                $org_id = isset($_GET['org_id']) ? $_GET['org_id'] : (isset($jsonData['org_id']) ? $jsonData['org_id'] : null);
+                if ($org_id && $jsonData) {
+                    $response = updateExternalOrganization($org_id, $jsonData, $staff_id);
+                } else {
+                    $response = array('success' => false, 'error' => true, 'message' => 'Missing org_id or data');
+                }
+                break;
+            case 'delete-external-organization':
+                $org_id = isset($jsonData['org_id']) ? $jsonData['org_id'] : null;
+                if ($org_id) {
+                    $response = deleteExternalOrganization($org_id, $staff_id);
+                } else {
+                    $response = array('success' => false, 'error' => true, 'message' => 'Missing org_id');
+                }
+                break;
+            case 'create-external-referee-for-org':
+                $org_id = isset($jsonData['org_id']) ? $jsonData['org_id'] : null;
+                $referee_data = isset($jsonData['referee_data']) ? $jsonData['referee_data'] : null;
+                if ($org_id && $referee_data) {
+                    $response = createExternalRefereeForOrg($org_id, $referee_data, $staff_id);
+                } else {
+                    $response = array('success' => false, 'error' => true, 'message' => 'Missing org_id or referee_data');
                 }
                 break;
             case 'all-forms':
