@@ -368,7 +368,7 @@ $(document).ready(function () {
                             outlet: outlet,
                             contact: contact,
                             staff_department_id: rd.business_unit_id,
-                            createdAt: rd.created_at,
+                            createdAt: rd.updated_at,
                             originalIndex: index
                         };
 
@@ -389,7 +389,7 @@ $(document).ready(function () {
                                     <a href="#" class="btn-icon btn-icon-download download-history-pdf-btn"
                                        data-id="${referral_id}"
                                        data-sequence="${rd.sequence}"
-                                       data-timestamp="${rd.created_at}"
+                                       data-timestamp="${rd.updated_at}"
                                        data-bs-toggle="tooltip"
                                        data-bs-placement="top"
                                        data-bs-title="Download PDF">
@@ -404,7 +404,7 @@ $(document).ready(function () {
                                                 <div class="referral-text">
                                                     <span class="referral-title">
                                                         ${businessUnit}, ${staff}, ${outlet}</span>
-                                                    <span class="referral-date">${rd.created_at}</span>
+                                                    <span class="referral-date">${rd.updated_at}</span>
                                                 </div>
                                                 <div class="referral-actions">
                                                     ${downloadButtonHtml}
@@ -429,7 +429,7 @@ $(document).ready(function () {
                                     outlet: outlet,
                                     contact: contact,
                                     staff_department_id: rd.business_unit_id,
-                                    createdAt: rd.created_at
+                                    createdAt: rd.updated_at
                                 };
 
                                 const panel = $(`[data-sequence="${rd.sequence}"] .referral-panel-item`);

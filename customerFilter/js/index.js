@@ -189,10 +189,10 @@ $(document).ready(function () {
             const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name}</span>`;
 
             // Generate PDF button for all referrals (both internal and external)
-            const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${item.id}" data-ref-id="${item.ref_id}" data-timestamp="${item.ori_created_at}" data-from-sequence="${item.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download MyReferral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
+            const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${item.id}" data-ref-id="${item.ref_id}" data-timestamp="${item.ori_updated_at}" data-from-sequence="${item.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download MyReferral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
 
             // Calculate relative time (using plain JavaScript since we may not have moment.js)
-            const relativeTime = item.ori_created_at ? getRelativeTime(item.ori_created_at) : 'N/A';
+            const relativeTime = item.ori_updated_at ? getRelativeTime(item.ori_updated_at) : 'N/A';
 
             rows += `
                 <tr>

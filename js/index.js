@@ -582,11 +582,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name}</span>`;
 
                 // Generate PDF button for all referrals (both internal and external)
-                const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_created_at}" data-from-sequence="${row.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download MyReferral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
+                const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_updated_at}" data-from-sequence="${row.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download MyReferral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
 
                 // Calculate relative time using moment.js
                 // Remove 'Z' suffix and treat as Malaysia time (UTC+8)
-                const relativeTime = row.ori_created_at ? moment(row.ori_created_at.replace('Z', '')).utcOffset(8, true).fromNow() : 'N/A';
+                const relativeTime = row.ori_updated_at ? moment(row.ori_updated_at.replace('Z', '')).utcOffset(8, true).fromNow() : 'N/A';
 
                 tr.innerHTML = `
                     <td style="font-size:13px;width: 8%;text-align:start;">${row.ref_id}</td>
@@ -1188,15 +1188,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         filteredData = filteredData.filter(function (row) {
-                            // Try ori_created_at first (ISO format), then fall back to created_at
+                            // Try ori_updated_at first (ISO format), then fall back to updated_at
                             let rowDate;
-                            if (row.ori_created_at) {
-                                rowDate = new Date(row.ori_created_at);
+                            if (row.ori_updated_at) {
+                                rowDate = new Date(row.ori_updated_at);
                             } else {
-                                rowDate = parseCustomDate(row.created_at || row.date || row.timestamp);
+                                rowDate = parseCustomDate(row.updated_at || row.date || row.timestamp);
                             }
                             if (!rowDate) {
-                                // console.log('Invalid row date:', row.created_at);
+                                // console.log('Invalid row date:', row.updated_at);
                                 return false;
                             }
 
@@ -1209,12 +1209,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             //     rowDate: rowDateOnly.toDateString(),
                             //     startDate: startDateOnly.toDateString(),
                             //     endDate: endDateOnly.toDateString(),
-                            //     originalRowDate: row.created_at
+                            //     originalRowDate: row.updated_at
                             // });
 
                             const isInRange = rowDateOnly >= startDateOnly && rowDateOnly <= endDateOnly;
                             if (isInRange) {
-                                // console.log('Date match:', row.created_at, 'parsed as:', rowDate.toDateString());
+                                // console.log('Date match:', row.updated_at, 'parsed as:', rowDate.toDateString());
                             }
                             return isInRange;
                         });
