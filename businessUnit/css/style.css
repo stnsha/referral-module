@@ -113,12 +113,12 @@ button.btn-icon:focus {
 }
 
 /* Status Badge Styling */
-.badge {
+.status-badge {
     font-weight: 500;
 }
 
 /* Inactive row styling */
-tr:has(.badge.bg-secondary) {
+tr:has(.status-inactive) {
     opacity: 0.7;
     background-color: rgba(108, 117, 125, 0.05);
 }

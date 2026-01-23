@@ -51,8 +51,11 @@ include('../../common/index_adv.php');
                         style="background-color: transparent !important;">
                         <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
                             <tr>
+                                <th style="font-size:14px;width: 10%;text-align:start;">
+                                    Status
+                                </th>
                                 <th class="sortable" data-column="name"
-                                    style="font-size:14px;width: 25%;text-align:start;cursor:pointer;user-select:none;">
+                                    style="font-size:14px;width: 20%;text-align:start;cursor:pointer;user-select:none;">
                                     Business Unit <i class="bi bi-arrow-down-up"
                                         style="font-size:12px;opacity:0.5;"></i>
                                 </th>

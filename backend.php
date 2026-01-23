@@ -514,31 +514,58 @@ function getAssignees($location_id)
     return $staffs;
 }
 
-function getStaffDetails($staff_id, $location_id, $bu_id = null, $deptId)
+function getStaffDetails($staff_id, $location_id, $bu_id = null, $deptId, $checkOutletAccess = true)
 {
     global $conn;
 
     $staff_id = mysqli_real_escape_string($conn, (int)$staff_id);
-    $location_id = mysqli_real_escape_string($conn, $location_id);
+    $location_id = !empty($location_id) ? mysqli_real_escape_string($conn, $location_id) : null;
     $bu_id = !empty($bu_id) ? mysqli_real_escape_string($conn, $bu_id) : null;
     $deptId = mysqli_real_escape_string($conn, $deptId);
+
+    if ($checkOutletAccess) {
+        if (!empty($location_id)) {
+            $outletJoin = "INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)";
+            $outletSelect = "o.code as code";
+        } else {
+            $outletJoin = "";
+            $outletSelect = "NULL as code";
+        }
+    } else {
+        if (!empty($location_id)) {
+            $outletJoin = "LEFT JOIN outlet o ON o.id = $location_id";
+            $outletSelect = "o.code as code";
+        } else {
+            $outletJoin = "";
+            $outletSelect = "NULL as code";
+        }
+    }
 
     $sql = "SELECT
             " . (!empty($bu_id) ? "r.name" : "NULL as name") . ",
             s.nama_staff,
             s.department,
             CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
-            o.code
+            $outletSelect
         FROM staff s
-        INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
+        $outletJoin
         " . (!empty($bu_id) ? "INNER JOIN ref_business_unit r ON r.id = $bu_id" : "") . "
-        WHERE s.id = $staff_id AND s.department = $deptId";
+        WHERE s.id = $staff_id" . ($checkOutletAccess ? " AND s.department = $deptId" : "");
+
+    // Debug logging
+    error_log("getStaffDetails SQL: " . $sql);
+    error_log("getStaffDetails params - staff_id: $staff_id, location_id: " . ($location_id ? $location_id : 'NULL') . ", bu_id: " . ($bu_id ? $bu_id : 'NULL') . ", checkOutletAccess: " . ($checkOutletAccess ? 'true' : 'false'));
 
     $result = mysqli_query($conn, $sql);
+
+    if (!$result) {
+        error_log("getStaffDetails query error: " . mysqli_error($conn));
+    }
 
     $staffDetails = array();
 
     if ($row = mysqli_fetch_assoc($result)) {
+        error_log("getStaffDetails row: " . print_r($row, true));
         $staffDetails[] = array(
             'business_unit' => $row['name'],
             'staff' => $row['nama_staff'],
@@ -546,6 +573,8 @@ function getStaffDetails($staff_id, $location_id, $bu_id = null, $deptId)
             'outlet' => $row['code'],
             'department_id' => $row['department']
         );
+    } else {
+        error_log("getStaffDetails: No rows returned");
     }
 
     return $staffDetails;
@@ -556,25 +585,42 @@ function getReferredFrom($staff_id, $location_id, $bu_id)
     global $conn;
 
     $staff_id = mysqli_real_escape_string($conn, (int)$staff_id);
-    $location_id = mysqli_real_escape_string($conn, $location_id);
+    $location_id = !empty($location_id) ? mysqli_real_escape_string($conn, $location_id) : null;
     $bu_id = !empty($bu_id) ? mysqli_real_escape_string($conn, $bu_id) : null;
 
+    if (!empty($location_id)) {
+        $outletJoin = "LEFT JOIN outlet o ON o.id = $location_id";
+        $outletSelect = "o.code as code";
+    } else {
+        $outletJoin = "";
+        $outletSelect = "NULL as code";
+    }
+
     $sql = "SELECT
-            r.name as name,
+            " . (!empty($bu_id) ? "r.name as name," : "NULL as name,") . "
             s.nama_staff,
             s.department,
             CONCAT('6', REPLACE(s.hp, '-', '')) AS contact,
-            o.code
+            $outletSelect
         FROM staff s
-        INNER JOIN outlet o ON o.id = $location_id AND FIND_IN_SET(o.id, s.outlet)
-        " . (!empty($bu_id) ? "INNER JOIN ref_business_unit r ON r.id = $bu_id" : "") . "
+        $outletJoin
+        " . (!empty($bu_id) ? "LEFT JOIN ref_business_unit r ON r.id = $bu_id" : "") . "
         WHERE s.id = $staff_id";
 
+    // Debug logging
+    error_log("getReferredFrom SQL: " . $sql);
+    error_log("getReferredFrom params - staff_id: $staff_id, location_id: " . ($location_id ? $location_id : 'NULL') . ", bu_id: " . ($bu_id ? $bu_id : 'NULL'));
+
     $result = mysqli_query($conn, $sql);
+
+    if (!$result) {
+        error_log("getReferredFrom query error: " . mysqli_error($conn));
+    }
 
     $staffDetails = array();
 
     if ($row = mysqli_fetch_assoc($result)) {
+        error_log("getReferredFrom row: " . print_r($row, true));
         $staffDetails[] = array(
             'business_unit' => $row['name'],
             'staff' => $row['nama_staff'],
@@ -582,6 +628,8 @@ function getReferredFrom($staff_id, $location_id, $bu_id)
             'outlet' => $row['code'],
             'department_id' => $row['department']
         );
+    } else {
+        error_log("getReferredFrom: No rows returned");
     }
 
     return $staffDetails;
@@ -862,7 +910,8 @@ if (isset($_GET['action']) && $_GET['action'] == 'getStaffLocation' && isset($_G
 if (isset($_GET['action']) && $_GET['action'] == 'getStaffDetails' && isset($_GET['staff_id']) && isset($_GET['location_id']) && isset($_GET['deptId'])) {
     header('Content-Type: application/json');
     $bu_id = isset($_GET['bu_id']) ? $_GET['bu_id'] : null;
-    echo json_encode(getStaffDetails($_GET['staff_id'], $_GET['location_id'], $bu_id, $_GET['deptId']));
+    $checkOutletAccess = isset($_GET['check_outlet_access']) ? (bool)$_GET['check_outlet_access'] : true;
+    echo json_encode(getStaffDetails($_GET['staff_id'], $_GET['location_id'], $bu_id, $_GET['deptId'], $checkOutletAccess));
     exit;
 }
 

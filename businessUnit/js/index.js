@@ -38,7 +38,7 @@ function loadBusinessUnits() {
             }
         },
         error: function (xhr, status, error) {
-            showToast('Error loading business units', 'error');
+            toast.error('Error loading business units');
             console.error('Error loading business units:', error);
         }
     });
@@ -50,7 +50,7 @@ function renderBusinessUnitsTable(data) {
     tbody.empty();
 
     if (data.length === 0) {
-        tbody.append('<tr><td colspan="4" class="text-start r-text">No business units found</td></tr>');
+        tbody.append('<tr><td colspan="5" class="text-start r-text">No business units found</td></tr>');
         return;
     }
 
@@ -59,11 +59,12 @@ function renderBusinessUnitsTable(data) {
         var statusBtnClass = isActive ? 'btn-outline-warning' : 'btn-outline-success';
         var statusBtnText = isActive ? 'Set Inactive' : 'Set Active';
         var statusBadge = isActive ?
-            '<span class="badge bg-success me-2" style="font-size:10px;">Active</span>' :
-            '<span class="badge bg-secondary me-2" style="font-size:10px;">Inactive</span>';
+            '<span class="status-badge status-active" style="font-size:13px;padding:5px 10px;border-radius:4px;border:1px solid #198754;background-color:#198754;color:#fff;display:inline-block;">Active</span>' :
+            '<span class="status-badge status-inactive" style="font-size:13px;padding:5px 10px;border-radius:4px;border:1px solid #6c757d;background-color:#6c757d;color:#fff;display:inline-block;">Inactive</span>';
 
         var row = '<tr>' +
-            '<td class="r-text" style="font-size:13px;text-align:start;">' + statusBadge + bu.name + '</td>' +
+            '<td class="r-text" style="font-size:13px;text-align:start;">' + statusBadge + '</td>' +
+            '<td class="r-text" style="font-size:13px;text-align:start;">' + bu.name + '</td>' +
             '<td class="r-text" style="font-size:13px;text-align:start;">' + bu.staff_department_id + '</td>' +
             '<td class="r-text" style="font-size:13px;text-align:start;">' + bu.ending_code + '</td>' +
             '<td class="r-text" style="font-size:13px;text-align:start;">' +
@@ -245,7 +246,7 @@ function handleBusinessUnitSubmit(e) {
         { action: actionStr, business_unit_data: buData };
 
     $.ajax({
-        url: 'referral/api-jwt.php',
+        url: '/odb/referral/api-jwt.php',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(payload),
@@ -388,7 +389,7 @@ function handleToggleStatus() {
     };
 
     $.ajax({
-        url: 'referral/api-jwt.php',
+        url: '/odb/referral/api-jwt.php',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(payload),
@@ -397,17 +398,17 @@ function handleToggleStatus() {
             console.log('Toggle Status Response:', response);
             // Handle success as both boolean and number (1 or true)
             if (response.success === true || response.success === 1 || response.success === '1') {
-                showToast('Business unit status updated successfully', 'success');
+                toast.success('Business unit status updated successfully');
                 // Reload page after 1 second to show latest changes
                 setTimeout(function () {
                     window.location.reload();
                 }, 1000);
             } else {
-                showToast(response.message || 'Status update failed', 'error');
+                toast.error(response.message || 'Status update failed');
             }
         },
         error: function (xhr, status, error) {
-            showToast('Error updating status', 'error');
+            toast.error('Error updating status');
             console.error('Error toggling status:', error);
             console.error('XHR:', xhr.responseText);
         }

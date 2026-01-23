@@ -196,13 +196,14 @@ $(document).ready(function () {
                     // Populate TO section with last sequence
                     if (toReferral.staff_id) {
                         // Use existing staff_id for TO section
+                        // Pass false for checkOutletAccess to show historical staff data regardless of current outlet assignments
                         getStaffDetails(toReferral.staff_id, toReferral.location, toReferral.business_unit_id, department, function (staffResponse) {
                             if (staffResponse && staffResponse.length > 0) {
                                 recipientTo.val(staffResponse[0].staff || '');
                                 business_unit_to.val(staffResponse[0].business_unit || '');
                                 location_to.val(staffResponse[0].outlet || '');
                             }
-                        });
+                        }, false);
                     } else {
                         // Only show staff name if not in view_only mode
                         if (!viewOnly) {
@@ -1354,7 +1355,10 @@ function toggleReplyFormRequirement(isRequired) {
     });
 }
 
-function getStaffDetails(staffId, locationId, businessUnitId, deptId, callback) {
+function getStaffDetails(staffId, locationId, businessUnitId, deptId, callback, checkOutletAccess) {
+    if (typeof checkOutletAccess === 'undefined') {
+        checkOutletAccess = true;
+    }
     $.ajax({
         url: 'referral/backend.php',
         method: 'GET',
@@ -1363,6 +1367,7 @@ function getStaffDetails(staffId, locationId, businessUnitId, deptId, callback) 
             location_id: locationId,
             bu_id: businessUnitId,
             deptId: deptId,
+            check_outlet_access: checkOutletAccess ? 1 : 0,
             action: 'getStaffDetails'
         },
         dataType: 'json',
