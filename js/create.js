@@ -978,6 +978,19 @@ $(document).ready(function () {
             }
         });
     }
+
+    // Optional URL parameter pre-population (e.g. from ConsultCall referral)
+    (function () {
+        var params = new URLSearchParams(window.location.search);
+        var ic = params.get('customer_ic');
+        var reason = params.get('referral_reason');
+        if (ic) {
+            $('input[name="customer_ic"]').val(ic).trigger('change');
+        }
+        if (reason) {
+            $('textarea[name="referral_reason"]').val(reason);
+        }
+    }());
 });
 
 //Function to upload multiple files

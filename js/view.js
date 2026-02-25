@@ -454,23 +454,51 @@ $(document).ready(function () {
             if (referralDetails && referralDetails.length > 0) {
                 const lastSequence = referralDetails[referralDetails.length - 1];
 
+                // If referral is In Progress (status 2), show reply form and enable status only to
+                // the assigned staff of the last sequence whose staff_id and business unit match.
+                // Submitting will create a new sequence via the backend.
+                if (status == 2 && lastSequence.staff_id && String(lastSequence.staff_id) === String(staffId) && String(lastSequence.business_unit_id) === String(businessUnitId)) {
+                    window.hasReplyForms = true;
+                    window.isLastSequence = true;
+                    if (!viewOnly) {
+                        $('.reply-form-container').show();
+                        displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                        $('.refer-another-container').show();
+                        $('.form-btn-submit').show();
+                    } else {
+                        $('.reply-form-container').hide();
+                        $('.refer-another-container').hide();
+                        $('.form-btn-submit').hide();
+                    }
+                }
                 // Check if external referral - hide reply form
-                if (lastSequence.external_referral && lastSequence.external_referral.length > 0) {
+                else if (lastSequence.external_referral && lastSequence.external_referral.length > 0) {
                     window.hasReplyForms = false;
                     window.isLastSequence = false;
                     $('.reply-form-container').hide();
                 }
                 // Check is_filled status - if true, hide reply form regardless of other conditions
+                // But still allow the assigned staff to update the status (e.g. from In Progress to Closed)
                 else if (lastSequence.is_filled === true) {
                     window.hasReplyForms = false;
-                    window.isLastSequence = false;
                     $('.reply-form-container').hide();
+                    if (lastSequence.staff_id && lastSequence.staff_id === staffId) {
+                        window.isLastSequence = true;
+                    } else {
+                        window.isLastSequence = false;
+                    }
                 }
                 // Check if referral_details exist but not empty (safety check)
+                // When referral_details is empty (no form answers yet) but a staff member is assigned,
+                // still allow the assigned staff to update the status even though the reply form is hidden.
                 else if (!lastSequence.referral_details || (lastSequence.referral_details.length === 0 && lastSequence.staff_id !== null)) {
                     window.hasReplyForms = false;
-                    window.isLastSequence = false;
                     $('.reply-form-container').hide();
+                    if (lastSequence.staff_id && lastSequence.staff_id === staffId) {
+                        window.isLastSequence = true;
+                    } else {
+                        window.isLastSequence = false;
+                    }
                 }
                 // Only show reply form if current user is the staff in last sequence
                 else if (lastSequence.staff_id) {
