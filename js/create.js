@@ -1,4 +1,5 @@
 let firstLoad = true;
+
 $(document).ready(function () {
     localStorage.clear();
     sessionStorage.clear();
@@ -156,10 +157,20 @@ $(document).ready(function () {
                 );
             });
 
+            // Outlet fallback: if no department match, check business unit outlet_id
+            if (!isSelected && staffOutlet) {
+                var staffOutletIds = staffOutlet.toString().split(',').map(function (id) { return parseInt(id.trim(), 10); });
+                $.each(response.data, function (index, businessUnit) {
+                    if (!isSelected && businessUnit.outlet_id && staffOutletIds.indexOf(parseInt(businessUnit.outlet_id, 10)) !== -1) {
+                        isSelected = true;
+                        businessUnitId = businessUnit.id;
+                    }
+                });
+            }
+
             if (isSelected) {
                 busUnitFrom.prop('disabled', true);
                 $('input[name="business_unit_id_from"]').val(businessUnitId);
-                // Set dropdown to the selected business unit ID
                 busUnitFrom.val(businessUnitId);
             } else {
                 // Fallback to department if no specific selection made
@@ -167,7 +178,6 @@ $(document).ready(function () {
             }
 
             displayReferredFrom(businessUnitId);
-            displayContent(businessUnitId);
 
             busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
 
@@ -297,20 +307,49 @@ $(document).ready(function () {
                 business_unit_id: businessUnitId
             },
             success: function (response) {
-                const forms = response.data.forms;
-                console.log(forms);
+                console.log('displayContent full response:', response);
+                const forms = response.data ? response.data.forms : null;
+                console.log('forms:', forms);
+
+                // Ensure a container div exists for this business unit ID.
+                // Static divs in create.php only cover IDs 1-7; dynamically create
+                // one for any BU (e.g. HQ) that does not have a pre-existing div.
+                if ($('.business-unit-' + businessUnitId).length === 0) {
+                    var newDiv = $('<div>', { class: 'business-unit-' + businessUnitId + ' content' });
+                    var lastContent = $('.content').last();
+                    if (lastContent.length > 0) {
+                        newDiv.insertAfter(lastContent);
+                    }
+                }
+
                 $('.content').hide();
                 const targetDiv = $('.business-unit-' + businessUnitId);
                 targetDiv.show();
                 targetDiv.find('[data-required="true"]').prop('required', true);
                 $('.content .form-container').remove();
 
-                forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
+                if (!Array.isArray(forms) || forms.length === 0) {
+                    console.warn('displayContent: no forms returned for BU', businessUnitId);
+                    return;
+                }
+                forms.forEach(({ form_id, label_name, is_hidden, display_on, form_details, conditions }) => {
                     // Skip hidden forms
                     if (is_hidden === true) {
                         return;
                     }
-                    const formContainer = $('<div class="form-container mb-3"></div>');
+                    // Skip forms that are reply-only
+                    if (display_on === 'reply') {
+                        return;
+                    }
+                    const isConditional = Array.isArray(conditions) && conditions.length > 0;
+                    const triggerIds = isConditional ? conditions.map(function(c) { return c.trigger_form_detail_id; }) : [];
+                    const formContainer = $('<div>', {
+                        class: 'form-container mb-3',
+                        'data-form-id': form_id,
+                        'data-conditional': isConditional ? '1' : '0',
+                        'data-triggers': JSON.stringify(triggerIds),
+                        css: { display: isConditional ? 'none' : '' }
+                    });
                     const normalizedDetails = Array.isArray(form_details)
                         ? form_details
                         : Object.values(form_details || {});
@@ -370,6 +409,16 @@ $(document).ready(function () {
 
                             wrapper.append(input);
 
+                        } else if (field_type === 'textarea') {
+                            wrapper = $('<div class="mb-2"></div>');
+                            const label = $('<p class="r-text"></p>').html(labelText);
+                            input = $('<textarea>', {
+                                name: field_name,
+                                class: 'form-control form-control-sm',
+                                rows: 10,
+                                'data-required': is_required
+                            }).text(field_value || '');
+                            wrapper.append(label, input);
                         } else {
                             wrapper = $('<div class="mb-2"></div>');
                             const label = $('<p class="r-text"></p>').html(labelText);
@@ -397,7 +446,15 @@ $(document).ready(function () {
                         formContainer.append(wrapper);
 
                     });
+                    if (isConditional) {
+                        formContainer.find('input, select, textarea').prop('disabled', true);
+                    }
                     targetDiv.append(formContainer);
+                });
+
+                // Attach change handler once after all forms are rendered
+                $(document).off('change.formConditions').on('change.formConditions', 'input[type="radio"], input[type="checkbox"], select', function () {
+                    evaluateConditions();
                 });
             }
             ,
@@ -407,12 +464,44 @@ $(document).ready(function () {
         });
     }
 
+    function evaluateConditions() {
+        var selectedIds = [];
+        $('input[type="radio"]:checked, input[type="checkbox"]:checked').each(function () {
+            var val = parseInt($(this).val(), 10);
+            if (!isNaN(val)) {
+                selectedIds.push(val);
+            }
+        });
+        $('select').each(function () {
+            var val = parseInt($(this).val(), 10);
+            if (!isNaN(val)) {
+                selectedIds.push(val);
+            }
+        });
+
+        $('[data-conditional="1"]').each(function () {
+            var triggers = [];
+            try {
+                triggers = JSON.parse($(this).attr('data-triggers') || '[]');
+            } catch (e) {
+                triggers = [];
+            }
+            var shouldShow = triggers.some(function (tid) {
+                return selectedIds.indexOf(tid) !== -1;
+            });
+            $(this).toggle(shouldShow);
+            $(this).find('input, select, textarea').prop('disabled', !shouldShow);
+        });
+    }
+
     // For Refer To
     $('#business_unit_to').change(function () {
         const selectedOption = $(this).find(':selected');
         var refBusId = selectedOption.data('id');
         var businessUnitId = $(this).val();
-        // displayContent(businessUnitId);
+        if (refBusId) {
+            displayContent(refBusId);
+        }
 
         if (refBusId) {
 
@@ -984,11 +1073,23 @@ $(document).ready(function () {
         var params = new URLSearchParams(window.location.search);
         var ic = params.get('customer_ic');
         var reason = params.get('referral_reason');
+        var condition = params.get('referral_condition');
+        var consultCallId = params.get('consult_call_id');
+        var followUpId = params.get('follow_up_id');
         if (ic) {
             $('input[name="customer_ic"]').val(ic).trigger('change');
         }
         if (reason) {
             $('textarea[name="referral_reason"]').val(reason);
+        }
+        if (condition) {
+            $('textarea[name="referral_condition"]').val(condition);
+        }
+        if (consultCallId) {
+            $('#consult_call_id').val(consultCallId);
+        }
+        if (followUpId) {
+            $('#follow_up_id').val(followUpId);
         }
     }());
 });
@@ -1385,7 +1486,33 @@ function validateForm(event) {
                     allUploadedFiles = [];
                     $('#attachmentPreview').empty();
 
-                    window.location.href = 'referral/successful.php?id=' + inner.id + '&sequence=1';
+                    const redirectUrl = 'referral/successful.php?id=' + inner.id + '&sequence=1';
+                    const ccId = parseInt($('#consult_call_id').val());
+                    const fuId = parseInt($('#follow_up_id').val());
+                    const locationTo = $('#location_to').val();
+
+                    if (ccId && fuId && inner.id) {
+                        const payload = {
+                            action: 'link-referral',
+                            consult_call_id: ccId,
+                            follow_up_id: fuId,
+                            data: {
+                                my_referral_id: inner.id,
+                                referral_to: locationTo ? parseInt(locationTo) : null
+                            }
+                        };
+                        $.ajax({
+                            url: 'consultcall/api-jwt.php',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(payload),
+                            complete: function() {
+                                window.location.href = redirectUrl;
+                            }
+                        });
+                    } else {
+                        window.location.href = redirectUrl;
+                    }
 
                 } else {
                     // Hide loading overlay on validation error

@@ -455,7 +455,8 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
-    $headers = curl_getinfo($ch, CURLINFO_HEADER_OUT);
+    // Use a separate variable so the original $headers array is not overwritten
+    $sentHeaders = curl_getinfo($ch, CURLINFO_HEADER_OUT);
 
     // If unauthorized, clear token and retry once
     if ($httpCode === 401 && isset($_SESSION['jwt_token'])) {
@@ -465,7 +466,7 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
         // Get new token and retry
         $token = getAuthToken($staff_id);
         if ($token) {
-            $headers[0] = 'Authorization: Bearer ' . $token; // Update auth header
+            $headers[0] = 'Authorization: Bearer ' . $token; // Update Authorization in request headers array
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
             $response = curl_exec($ch);
@@ -504,7 +505,7 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
             'success' => true,
             'response' => $response,
             'httpCode' => $httpCode,
-            'headers' => $headers
+            'headers' => $sentHeaders
         );
     }
 
@@ -614,13 +615,18 @@ function getBusinessUnit($staff_id)
 
 function createForm($data, $staff_id)
 {
+    $buIds = isset($data['business_unit_ids']) ? $data['business_unit_ids'] : array();
+    if (empty($buIds) && isset($data['business_unit_id'])) {
+        $buIds = array((int)$data['business_unit_id']);
+    }
     $formattedData = array(
-        'business_unit_id' => (int)$data['business_unit_id'],
+        'business_unit_ids' => array_values(array_map('intval', $buIds)),
         'label_name' => $data['label_name'],
         'field_name' => $data['field_name'],
         'field_type' => $data['field_type'],
         'is_hidden' => isset($data['is_hidden']) ? (int)$data['is_hidden'] : 0,
         'is_required' => isset($data['is_required']) ? (int)$data['is_required'] : 0,
+        'display_on' => isset($data['display_on']) ? $data['display_on'] : 'creation',
     );
 
     if (isset($data['value_fields']) && is_array($data['value_fields'])) {
@@ -639,6 +645,28 @@ function createForm($data, $staff_id)
     } else {
         return array('error' => true, 'message' => isset($decoded['message']) ? $decoded['message'] : 'Unknown error');
     }
+}
+
+function createFormCondition($data, $staff_id)
+{
+    $payload = array(
+        'form_id' => (int)$data['form_id'],
+        'trigger_form_detail_id' => (int)$data['trigger_form_detail_id'],
+    );
+    $result = getApiDataWithJWT('formCondition', $payload, 'POST', $staff_id);
+    $decoded = json_decode($result['response'], true);
+    return ($result['httpCode'] == 201)
+        ? array('success' => true, 'condition_id' => $decoded['condition_id'])
+        : array('success' => false, 'message' => isset($decoded['message']) ? $decoded['message'] : 'Unknown error');
+}
+
+function deleteFormCondition($condition_id, $staff_id)
+{
+    $result = getApiDataWithJWT('formCondition/' . (int)$condition_id, null, 'DELETE', $staff_id);
+    $decoded = json_decode($result['response'], true);
+    return ($result['httpCode'] == 200)
+        ? array('success' => true)
+        : array('success' => false, 'message' => isset($decoded['message']) ? $decoded['message'] : 'Unknown error');
 }
 
 function getAllForm($recipientBuId, $staff_id)
@@ -1266,6 +1294,66 @@ function createFormDetails($data, $staff_id)
 }
 
 /**
+ * Add a business unit to a form
+ * @param int $form_id Form ID
+ * @param int $business_unit_id Business unit ID to attach
+ * @param int $staff_id Staff ID for authentication
+ * @return array Result
+ */
+function addFormBusinessUnit($form_id, $business_unit_id, $staff_id)
+{
+    $result = getApiDataWithJWT(
+        'form/' . (int)$form_id . '/business-units',
+        array('business_unit_id' => (int)$business_unit_id),
+        'POST',
+        $staff_id
+    );
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200 || $httpCode == 201) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit added to form'
+        );
+    }
+    return array(
+        'success' => false,
+        'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to add business unit to form'
+    );
+}
+
+/**
+ * Remove a business unit from a form
+ * @param int $form_id Form ID
+ * @param int $business_unit_id Business unit ID to detach
+ * @param int $staff_id Staff ID for authentication
+ * @return array Result
+ */
+function removeFormBusinessUnit($form_id, $business_unit_id, $staff_id)
+{
+    $result = getApiDataWithJWT(
+        'form/' . (int)$form_id . '/business-units/' . (int)$business_unit_id,
+        null,
+        'DELETE',
+        $staff_id
+    );
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Business unit removed from form'
+        );
+    }
+    return array(
+        'success' => false,
+        'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to remove business unit from form'
+    );
+}
+
+/**
  * Get form detail by ID
  * @param int $detail_id Form detail ID
  * @param int $staff_id Staff ID for authentication
@@ -1362,9 +1450,10 @@ function createBusinessUnit($data, $staff_id)
 
     // Prepare API data (exclude ending_code)
     $apiData = array(
-        'name' => $data['name'],
-        'staff_department_id' => (int)$data['staff_department_id'],
-        'is_active' => isset($data['is_active']) ? (int)$data['is_active'] : 1
+        'name'                => $data['name'],
+        'staff_department_id' => !empty($data['staff_department_id']) ? (int)$data['staff_department_id'] : null,
+        'outlet_id'           => !empty($data['outlet_id']) ? (int)$data['outlet_id'] : null,
+        'is_active'           => isset($data['is_active']) ? (int)$data['is_active'] : 1
     );
 
     // Call API first
@@ -1378,13 +1467,14 @@ function createBusinessUnit($data, $staff_id)
 
         if ($api_bu_id) {
             // Insert into ref_business_unit with API's ID
-            $name = mysqli_real_escape_string($conn, $data['name']);
-            $dept_id = (int)$data['staff_department_id'];
-            $ending_code = mysqli_real_escape_string($conn, $data['ending_code']);
-            $is_active = isset($data['is_active']) ? (int)$data['is_active'] : 1;
+            $name            = mysqli_real_escape_string($conn, $data['name']);
+            $dept_id_sql     = !empty($data['staff_department_id']) ? (int)$data['staff_department_id'] : 'NULL';
+            $outlet_id_sql   = !empty($data['outlet_id']) ? (int)$data['outlet_id'] : 'NULL';
+            $ending_code_sql = !empty($data['ending_code']) ? "'" . mysqli_real_escape_string($conn, $data['ending_code']) . "'" : 'NULL';
+            $is_active       = isset($data['is_active']) ? (int)$data['is_active'] : 1;
 
-            $query = "INSERT INTO ref_business_unit (id, name, staff_department_id, ending_code, is_active)
-                      VALUES ($api_bu_id, '$name', $dept_id, '$ending_code', $is_active)";
+            $query = "INSERT INTO ref_business_unit (id, name, staff_department_id, outlet_id, ending_code, is_active)
+                      VALUES ($api_bu_id, '$name', $dept_id_sql, $outlet_id_sql, $ending_code_sql, $is_active)";
 
             if (mysqli_query($conn, $query)) {
                 return array(
@@ -1441,13 +1531,15 @@ function updateBusinessUnit($business_unit_id, $data, $staff_id)
     }
 
     // Update ref_business_unit first
-    $name = mysqli_real_escape_string($conn, $data['name']);
-    $dept_id = (int)$data['staff_department_id'];
-    $ending_code = mysqli_real_escape_string($conn, $data['ending_code']);
-    $is_active = (int)$data['is_active'];
+    $name            = mysqli_real_escape_string($conn, $data['name']);
+    $dept_id_sql     = !empty($data['staff_department_id']) ? (int)$data['staff_department_id'] : 'NULL';
+    $outlet_id_sql   = !empty($data['outlet_id']) ? (int)$data['outlet_id'] : 'NULL';
+    $ending_code_sql = !empty($data['ending_code']) ? "'" . mysqli_real_escape_string($conn, $data['ending_code']) . "'" : 'NULL';
+    $is_active       = (int)$data['is_active'];
 
     $updateQuery = "UPDATE ref_business_unit
-                    SET name='$name', staff_department_id=$dept_id, ending_code='$ending_code', is_active=$is_active
+                    SET name='$name', staff_department_id=$dept_id_sql, outlet_id=$outlet_id_sql,
+                        ending_code=$ending_code_sql, is_active=$is_active
                     WHERE id=$bu_id";
 
     if (!mysqli_query($conn, $updateQuery)) {
@@ -1459,9 +1551,10 @@ function updateBusinessUnit($business_unit_id, $data, $staff_id)
 
     // Prepare API data (exclude ending_code)
     $apiData = array(
-        'name' => $data['name'],
-        'staff_department_id' => $dept_id,
-        'is_active' => $is_active
+        'name'                => $data['name'],
+        'staff_department_id' => !empty($data['staff_department_id']) ? (int)$data['staff_department_id'] : null,
+        'outlet_id'           => !empty($data['outlet_id']) ? (int)$data['outlet_id'] : null,
+        'is_active'           => $is_active
     );
 
     // Call API (using same ID since they're synced)
@@ -1476,10 +1569,14 @@ function updateBusinessUnit($business_unit_id, $data, $staff_id)
         );
     } else {
         // API call failed, rollback local changes
+        $rollback_dept_sql        = !empty($originalData['staff_department_id']) ? (int)$originalData['staff_department_id'] : 'NULL';
+        $rollback_outlet_sql      = !empty($originalData['outlet_id']) ? (int)$originalData['outlet_id'] : 'NULL';
+        $rollback_ending_code_sql = !empty($originalData['ending_code']) ? "'" . mysqli_real_escape_string($conn, $originalData['ending_code']) . "'" : 'NULL';
         $rollbackQuery = "UPDATE ref_business_unit
                           SET name='" . mysqli_real_escape_string($conn, $originalData['name']) . "',
-                              staff_department_id=" . (int)$originalData['staff_department_id'] . ",
-                              ending_code='" . mysqli_real_escape_string($conn, $originalData['ending_code']) . "',
+                              staff_department_id=$rollback_dept_sql,
+                              outlet_id=$rollback_outlet_sql,
+                              ending_code=$rollback_ending_code_sql,
                               is_active=" . (int)$originalData['is_active'] . "
                           WHERE id=$bu_id";
 
@@ -1933,6 +2030,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = deleteBusinessUnit($jsonData['business_unit_id'], $staff_id);
                 }
                 break;
+            case 'create-condition':
+                if (isset($jsonData['form_id']) && isset($jsonData['trigger_form_detail_id'])) {
+                    $response = createFormCondition($jsonData, $staff_id);
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing form_id or trigger_form_detail_id');
+                }
+                break;
+            case 'delete-condition':
+                if (isset($jsonData['condition_id'])) {
+                    $response = deleteFormCondition($jsonData['condition_id'], $staff_id);
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing condition_id');
+                }
+                break;
+            case 'add-form-details':
+                if (isset($jsonData['form_id']) && isset($jsonData['form_details'])) {
+                    $response = createFormDetails($jsonData, $staff_id);
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing form_id or form_details');
+                }
+                break;
+            case 'add-form-business-unit':
+                if (isset($jsonData['form_id']) && isset($jsonData['business_unit_id'])) {
+                    $response = addFormBusinessUnit($jsonData['form_id'], $jsonData['business_unit_id'], $staff_id);
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing form_id or business_unit_id');
+                }
+                break;
+            case 'remove-form-business-unit':
+                if (isset($jsonData['form_id']) && isset($jsonData['business_unit_id'])) {
+                    $response = removeFormBusinessUnit($jsonData['form_id'], $jsonData['business_unit_id'], $staff_id);
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing form_id or business_unit_id');
+                }
+                break;
         }
         echo json_encode($response);
     } elseif (isset($_POST['action'])) {
@@ -1943,12 +2075,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             case 'create-form':
                 $formData = array(
-                    'business_unit_id' => isset($_POST['business_unit_id']) ? $_POST['business_unit_id'] : null,
+                    'business_unit_ids' => isset($_POST['business_unit_ids']) && is_array($_POST['business_unit_ids']) ? $_POST['business_unit_ids'] : array(),
                     'label_name' => isset($_POST['label_name']) ? $_POST['label_name'] : null,
                     'field_name' => isset($_POST['field_name']) ? $_POST['field_name'] : null,
                     'field_type' => isset($_POST['field_type']) ? $_POST['field_type'] : null,
                     'is_hidden' => isset($_POST['is_hidden']) ? $_POST['is_hidden'] : 0,
                     'is_required' => isset($_POST['is_required']) ? $_POST['is_required'] : 0,
+                    'display_on' => isset($_POST['display_on']) ? $_POST['display_on'] : 'creation',
                 );
                 if (isset($_POST['value_fields']) && is_array($_POST['value_fields'])) {
                     $formData['value_fields'] = $_POST['value_fields'];

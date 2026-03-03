@@ -457,12 +457,12 @@ $(document).ready(function () {
                 // If referral is In Progress (status 2), show reply form and enable status only to
                 // the assigned staff of the last sequence whose staff_id and business unit match.
                 // Submitting will create a new sequence via the backend.
-                if (status == 2 && lastSequence.staff_id && String(lastSequence.staff_id) === String(staffId) && String(lastSequence.business_unit_id) === String(businessUnitId)) {
+                if (status == 2 && String(lastSequence.business_unit_id) === String(businessUnitId) && String(lastSequence.location) === String(staffOutlet)) {
                     window.hasReplyForms = true;
                     window.isLastSequence = true;
                     if (!viewOnly) {
                         $('.reply-form-container').show();
-                        displayContent(lastSequence.business_unit_id, '.reply-content', null);
+                        displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
                         $('.refer-another-container').show();
                         $('.form-btn-submit').show();
                     } else {
@@ -536,12 +536,7 @@ $(document).ready(function () {
                             // Only show reply form if NOT in view_only mode
                             if (!viewOnly) {
                                 $('.reply-form-container').show();
-                                // Check if referral_details is empty - show all forms
-                                if (lastSequence.referral_details && lastSequence.referral_details.length === 0) {
-                                    displayContent(lastSequence.business_unit_id, '.reply-content', null);
-                                } else {
-                                    displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
-                                }
+                                displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
                                 // Show "Refer Another" container and submit button when department matches
                                 $('.refer-another-container').show();
                                 if (status != 4 && status != 5) {
@@ -582,12 +577,7 @@ $(document).ready(function () {
                             // Only show reply form if NOT in view_only mode
                             if (!viewOnly) {
                                 $('.reply-form-container').show();
-                                // Check if referral_details is empty - show all forms
-                                if (lastSequence.referral_details && lastSequence.referral_details.length === 0) {
-                                    displayContent(lastSequence.business_unit_id, '.reply-content', null);
-                                } else {
-                                    displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
-                                }
+                                displayContent(lastSequence.business_unit_id, '.reply-content', referralDetails);
                                 // Show "Refer Another" container and submit button when department matches
                                 $('.refer-another-container').show();
                                 if (status != 4 && status != 5) {
@@ -775,15 +765,15 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
                 <p class="r-title">Previous Feedback</p>
                 <div class="mb-2">
                     <p class="r-text">Post Diagnosis</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.replyForm.post_diagnosis || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${rd.replyForm.post_diagnosis || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
                     <p class="r-text">Outcome</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.replyForm.outcome || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${rd.replyForm.outcome || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
                     <p class="r-text">Feedback</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.replyForm.feedback || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${rd.replyForm.feedback || 'N/A'}</textarea>
                 </div>
             </div>
             `);
@@ -796,19 +786,19 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
                 <p class="r-title">Referral Information</p>
                 <div class="mb-2">
                     <p class="r-text">Purpose of Referral</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.createForm.referral_reason || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${rd.createForm.referral_reason || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
                     <p class="r-text">Details of Patient's Condition</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.createForm.referral_condition || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${rd.createForm.referral_condition || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
                     <p class="r-text">Relevant Medical History</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.createForm.medical_history || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${rd.createForm.medical_history || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
                     <p class="r-text">Additional Remarks</p>
-                    <textarea class="form-control form-control-sm" rows="3" readonly>${rd.additional_remarks || 'N/A'}</textarea>
+                    <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${rd.additional_remarks || 'N/A'}</textarea>
                 </div>
             </div>
             `);
@@ -1294,7 +1284,7 @@ function addStatusNoteField(container, selectedStatus, statusNote = null) {
     statusNoteDiv.innerHTML = `
         <div style="display: ${displayStyle};">
             <label class="form-label r-text" for="status_note">Status Note</label>
-            <textarea class="form-control form-control-sm" name="status_note" id="status_note" rows="3" placeholder="Please provide additional details..." ${disabledAttr}>${noteValue}</textarea>
+            <textarea class="form-control form-control-sm" name="status_note" id="status_note" rows="10" placeholder="Please provide additional details..." ${disabledAttr}>${noteValue}</textarea>
             <div id="error-status_note" class="error-message" style="color: red; font-size: 12px;"></div>
         </div>
     `;
@@ -1491,6 +1481,33 @@ function getRecipientDetails(location, businessUnit, callback) {
     });
 }
 
+function getCreationAnswers(referralDetails) {
+    var answered = [];
+    if (!referralDetails || !referralDetails.length) {
+        return answered;
+    }
+    var firstSeq = referralDetails[0];
+    if (!firstSeq || !firstSeq.referral_details) {
+        return answered;
+    }
+    firstSeq.referral_details.forEach(function (rd) {
+        if (!rd.form_details) {
+            return;
+        }
+        var formId = rd.form_id;
+        Object.values(rd.form_details).forEach(function (detail) {
+            if (Array.isArray(detail.field_data)) {
+                detail.field_data.forEach(function (opt) {
+                    if (opt.is_answer) {
+                        answered.push({ form_detail_id: opt.form_detail_id, form_id: formId });
+                    }
+                });
+            }
+        });
+    });
+    return answered;
+}
+
 function displayContent(businessUnitId, targetSelector, referralDetails = null) {
     $.ajax({
         url: 'referral/api-jwt.php',
@@ -1502,14 +1519,7 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
         success: function (response) {
             let forms = response.data.forms;
 
-            // Filter forms based on referralDetails if provided
-            if (referralDetails && referralDetails.length > 0) {
-                const lastSequence = referralDetails[referralDetails.length - 1];
-                if (lastSequence.referral_details && lastSequence.referral_details.length > 0) {
-                    const allowedFormIds = lastSequence.referral_details.map(rd => rd.form_id);
-                    forms = forms.filter(form => allowedFormIds.includes(form.form_id));
-                }
-            }
+            var creationAnswers = getCreationAnswers(referralDetails);
 
             $('.reply-content').hide();
             const targetDiv = $(targetSelector);
@@ -1520,10 +1530,29 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
             const bu_id_reply = $('<input type="text" name="bu_id_reply" hidden value=' + businessUnitId + ' readonly/>');
             targetDiv.append(bu_id_reply);
 
-            forms.forEach(({ form_id, label_name, is_hidden, form_details }) => {
+            forms.forEach(({ form_id, label_name, is_hidden, display_on, form_details, conditions }) => {
                 // Skip hidden forms
                 if (is_hidden === true) {
                     return;
+                }
+                // Skip creation-only forms in reply context
+                if (display_on === 'creation') {
+                    return;
+                }
+                // Evaluate conditions against creation answers.
+                // A condition is triggered only when the answered form_detail_id matches
+                // trigger_form_detail_id AND the answer came from the same form
+                // (trigger_form_id matches the form_id recorded in referral_details).
+                if (Array.isArray(conditions) && conditions.length > 0) {
+                    var triggered = conditions.some(function (c) {
+                        return creationAnswers.some(function (a) {
+                            return a.form_detail_id === c.trigger_form_detail_id &&
+                                   a.form_id === c.trigger_form_id;
+                        });
+                    });
+                    if (!triggered) {
+                        return;
+                    }
                 }
                 const formContainer = $('<div class="form-container mb-3"></div>');
 
@@ -1587,6 +1616,16 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
 
                         wrapper.append(input);
 
+                    } else if (field_type === 'textarea') {
+                        wrapper = $('<div class="mb-2"></div>');
+                        const label = $('<p class="r-text"></p>').html(labelText);
+                        input = $('<textarea>', {
+                            name: field_name,
+                            class: 'form-control form-control-sm',
+                            rows: 10,
+                            required: is_required
+                        }).text(field_value || '');
+                        wrapper.append(label, input);
                     } else {
                         wrapper = $('<div class="mb-2"></div>');
                         const label = $('<p class="r-text"></p>').html(labelText);
@@ -1621,7 +1660,7 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
                 <div class="mb-2">
                     <p class="r-text">Post Diagnosis<span style="color:red;">*</span></p>
                     <textarea name="post_diagnosis" id="post_diagnosis"
-                        class="form-control form-control-sm" rows="5"></textarea>
+                        class="form-control form-control-sm" rows="10"></textarea>
                     <div id="error-post_diagnosis" class="error-message" style="color: red;font-size:12px;"></div>
                 </div>
             `);
@@ -1630,16 +1669,16 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
                 <div class="mb-2">
                     <p class="r-text">Outcome</p>
                     <textarea name="outcome" id="outcome"
-                        class="form-control form-control-sm" rows="5"></textarea>
+                        class="form-control form-control-sm" rows="10"></textarea>
                     <div id="error-outcome" class="error-message" style="color: red;font-size:12px;"></div>
                 </div>
             `);
 
             const feedbackWrapper = $(`
-                <div class="mb-2">
+                <div class="mb-2" style="display:none;">
                     <p class="r-text">Feedback</p>
                     <textarea name="feedback" id="feedback"
-                        class="form-control form-control-sm" rows="5"></textarea>
+                        class="form-control form-control-sm" rows="10"></textarea>
                     <div id="error-feedback" class="error-message" style="color: red;font-size:12px;"></div>
                 </div>
             `);
@@ -1648,7 +1687,7 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
                 <div class="mb-2">
                     <p class="r-text">Additional Remarks</p>
                     <textarea name="additional_remarks_reply" id="additional_remarks_reply"
-                        class="form-control form-control-sm" rows="5"></textarea>
+                        class="form-control form-control-sm" rows="10"></textarea>
                 </div>
             `);
 
@@ -1766,6 +1805,21 @@ function initialTreatment(initialTreatment, bu_id, targetPanel, additionalRemark
 
                 wrapper.append(label, input);
 
+            } else if (field_type === 'textarea') {
+                wrapper = $('<div class="mb-2"></div>');
+                const label = $('<p class="r-text"></p>').html(labelText);
+
+                const answer = field_data.find(d => d.is_answer) || {};
+                const value = answer.field_value || '';
+
+                input = $('<textarea>', {
+                    name: field_name,
+                    class: 'form-control form-control-sm',
+                    rows: 10,
+                    readonly: true
+                }).css('white-space', 'pre-wrap').val(value);
+
+                wrapper.append(label, input);
             } else {
                 wrapper = $('<div class="mb-2"></div>');
                 const label = $('<p class="r-text"></p>').html(labelText);
@@ -2612,11 +2666,7 @@ function handleTakeoverReferral(toReferral, referralDetails) {
     $('.reply-form-container').show();
 
     // 5. Display content/forms for reply
-    if (toReferral.referral_details && toReferral.referral_details.length === 0) {
-        displayContent(toReferral.business_unit_id, '.reply-content', null);
-    } else {
-        displayContent(toReferral.business_unit_id, '.reply-content', referralDetails);
-    }
+    displayContent(toReferral.business_unit_id, '.reply-content', referralDetails);
 
     // 6. Show "Refer Another" container and submit button
     $('.refer-another-container').show();

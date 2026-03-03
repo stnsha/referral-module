@@ -23,21 +23,46 @@ function normalizeCompName($comp_name)
 function getBusinessUnits()
 {
     global $conn;
-    $department_results = mysqli_query($conn, "SELECT * FROM ref_business_unit ORDER BY name ASC");
+    $result = mysqli_query($conn, "
+        SELECT rbu.*, o.code AS outlet_code
+        FROM ref_business_unit rbu
+        LEFT JOIN outlet o ON o.id = rbu.outlet_id
+        ORDER BY rbu.name ASC
+    ");
 
     $departments = array();
 
-    while ($row = mysqli_fetch_assoc($department_results)) {
+    while ($row = mysqli_fetch_assoc($result)) {
         $departments[] = array(
-            'id' => $row['id'],
-            'name' => $row['name'],
+            'id'                  => $row['id'],
+            'name'                => $row['name'],
             'staff_department_id' => $row['staff_department_id'],
-            'ending_code' => $row['ending_code'],
-            'is_active' => isset($row['is_active']) ? (int)$row['is_active'] : 1
+            'outlet_id'           => isset($row['outlet_id']) ? $row['outlet_id'] : null,
+            'outlet_code'         => isset($row['outlet_code']) ? $row['outlet_code'] : '',
+            'ending_code'         => $row['ending_code'],
+            'is_active'           => isset($row['is_active']) ? (int)$row['is_active'] : 1
         );
     }
 
     return $departments;
+}
+
+function searchOutlets($search_term)
+{
+    global $conn;
+    $search_term = mysqli_real_escape_string($conn, $search_term);
+    $like = '%' . $search_term . '%';
+    $result = mysqli_query($conn, "
+        SELECT id, code FROM outlet
+        WHERE code LIKE '$like'
+        ORDER BY comp_name ASC
+        LIMIT 30
+    ");
+    $outlets = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $outlets[] = array('id' => $row['id'], 'code' => $row['code']);
+    }
+    return $outlets;
 }
 
 function getDepartments()
@@ -119,12 +144,22 @@ function getLocations($ref_bus_id)
 
     $ref_bus_id = mysqli_real_escape_string($conn, $ref_bus_id);
 
-    $ref_bus_query = mysqli_query($conn, "SELECT ending_code FROM ref_business_unit WHERE id = $ref_bus_id");
+    $ref_bus_query = mysqli_query($conn, "SELECT ending_code, outlet_id FROM ref_business_unit WHERE id = $ref_bus_id");
 
     if ($ref_bus_result = mysqli_fetch_assoc($ref_bus_query)) {
         $ending_code = $ref_bus_result['ending_code'];
+        $outlet_id   = $ref_bus_result['outlet_id'];
 
-        $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE RIGHT(code, 1) = '$ending_code' ORDER BY comp_name ASC");
+        if (!empty($ending_code)) {
+            // Standard case: filter outlets by ending_code suffix
+            $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE RIGHT(code, 1) = '$ending_code' ORDER BY comp_name ASC");
+        } elseif (!empty($outlet_id)) {
+            // Special case (e.g., HQ): return the directly linked outlet
+            $outlet_id_int = intval($outlet_id);
+            $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE id = $outlet_id_int ORDER BY comp_name ASC");
+        } else {
+            return array();
+        }
 
         $all_locations = array();
 
@@ -1015,6 +1050,14 @@ if (isset($_GET['action']) && $_GET['action'] == 'getDepartments') {
 if (isset($_GET['action']) && $_GET['action'] == 'searchDepartments' && isset($_POST['search_term'])) {
     header('Content-Type: application/json');
     echo json_encode(searchDepartments($_POST['search_term']));
+    exit;
+}
+
+// Search outlets by code for autocomplete
+if (isset($_GET['action']) && $_GET['action'] == 'searchOutlets') {
+    header('Content-Type: application/json');
+    $search_term = isset($_POST['search_term']) ? $_POST['search_term'] : '';
+    echo json_encode(searchOutlets($search_term));
     exit;
 }
 

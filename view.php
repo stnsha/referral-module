@@ -229,21 +229,21 @@ include('../common/index_adv.php');
                         <div class="mb-2">
                             <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
                             <textarea name="referral_reason" id="referral_reason" class="form-control form-control-sm"
-                                rows="5" readonly></textarea>
+                                rows="10" readonly></textarea>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
                             <textarea name="referral_condition" id="referral_condition"
-                                class="form-control form-control-sm" rows="5" readonly></textarea>
+                                class="form-control form-control-sm" rows="10" readonly></textarea>
                             <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
                             </div>
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Relevant Medical History (if applicable)</p>
                             <textarea name="medical_history" id="medical_history" class="form-control form-control-sm"
-                                rows="5" readonly></textarea>
+                                rows="10" readonly></textarea>
                             <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
                             </div>
                         </div>
@@ -274,21 +274,21 @@ include('../common/index_adv.php');
                     <div class="mb-2">
                         <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
                         <textarea name="referral_reason_refer" id="referral_reason_refer"
-                            class="form-control form-control-sm" rows="5" readonly></textarea>
+                            class="form-control form-control-sm" rows="10" readonly></textarea>
                         <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                         </div>
                     </div>
                     <div class="mb-2">
                         <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
                         <textarea name="referral_condition_refer" id="referral_condition_refer"
-                            class="form-control form-control-sm" rows="5" readonly></textarea>
+                            class="form-control form-control-sm" rows="10" readonly></textarea>
                         <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
                         </div>
                     </div>
                     <div class="mb-2">
                         <p class="r-text">Relevant Medical History (if applicable)</p>
                         <textarea name="medical_history_refer" id="medical_history_refer"
-                            class="form-control form-control-sm" rows="5" readonly></textarea>
+                            class="form-control form-control-sm" rows="10" readonly></textarea>
                         <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
                         </div>
                     </div>
@@ -308,7 +308,7 @@ include('../common/index_adv.php');
                         <!-- <div class="mb-2">
                             <p class="r-text">Additional Remarks</p>
                             <textarea name="additional_remarks" id="additional_remarks"
-                                class="form-control form-control-sm" rows="5"></textarea>
+                                class="form-control form-control-sm" rows="10"></textarea>
                         </div> -->
                     </div>
                 </div>
@@ -402,7 +402,7 @@ include('../common/index_adv.php');
                                     <div class="mb-2">
                                         <p class="r-text">Address</p>
                                         <textarea name="refer_new_org_address" id="refer-new-org-address"
-                                            class="form-control form-control-sm" rows="2"></textarea>
+                                            class="form-control form-control-sm" rows="10"></textarea>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col">
@@ -490,7 +490,7 @@ include('../common/index_adv.php');
                                     <div class="mb-2">
                                         <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
                                         <textarea name="referral_reason" class="form-control form-control-sm"
-                                            rows="5"></textarea>
+                                            rows="10"></textarea>
                                         <div class="error-message" id="error-referral-reason"
                                             style="color: red;font-size:12px;"></div>
                                     </div>
@@ -500,7 +500,7 @@ include('../common/index_adv.php');
                                                 style="color:red;">*</span>
                                         </p>
                                         <textarea name="referral_condition" class="form-control form-control-sm"
-                                            rows="5"></textarea>
+                                            rows="10"></textarea>
                                         <div class="error-message" id="error-referral-condition"
                                             style="color: red;font-size:12px;"></div>
                                     </div>
@@ -508,7 +508,7 @@ include('../common/index_adv.php');
                                     <div class="mb-2">
                                         <p class="r-text">Relevant Medical History (if applicable)</p>
                                         <textarea name="medical_history" class="form-control form-control-sm"
-                                            rows="5"></textarea>
+                                            rows="10"></textarea>
                                         <div class="error-message" id="error-medical-history"
                                             style="color: red;font-size:12px;"></div>
                                     </div>
@@ -558,6 +558,7 @@ include('../common/index_adv.php');
         const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
+        const staffOutlet = <?php echo json_encode(isset($outlet) ? $outlet : ''); ?>;
         const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
         const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
         </script>

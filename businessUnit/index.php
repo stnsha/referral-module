@@ -97,23 +97,28 @@ include('../../common/index_adv.php');
                         </div>
 
                         <div class="row mb-2 align-items-start">
-                            <label class="col-sm-3 r-text text-start">Department <span
-                                    class="text-danger">*</span></label>
+                            <label class="col-sm-3 r-text text-start">Outlet</label>
                             <div class="col-sm-8">
-                                <select class="form-select form-select-sm" id="bu-department" name="bu_department"
-                                    required>
+                                <select class="form-select form-select-sm" id="bu-outlet" name="bu_outlet">
+                                    <option value="">Type to search...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2 align-items-start">
+                            <label class="col-sm-3 r-text text-start">Department</label>
+                            <div class="col-sm-8">
+                                <select class="form-select form-select-sm" id="bu-department" name="bu_department">
                                     <option value="">Type to search...</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="row mb-3 align-items-start">
-                            <label class="col-sm-3 r-text text-start">Ending Code <span
-                                    class="text-danger">*</span></label>
+                            <label class="col-sm-3 r-text text-start">Ending Code</label>
                             <div class="col-sm-8">
                                 <input type="text" class="form-control form-control-sm r-text" id="bu-ending-code"
-                                    name="bu_ending_code" maxlength="1" placeholder="Single character (A-Z, 0-9)"
-                                    required>
+                                    name="bu_ending_code" maxlength="1" placeholder="Single character (A-Z, 0-9)">
                                 <!-- <small class="form-text text-muted text-start">Single character (A-Z, 0-9)</small> -->
                             </div>
                         </div>

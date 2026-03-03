@@ -48,10 +48,8 @@ if (isset($referral) && $referral == 0) {
                         <div class="row mb-2 align-items-center">
                             <label class="col-sm-4 r-text text-sm-start">Business Unit</label>
                             <div class="col-sm-8">
-                                <select name="business-unitss" id="business-units"
-                                    class="form-select form-select-sm text-capitalize">
-                                    <option value="">Select Business Unit</option>
-                                </select>
+                                <div id="business-units-container" class="border rounded p-2"
+                                    style="max-height:120px;overflow-y:auto;background:#fff;"></div>
                                 <div class="error-message" id="error-business-units"
                                     style="color: red; font-size: 12px;">
                                 </div>
@@ -88,14 +86,24 @@ if (isset($referral) && $referral == 0) {
                             </div>
                         </div>
                         <div class="row mb-2 align-items-center">
+                            <label class="col-sm-4 r-text text-sm-start">Display On</label>
+                            <div class="col-sm-8">
+                                <select name="display_on" id="display_on" class="form-select form-select-sm">
+                                    <option value="creation">Creation only</option>
+                                    <option value="reply">Reply only</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-2 align-items-center">
                             <label class="col-sm-4 r-text text-sm-start">Field Type</label>
                             <div class="col-sm-8">
                                 <select name="input_type" id="input_type" class="form-select form-select-sm">
                                     <option value="">Select Field Type</option>
                                     <!-- <option value="button">button - clickable button</option> -->
-                                    <option value="checkbox">checkbox - checkbox</option>
+                                    <option value="checkbox">checkbox - multiple option</option>
                                     <!-- <option value="color">color - color picker</option> -->
-                                    <!-- <option value="date">date - date control</option> -->
+                                    <option value="date">date - date control</option>
                                     <!-- <option value="datetime-local">datetime-local - date and time control</option> -->
                                     <!-- <option value="email">email - field for an e-mail address</option> -->
                                     <option value="file">file - file-select field</option>
@@ -104,13 +112,14 @@ if (isset($referral) && $referral == 0) {
                                     <option value="month">month - month and year control</option>
                                     <option value="number">number - field for entering a number</option>
                                     <option value="password">password - password field</option> -->
-                                    <option value="radio">radio - radio button</option>
+                                    <option value="radio">radio - one option</option>
                                     <!-- <option value="range">range - range control</option>
                                     <option value="reset">reset - reset button</option>
                                     <option value="search">search - text field for search</option>
                                     <option value="submit">submit - submit button</option>
                                     <option value="tel">tel - field for entering a telephone number</option> -->
                                     <option value="text">text - single-line text field</option>
+                                    <option value="textarea">textarea - multi-line text field</option>
                                     <!-- <option value="time">time - control for entering a time</option>
                                     <option value="url">url - field for entering a URL</option>
                                     <option value="week">week - week and year control</option> -->
@@ -158,28 +167,55 @@ if (isset($referral) && $referral == 0) {
                             style="background-color: transparent !important;">
                             <thead style="border-bottom: 2px solid #dbe2e9;margin-bottom:15px !important;">
                                 <tr>
-                                    <th style="font-size:14px;width: 5%;text-align:start;">#</th>
+                                    <th style="font-size:14px;width: 4%;text-align:start;">#</th>
                                     <th class="sortable" data-column="label_name"
-                                        style="font-size:14px;width: 25%;text-align:start;cursor:pointer;user-select:none;">
+                                        style="font-size:14px;width: 15%;text-align:start;cursor:pointer;user-select:none;">
                                         Label Name <i class="bi bi-arrow-down-up"
                                             style="font-size:12px;opacity:0.5;"></i>
                                     </th>
+                                    <th style="font-size:14px;width: 15%;text-align:start;">Business Units</th>
                                     <th class="sortable" data-column="is_hidden"
-                                        style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
+                                        style="font-size:14px;width: 7%;text-align:start;cursor:pointer;user-select:none;">
                                         Hidden <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
                                     </th>
-                                    <th style="font-size:14px;width: 45%;text-align:start;">Form Details</th>
-                                    <th style="font-size:14px;width: 15%;text-align:start;">Actions</th>
+                                    <th style="font-size:14px;width: 9%;text-align:start;">Display On</th>
+                                    <th style="font-size:14px;width: 12%;text-align:start;">Conditions</th>
+                                    <th style="font-size:14px;width: 27%;text-align:start;">Form Details</th>
+                                    <th style="font-size:14px;width: 11%;text-align:start;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="forms-tbody">
                                 <tr>
-                                    <td colspan="5" class="text-center">Loading...</td>
+                                    <td colspan="8" class="text-center">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title r-text" id="editModalLabel">Edit Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="editModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="conditionModal" tabindex="-1" aria-labelledby="conditionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title r-text" id="conditionModalLabel">Manage Conditions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="conditionModalBody"></div>
             </div>
         </div>
     </div>

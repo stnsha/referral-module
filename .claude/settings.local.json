@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Read(//c/xampp/htdocs/odb/**)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(php artisan:*)"
     ],
     "deny": [],
     "ask": []

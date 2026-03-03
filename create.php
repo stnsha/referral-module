@@ -28,6 +28,8 @@ include('../common/index_adv.php');
         <p class="r-main-title text-start px-3">New MyReferral</p>
         <form action="referral/post.php" method="POST" id="referral-form" name="referral-form"
             onsubmit="validateForm(event)" enctype="multipart/form-data">
+            <input type="hidden" name="consult_call_id" id="consult_call_id" value="">
+            <input type="hidden" name="follow_up_id" id="follow_up_id" value="">
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">
                     <div class="border-bottom pb-3 mb-3">
@@ -148,7 +150,7 @@ include('../common/index_adv.php');
                             <div class="mb-2">
                                 <p class="r-text">Address</p>
                                 <textarea name="new_org_address" id="new-org-address"
-                                    class="form-control form-control-sm" rows="2"></textarea>
+                                    class="form-control form-control-sm" rows="10"></textarea>
                             </div>
                             <div class="row mb-2">
                                 <div class="col">
@@ -335,23 +337,23 @@ include('../common/index_adv.php');
                         <p class="r-title">Referring Indication</p>
                         <div class="mb-2">
                             <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
-                            <textarea name="referral_reason" class="form-control form-control-sm" rows="5"></textarea>
+                            <textarea name="referral_reason" id="referral_reason" class="form-control form-control-sm" rows="10"></textarea>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
                             <small class="form-text text-muted">
-                                Only state the purpose of referral. Do not include greetings such as “Dear Doctor”.
+                                Only state the purpose of referral. Do not include greetings such as “Dear Doctor".
                             </small>
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
-                            <textarea name="referral_condition" class="form-control form-control-sm"
-                                rows="5"></textarea>
+                            <textarea name="referral_condition" id="referral_condition" class="form-control form-control-sm"
+                                rows="10"></textarea>
                             <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
                             </div>
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Relevant Medical History (if applicable)</p>
-                            <textarea name="medical_history" class="form-control form-control-sm" rows="5"></textarea>
+                            <textarea name="medical_history" id="medical_history" class="form-control form-control-sm" rows="10"></textarea>
                             <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
                             </div>
                         </div>
@@ -420,6 +422,7 @@ include('../common/index_adv.php');
         const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
         const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const staffOutlet = <?php echo json_encode(isset($outlet) ? $outlet : ''); ?>;
     </script>
     <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>
     <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>

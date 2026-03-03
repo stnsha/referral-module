@@ -1,62 +1,63 @@
-$(document).ready(function () {
-    // Load business units
+function loadBusinessUnits() {
     $.ajax({
         url: 'referral/api-jwt.php',
         type: 'POST',
         dataType: 'json',
-        data: {
-            action: 'business-units'
-        },
+        data: { action: 'business-units' },
         success: function (data) {
-            // console.log(data);
-            var $select = $('#business-units');
-            $select.empty().append('<option value="">Select Business Unit</option>');
+            window.allBusinessUnits = data.data;
+            var $container = $('#business-units-container');
+            $container.empty();
 
-            let isSelected = false;
-            let businessUnitId = '';
+            var preSelectedIds = [];
 
             $.each(data.data, function (i, unit) {
-                let selected = '';
+                var isMatch = false;
 
-                // Special logic for department 1 only (Audiology/Pharmacy department)
                 if (department == 1) {
-                    // Check if staff position contains 'audiologist' (any type)
                     if (staffPosition.toLowerCase().includes('audiologist')) {
-                        // Audiologist -> assign to Alpro Audiology (ID = 1)
-                        if (unit.id === 1) {
-                            selected = 'selected';
-                            businessUnitId = unit.id;
-                            isSelected = true;
-                        }
+                        if (unit.id === 1) { isMatch = true; }
                     } else {
-                        // Not audiologist -> assign to Alpro Pharmacy (ID = 5)
-                        if (unit.id === 5 && unit.name.toLowerCase().includes('pharmacy')) {
-                            selected = 'selected';
-                            businessUnitId = unit.id;
-                            isSelected = true;
-                        }
+                        if (unit.id === 5 && unit.name.toLowerCase().includes('pharmacy')) { isMatch = true; }
                     }
                 } else {
-                    // For other departments, match by staff_department_id
-                    if (unit.staff_department_id == department) {
-                        selected = 'selected';
-                        businessUnitId = unit.id;
-                        isSelected = true;
-                    }
+                    if (unit.staff_department_id == department) { isMatch = true; }
                 }
 
-                $select.append('<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>');
+                if (isMatch) { preSelectedIds.push(unit.id); }
+
+                var $label = $('<label>', {
+                    class: 'form-check-label r-text text-capitalize',
+                    'for': 'bu-check-' + unit.id,
+                    text: unit.name,
+                    css: { fontSize: '13px' }
+                });
+                var $cb = $('<input>', {
+                    type: 'checkbox',
+                    class: 'form-check-input me-1 bu-checkbox',
+                    id: 'bu-check-' + unit.id,
+                    value: unit.id,
+                    name: 'business_unit_ids[]'
+                });
+                var $wrap = $('<div>', { class: 'form-check mb-0' }).append($cb).append($label);
+                $container.append($wrap);
             });
 
-            if (isSelected) {
-                $select.prop('disabled', true);
-                $select.val(businessUnitId);
+            if (preSelectedIds.length > 0) {
+                $.each(preSelectedIds, function (i, id) {
+                    $('#bu-check-' + id).prop('checked', true).prop('disabled', true);
+                });
             }
         },
         error: function () {
-            $('#error-business-unit-from').text('Failed to load business units');
+            $('#error-business-units').text('Failed to load business units');
         }
     });
+}
+
+$(document).ready(function () {
+    // Load business units
+    loadBusinessUnits();
 
     // Load all forms
     loadAllForms();
@@ -112,9 +113,13 @@ function loadAllForms() {
             $tbody.empty();
 
             if (response && response.data && response.data.forms && Array.isArray(response.data.forms) && response.data.forms.length > 0) {
+                // Store all forms globally for use in condition modal dropdowns
+                window.allFormsData = response.data.forms;
+
                 $.each(response.data.forms, function (i, form) {
                     var isHidden = form.is_hidden ? 'Yes' : 'No';
-                    var rowNumber = i + 1; // Sequential number starting from 1
+                    var displayOn = form.display_on || 'creation';
+                    var rowNumber = i + 1;
 
                     // Build nested table for form details
                     var detailsHtml = '<table class="table table-sm table-bordered mb-0">';
@@ -122,7 +127,7 @@ function loadAllForms() {
                     detailsHtml += '<tbody>';
 
                     if (Array.isArray(form.form_details)) {
-                        // Array format (form_id 16, 17)
+                        // Array format
                         $.each(form.form_details, function (j, detail) {
                             var isRequired = detail.is_required ? 'Yes' : 'No';
                             var fieldValue = detail.field_value || '-';
@@ -134,7 +139,7 @@ function loadAllForms() {
                             detailsHtml += '</tr>';
                         });
                     } else if (typeof form.form_details === 'object') {
-                        // Object format (form_id 18)
+                        // Object format
                         $.each(form.form_details, function (fieldName, detail) {
                             var isRequired = detail.is_required ? 'Yes' : 'No';
                             var fieldValue = '-';
@@ -158,6 +163,24 @@ function loadAllForms() {
 
                     detailsHtml += '</tbody></table>';
 
+                    // Build conditions summary
+                    var conditionsHtml = '-';
+                    if (Array.isArray(form.conditions) && form.conditions.length > 0) {
+                        conditionsHtml = form.conditions.map(function(c) {
+                            return 'trigger:' + c.trigger_form_detail_id;
+                        }).join(', ');
+                    }
+
+                    // Build business units summary
+                    var buNamesHtml = '-';
+                    if (Array.isArray(form.business_unit_ids) && form.business_unit_ids.length > 0 && window.allBusinessUnits) {
+                        var buNames = form.business_unit_ids.map(function(id) {
+                            var bu = window.allBusinessUnits.find(function(b) { return b.id === id; });
+                            return bu ? bu.name : 'ID:' + id;
+                        });
+                        buNamesHtml = buNames.join(', ');
+                    }
+
                     // Determine button text and color based on is_hidden status
                     var buttonText = form.is_hidden ? 'Unhide' : 'Hide';
                     var buttonClass = form.is_hidden ? 'btn-primary' : 'btn-warning';
@@ -165,24 +188,450 @@ function loadAllForms() {
                     var row = '<tr>' +
                         '<td class="r-text" style="font-size:13px;text-align:start;">' + rowNumber + '</td>' +
                         '<td class="r-text" style="font-size:13px;text-align:start;">' + form.label_name + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' + buNamesHtml + '</td>' +
                         '<td class="r-text" style="font-size:13px;text-align:start;">' + isHidden + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' + displayOn + '</td>' +
+                        '<td class="r-text" style="font-size:13px;text-align:start;">' + conditionsHtml + '</td>' +
                         '<td class="r-text" style="font-size:13px;text-align:start;">' + detailsHtml + '</td>' +
                         '<td class="r-text" style="font-size:13px;text-align:start;">' +
-                        '<button class="btn btn-sm ' + buttonClass + ' btn-toggle-form" data-id="' + form.form_id + '" data-hidden="' + form.is_hidden + '">' + buttonText + '</button>' +
+                        '<button class="btn btn-sm ' + buttonClass + ' btn-toggle-form me-1" data-id="' + form.form_id + '" data-hidden="' + form.is_hidden + '">' + buttonText + '</button>' +
+                        '<button class="btn btn-sm btn-secondary btn-manage-conditions me-1" data-form-id="' + form.form_id + '" data-form-name="' + form.label_name + '">Conditions</button>' +
+                        '<button class="btn btn-sm btn-info btn-edit-form" data-form-id="' + form.form_id + '">Edit</button>' +
                         '</td>' +
                         '</tr>';
                     $tbody.append(row);
                 });
             } else {
-                $tbody.append('<tr><td colspan="5" class="text-center">No forms found</td></tr>');
+                $tbody.append('<tr><td colspan="8" class="text-center">No forms found</td></tr>');
             }
         },
         error: function (xhr, status, error) {
             console.error('Error loading forms:', error);
-            $('#forms-tbody').html('<tr><td colspan="5" class="text-center text-danger">Error loading forms</td></tr>');
+            $('#forms-tbody').html('<tr><td colspan="8" class="text-center text-danger">Error loading forms</td></tr>');
         }
     });
 }
+
+// Delegated handler for "Edit" button
+$(document).on('click', '.btn-edit-form', function () {
+    var formId = parseInt($(this).data('form-id'), 10);
+    var form = (window.allFormsData || []).find(function (f) { return f.form_id === formId; });
+    if (form) { openEditModal(form); }
+});
+
+function openEditModal(form) {
+    // Extract first detail from array or grouped-object format
+    var detail = null;
+    if (Array.isArray(form.form_details) && form.form_details.length > 0) {
+        detail = form.form_details[0];
+    } else if (form.form_details && typeof form.form_details === 'object') {
+        var vals = Object.values(form.form_details);
+        if (vals.length > 0) { detail = vals[0]; }
+    }
+
+    var bodyHtml = '<p class="r-text mb-1"><strong>Label:</strong> ' + form.label_name + '</p>';
+
+    // Business unit management section
+    bodyHtml += '<hr><p class="r-text fw-bold mb-2" style="font-size:14px;">Business Units</p>';
+    bodyHtml += '<div id="bu-list-container">';
+    var attachedBuIds = Array.isArray(form.business_unit_ids) ? form.business_unit_ids : [];
+    if (attachedBuIds.length > 0 && window.allBusinessUnits) {
+        attachedBuIds.forEach(function (buId) {
+            var bu = window.allBusinessUnits.find(function (b) { return b.id === buId; });
+            var buName = bu ? bu.name : 'ID:' + buId;
+            bodyHtml += '<div class="d-flex justify-content-between align-items-center mb-1 r-text bu-row" ' +
+                'id="bu-row-' + buId + '" style="font-size:13px;">' +
+                '<span>' + buName + '</span>' +
+                '<button class="btn btn-sm btn-danger btn-remove-form-bu" ' +
+                'data-form-id="' + form.form_id + '" data-bu-id="' + buId + '">Remove</button>' +
+                '</div>';
+        });
+    } else {
+        bodyHtml += '<p class="text-muted r-text" style="font-size:13px;" id="no-bu-msg">No business units attached.</p>';
+    }
+    bodyHtml += '</div>';
+
+    // Dropdown for adding a new BU (exclude already attached)
+    var availableBus = window.allBusinessUnits ? window.allBusinessUnits.filter(function (bu) {
+        return attachedBuIds.indexOf(bu.id) === -1;
+    }) : [];
+    bodyHtml += '<div class="d-flex align-items-center mt-2">' +
+        '<select id="add-bu-select" class="form-select form-select-sm">' +
+        '<option value="">Select business unit to add...</option>';
+    availableBus.forEach(function (bu) {
+        bodyHtml += '<option value="' + bu.id + '">' + bu.name + '</option>';
+    });
+    bodyHtml += '</select>' +
+        '<button class="btn btn-sm btn-primary ms-2 btn-add-form-bu" ' +
+        'data-form-id="' + form.form_id + '">Add</button>' +
+        '</div>' +
+        '<div id="bu-modal-message" class="mt-1" style="font-size:12px;"></div>';
+    bodyHtml += '<hr>';
+
+    if (!detail) {
+        bodyHtml += '<p class="text-muted r-text">No form details found for this form.</p>';
+    } else {
+        var fieldName = detail.field_name;
+        var fieldType = detail.field_type;
+        var isRequired = detail.is_required ? 1 : 0;
+
+        bodyHtml += '<p class="r-text mb-2">' +
+            '<strong>Field Name:</strong> ' + fieldName +
+            ' &nbsp; <strong>Type:</strong> ' + fieldType + '</p>';
+
+        if (fieldType === 'radio' || fieldType === 'checkbox') {
+            bodyHtml += '<div id="edit-value-fields">' +
+                '<div class="input-group mb-2">' +
+                '<input type="text" class="form-control form-control-sm edit-value-input" placeholder="Enter new value">' +
+                '<button type="button" class="btn btn-sm btn-danger remove-edit-value">Remove</button>' +
+                '</div></div>' +
+                '<button type="button" id="btn-add-edit-value" class="btn btn-sm btn-secondary mb-2">+ Add More</button>' +
+                '<div id="edit-modal-message" class="mb-2"></div>' +
+                '<button type="button" id="btn-save-edit-values" ' +
+                'data-form-id="' + form.form_id + '" ' +
+                'data-field-name="' + fieldName + '" ' +
+                'data-field-type="' + fieldType + '" ' +
+                'data-is-required="' + isRequired + '" ' +
+                'class="btn btn-sm btn-primary">Save</button>';
+        } else {
+            bodyHtml += '<p class="text-muted r-text">New values can only be added to radio or checkbox field types.</p>';
+        }
+    }
+
+    $('#editModalBody').html(bodyHtml);
+    $('#editModalLabel').text('Edit Form: ' + form.label_name);
+    var editModalEl = document.getElementById('editModal');
+    bootstrap.Modal.getOrCreateInstance(editModalEl).show();
+}
+
+// Add More value row in edit modal
+$(document).on('click', '#btn-add-edit-value', function () {
+    $('#edit-value-fields').append(
+        '<div class="input-group mb-2">' +
+        '<input type="text" class="form-control form-control-sm edit-value-input" placeholder="Enter new value">' +
+        '<button type="button" class="btn btn-sm btn-danger remove-edit-value">Remove</button>' +
+        '</div>'
+    );
+});
+
+// Remove value row in edit modal
+$(document).on('click', '.remove-edit-value', function () {
+    $(this).closest('.input-group').remove();
+});
+
+// Save new values in edit modal
+$(document).on('click', '#btn-save-edit-values', function () {
+    var $btn = $(this);
+    var formId = parseInt($btn.data('form-id'), 10);
+    var fieldName = $btn.data('field-name');
+    var fieldType = $btn.data('field-type');
+    var isRequired = parseInt($btn.data('is-required'), 10);
+    var $msg = $('#edit-modal-message');
+
+    var newValues = [];
+    $('.edit-value-input').each(function () {
+        var v = $(this).val().trim();
+        if (v !== '') { newValues.push(v); }
+    });
+
+    if (newValues.length === 0) {
+        // No values entered — business unit changes are already saved; just close
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).hide();
+        return;
+    }
+
+    $btn.prop('disabled', true).text('Saving...');
+    $msg.text('');
+
+    var formDetails = newValues.map(function (v) {
+        return {
+            field_name: fieldName,
+            field_type: fieldType,
+            is_required: isRequired,
+            field_value: v
+        };
+    });
+
+    $.ajax({
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'add-form-details',
+            form_id: formId,
+            form_details: formDetails
+        }),
+        success: function (data) {
+            $btn.prop('disabled', false).text('Save');
+            if (data.success) {
+                $msg.text('Values added successfully.').css('color', 'green');
+                loadAllForms();
+                setTimeout(function () {
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).hide();
+                }, 1200);
+            } else {
+                $msg.text('Error: ' + (data.message || 'Failed to add values.')).css('color', 'red');
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).text('Save');
+            $msg.text('Request failed. Please try again.').css('color', 'red');
+        }
+    });
+});
+
+// Remove a business unit from a form
+$(document).on('click', '.btn-remove-form-bu', function () {
+    var $btn = $(this);
+    var formId = parseInt($btn.data('form-id'), 10);
+    var buId = parseInt($btn.data('bu-id'), 10);
+    var buName = $btn.closest('.bu-row').find('span').text();
+    var $msg = $('#bu-modal-message');
+
+    if (!confirm('Remove "' + buName + '" from this form?')) { return; }
+
+    $btn.prop('disabled', true).text('Removing...');
+    $msg.text('');
+
+    $.ajax({
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({ action: 'remove-form-business-unit', form_id: formId, business_unit_id: buId }),
+        success: function (data) {
+            if (data.success) {
+                $btn.closest('.bu-row').remove();
+                // Add the removed BU back to the add dropdown
+                if (window.allBusinessUnits) {
+                    var bu = window.allBusinessUnits.find(function (b) { return b.id === buId; });
+                    if (bu) {
+                        $('#add-bu-select').append('<option value="' + bu.id + '">' + bu.name + '</option>');
+                    }
+                }
+                if ($('#bu-list-container .bu-row').length === 0) {
+                    $('#bu-list-container').append('<p class="text-muted r-text" style="font-size:13px;" id="no-bu-msg">No business units attached.</p>');
+                }
+                $msg.text(data.message || 'Removed successfully.').css('color', 'green');
+                loadAllForms();
+            } else {
+                $btn.prop('disabled', false).text('Remove');
+                $msg.text(data.message || 'Failed to remove.').css('color', 'red');
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).text('Remove');
+            $msg.text('Request failed.').css('color', 'red');
+        }
+    });
+});
+
+// Add a business unit to a form
+$(document).on('click', '.btn-add-form-bu', function () {
+    var $btn = $(this);
+    var formId = parseInt($btn.data('form-id'), 10);
+    var buId = parseInt($('#add-bu-select').val(), 10);
+    var $msg = $('#bu-modal-message');
+
+    if (!buId) {
+        $msg.text('Please select a business unit.').css('color', 'red');
+        return;
+    }
+
+    $btn.prop('disabled', true).text('Adding...');
+    $msg.text('');
+
+    $.ajax({
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({ action: 'add-form-business-unit', form_id: formId, business_unit_id: buId }),
+        success: function (data) {
+            $btn.prop('disabled', false).text('Add');
+            if (data.success) {
+                var bu = window.allBusinessUnits ? window.allBusinessUnits.find(function (b) { return b.id === buId; }) : null;
+                var buName = bu ? bu.name : 'ID:' + buId;
+                // Add row to list
+                $('#no-bu-msg').remove();
+                $('#bu-list-container').append(
+                    '<div class="d-flex justify-content-between align-items-center mb-1 r-text bu-row" ' +
+                    'id="bu-row-' + buId + '" style="font-size:13px;">' +
+                    '<span>' + buName + '</span>' +
+                    '<button class="btn btn-sm btn-danger btn-remove-form-bu" ' +
+                    'data-form-id="' + formId + '" data-bu-id="' + buId + '">Remove</button>' +
+                    '</div>'
+                );
+                // Remove from dropdown
+                $('#add-bu-select option[value="' + buId + '"]').remove();
+                $('#add-bu-select').val('');
+                $msg.text(data.message || 'Added successfully.').css('color', 'green');
+                loadAllForms();
+            } else {
+                $msg.text(data.message || 'Failed to add.').css('color', 'red');
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).text('Add');
+            $msg.text('Request failed.').css('color', 'red');
+        }
+    });
+});
+
+// Delegated handler for "Conditions" button
+$(document).on('click', '.btn-manage-conditions', function () {
+    var formId = $(this).data('form-id');
+    var formName = $(this).data('form-name');
+    openConditionModal(formId, formName);
+});
+
+function openConditionModal(formId, formName) {
+    $('#conditionModalLabel').text('Conditions: ' + formName);
+
+    var form = null;
+    if (window.allFormsData) {
+        for (var i = 0; i < window.allFormsData.length; i++) {
+            if (window.allFormsData[i].form_id === formId) {
+                form = window.allFormsData[i];
+                break;
+            }
+        }
+    }
+
+    var bodyHtml = '';
+
+    // Current conditions list
+    if (form && Array.isArray(form.conditions) && form.conditions.length > 0) {
+        bodyHtml += '<p class="r-text fw-bold">Current Conditions</p>';
+        bodyHtml += '<ul class="list-group mb-3" id="condition-list">';
+        form.conditions.forEach(function (c) {
+            var label = 'form_detail_id: ' + c.trigger_form_detail_id;
+            // Try to find the field_value label from allFormsData
+            if (window.allFormsData) {
+                window.allFormsData.forEach(function (f) {
+                    var details = Array.isArray(f.form_details) ? f.form_details : Object.values(f.form_details || {});
+                    details.forEach(function (d) {
+                        if (Array.isArray(d.field_value)) {
+                            d.field_value.forEach(function (opt) {
+                                if (opt.form_detail_id === c.trigger_form_detail_id) {
+                                    label = opt.field_value + ' (id:' + opt.form_detail_id + ')';
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+            bodyHtml += '<li class="list-group-item d-flex justify-content-between align-items-center r-text" style="font-size:13px;">' +
+                label +
+                '<button class="btn btn-sm btn-danger btn-delete-condition" data-condition-id="' + c.condition_id + '" data-form-id="' + formId + '">Delete</button>' +
+                '</li>';
+        });
+        bodyHtml += '</ul>';
+    } else {
+        bodyHtml += '<p class="r-text text-muted" style="font-size:13px;">No conditions defined.</p>';
+    }
+
+    // Add condition form
+    bodyHtml += '<hr><p class="r-text fw-bold">Add Condition</p>';
+    bodyHtml += '<div class="mb-2">';
+    bodyHtml += '<label class="r-text" style="font-size:13px;">Trigger Form Detail</label>';
+    bodyHtml += '<select id="trigger-detail-select" class="form-select form-select-sm mt-1">';
+    bodyHtml += '<option value="">Select trigger option</option>';
+
+    if (window.allFormsData) {
+        window.allFormsData.forEach(function (f) {
+            var details = Array.isArray(f.form_details) ? f.form_details : Object.values(f.form_details || {});
+            details.forEach(function (d) {
+                if (Array.isArray(d.field_value)) {
+                    d.field_value.forEach(function (opt) {
+                        bodyHtml += '<option value="' + opt.form_detail_id + '">' +
+                            '[Form: ' + f.label_name + '] ' + opt.field_value + ' (id:' + opt.form_detail_id + ')' +
+                            '</option>';
+                    });
+                }
+            });
+        });
+    }
+
+    bodyHtml += '</select></div>';
+    bodyHtml += '<button class="btn btn-sm btn-primary" id="btn-add-condition" data-form-id="' + formId + '">Add Condition</button>';
+    bodyHtml += '<div id="condition-modal-message" class="mt-2" style="font-size:12px;"></div>';
+
+    $('#conditionModalBody').html(bodyHtml);
+    var modal = new bootstrap.Modal(document.getElementById('conditionModal'));
+    modal.show();
+}
+
+$(document).on('click', '.btn-delete-condition', function () {
+    var conditionId = $(this).data('condition-id');
+    var formId = $(this).data('form-id');
+    var $btn = $(this);
+    $btn.prop('disabled', true).text('Deleting...');
+
+    $.ajax({
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'delete-condition',
+            condition_id: conditionId
+        }),
+        success: function (data) {
+            if (data.success) {
+                $btn.closest('li').remove();
+                loadAllForms();
+            } else {
+                $btn.prop('disabled', false).text('Delete');
+                $('#condition-modal-message').text('Error: ' + (data.message || 'Failed to delete.')).css('color', 'red');
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).text('Delete');
+            $('#condition-modal-message').text('Request failed.').css('color', 'red');
+        }
+    });
+});
+
+$(document).on('click', '#btn-add-condition', function () {
+    var formId = $(this).data('form-id');
+    var triggerDetailId = $('#trigger-detail-select').val();
+    var $btn = $(this);
+
+    if (!triggerDetailId) {
+        $('#condition-modal-message').text('Please select a trigger option.').css('color', 'red');
+        return;
+    }
+
+    $btn.prop('disabled', true).text('Adding...');
+    $('#condition-modal-message').text('');
+
+    $.ajax({
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'create-condition',
+            form_id: formId,
+            trigger_form_detail_id: parseInt(triggerDetailId, 10)
+        }),
+        success: function (data) {
+            $btn.prop('disabled', false).text('Add Condition');
+            if (data.success) {
+                $('#condition-modal-message').text('Condition added successfully.').css('color', 'green');
+                loadAllForms();
+            } else {
+                $('#condition-modal-message').text('Error: ' + (data.message || 'Failed to add.')).css('color', 'red');
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).text('Add Condition');
+            $('#condition-modal-message').text('Request failed.').css('color', 'red');
+        }
+    });
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     const inputTypeSelect = document.getElementById('input_type');
@@ -249,7 +698,6 @@ document.addEventListener('DOMContentLoaded', function () {
 function validateForm(e) {
     let hasError = false;
 
-    const businessUnit = document.getElementById('business-units');
     const labelName = document.getElementById('label_name');
     const fieldName = document.getElementById('field_name');
     const fieldType = document.getElementById('input_type');
@@ -262,9 +710,10 @@ function validateForm(e) {
     document.getElementById('error-field-type').textContent = '';
     document.getElementById('error-value-field').textContent = '';
 
-    if (businessUnit.value.trim() === '') {
+    var selectedBuIds = Array.from(document.querySelectorAll('#business-units-container .bu-checkbox:checked')).map(function(cb) { return parseInt(cb.value, 10); });
+    if (selectedBuIds.length === 0) {
         const errorDiv = document.getElementById('error-business-units');
-        errorDiv.textContent = 'Business Unit is required.';
+        errorDiv.textContent = 'At least one Business Unit is required.';
         errorDiv.style = style;
         hasError = true;
     }
@@ -276,17 +725,34 @@ function validateForm(e) {
         hasError = true;
     }
 
+    var fieldNameDiv = fieldName.closest('.col-sm-8');
+    var fieldNameError = fieldNameDiv.querySelector('.error-message');
+    if (!fieldNameError) {
+        fieldNameError = document.createElement('div');
+        fieldNameError.className = 'error-message';
+        fieldNameDiv.appendChild(fieldNameError);
+    }
+    fieldNameError.textContent = '';
+
     if (fieldName.value.trim() === '') {
-        const fieldNameDiv = fieldName.closest('.col-sm-8');
-        let error = fieldNameDiv.querySelector('.error-message');
-        if (!error) {
-            error = document.createElement('div');
-            error.className = 'error-message';
-            fieldNameDiv.appendChild(error);
-        }
-        error.textContent = 'Field Name is required.';
-        error.style = style;
+        fieldNameError.textContent = 'Field Name is required.';
+        fieldNameError.style = style;
         hasError = true;
+    } else if (window.allFormsData) {
+        var enteredName = fieldName.value.trim();
+        var isDuplicate = window.allFormsData.some(function (f) {
+            if (Array.isArray(f.form_details)) {
+                return f.form_details.some(function (d) { return d.field_name === enteredName; });
+            } else if (f.form_details && typeof f.form_details === 'object') {
+                return Object.prototype.hasOwnProperty.call(f.form_details, enteredName);
+            }
+            return false;
+        });
+        if (isDuplicate) {
+            fieldNameError.textContent = 'Field Name already exists. Please use a unique name.';
+            fieldNameError.style = style;
+            hasError = true;
+        }
     }
 
     if (fieldType.value === '') {
@@ -310,13 +776,15 @@ function validateForm(e) {
         e.preventDefault();
     } else {
         // Create custom data array
+        const displayOnEl = document.getElementById('display_on');
         const formDataArray = {
-            'business_unit_id': businessUnit.value, // Changed from business_unit to business_unit_id
+            'business_unit_ids': selectedBuIds,
             'label_name': labelName.value,
             'field_name': fieldName.value,
             'field_type': fieldType.value,
-            'is_hidden': document.querySelector('input[name="is_hidden"]:checked') ? 1 : 0, // Use 1/0 instead of true/false
-            'is_required': document.querySelector('input[name="is_required"]:checked') ? 1 : 0 // Use 1/0 instead of true/false
+            'is_hidden': document.querySelector('input[name="is_hidden"]:checked') ? 1 : 0,
+            'is_required': document.querySelector('input[name="is_required"]:checked') ? 1 : 0,
+            'display_on': displayOnEl ? displayOnEl.value : 'creation'
         };
         // Add value_fields if checkbox or radio
         if (fieldType.value === 'checkbox' || fieldType.value === 'radio') {
@@ -365,58 +833,8 @@ function validateForm(e) {
                     // Reload all forms table
                     loadAllForms();
 
-                    // Re-enable business unit dropdown if it was disabled
-                    $('#business-units').prop('disabled', false);
-
-                    // Reload business units to restore selection
-                    $.ajax({
-                        url: 'referral/api-jwt.php',
-                        type: 'POST',
-                        dataType: 'json',
-                        data: {
-                            action: 'business-units'
-                        },
-                        success: function (data) {
-                            var $select = $('#business-units');
-                            $select.empty().append('<option value="">Select Business Unit</option>');
-
-                            let isSelected = false;
-                            let businessUnitId = '';
-
-                            $.each(data.data, function (i, unit) {
-                                let selected = '';
-
-                                if (department == 1) {
-                                    if (staffPosition.toLowerCase().includes('audiologist')) {
-                                        if (unit.id === 1) {
-                                            selected = 'selected';
-                                            businessUnitId = unit.id;
-                                            isSelected = true;
-                                        }
-                                    } else {
-                                        if (unit.id === 5 && unit.name.toLowerCase().includes('pharmacy')) {
-                                            selected = 'selected';
-                                            businessUnitId = unit.id;
-                                            isSelected = true;
-                                        }
-                                    }
-                                } else {
-                                    if (unit.staff_department_id == department) {
-                                        selected = 'selected';
-                                        businessUnitId = unit.id;
-                                        isSelected = true;
-                                    }
-                                }
-
-                                $select.append('<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>');
-                            });
-
-                            if (isSelected) {
-                                $select.prop('disabled', true);
-                                $select.val(businessUnitId);
-                            }
-                        }
-                    });
+                    // Reload business units checkboxes to restore default selection
+                    loadBusinessUnits();
 
                     // Hide success message after 3 seconds
                     setTimeout(function() {

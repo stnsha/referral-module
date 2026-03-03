@@ -8,21 +8,25 @@ $(document).ready(function () {
     // 2. Initialize Department autocomplete
     initializeDepartmentAutocomplete();
 
-    // 3. Initialize Select2 for staff search
+    // 3. Initialize Outlet Select2
+    initializeOutletSelect();
+
+    // 4. Initialize Select2 for staff search
     initializeStaffSearch();
 
-    // 4. Business Unit Form Submit
+    // 5. Business Unit Form Submit
     $('#business-unit-form').on('submit', handleBusinessUnitSubmit);
 
-    // 5. Access Control Form Submit
+    // 6. Access Control Form Submit
     $('#access-control-form').on('submit', handleAccessControlSubmit);
 
-    // 6. Cancel Edit Mode
+    // 7. Cancel Edit Mode
     $('#bu-cancel-btn').on('click', resetBusinessUnitForm);
 
-    // 7. Add change detection listeners for edit mode
+    // 8. Add change detection listeners for edit mode
     $('#bu-name, #bu-ending-code').on('input', checkFormChanges);
     $('#bu-department').on('change', checkFormChanges);
+    $('#bu-outlet').on('change', checkFormChanges);
     $('input[name="bu_status"]').on('change', checkFormChanges);
 });
 
@@ -65,17 +69,20 @@ function renderBusinessUnitsTable(data) {
         var row = '<tr>' +
             '<td class="r-text" style="font-size:13px;text-align:start;">' + statusBadge + '</td>' +
             '<td class="r-text" style="font-size:13px;text-align:start;">' + bu.name + '</td>' +
-            '<td class="r-text" style="font-size:13px;text-align:start;">' + bu.staff_department_id + '</td>' +
-            '<td class="r-text" style="font-size:13px;text-align:start;">' + bu.ending_code + '</td>' +
+            '<td class="r-text" style="font-size:13px;text-align:start;">' + (bu.staff_department_id || 'N/A') + '</td>' +
+            '<td class="r-text" style="font-size:13px;text-align:start;">' + (bu.ending_code || 'N/A') + '</td>' +
             '<td class="r-text" style="font-size:13px;text-align:start;">' +
             '<button class="btn-icon btn-icon-edit edit-bu" data-id="' + bu.id + '" ' +
             'data-name="' + bu.name + '" data-dept="' + bu.staff_department_id + '" ' +
             'data-code="' + bu.ending_code + '" data-active="' + bu.is_active + '" ' +
+            'data-outlet-id="' + (bu.outlet_id || '') + '" ' +
+            'data-outlet-code="' + (bu.outlet_code || '') + '" ' +
             'data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit Business Unit">' +
             '<i class="bi bi-pencil-square"></i></button>' +
             '<button class="btn btn-sm ' + statusBtnClass + ' toggle-status-bu" data-id="' + bu.id + '" ' +
             'data-name="' + bu.name + '" data-dept="' + bu.staff_department_id + '" ' +
-            'data-code="' + bu.ending_code + '" data-active="' + bu.is_active + '">' + statusBtnText + '</button>' +
+            'data-code="' + bu.ending_code + '" data-active="' + bu.is_active + '" ' +
+            'data-outlet-id="' + (bu.outlet_id || '') + '">' + statusBtnText + '</button>' +
             '</td>' +
             '</tr>';
         tbody.append(row);
@@ -120,6 +127,40 @@ function initializeDepartmentAutocomplete() {
                             id: dept.id,
                             text: dept.name
                         };
+                    })
+                };
+            },
+            cache: true
+        },
+        templateResult: function (data) {
+            if (!data.id) return data.text;
+            return $('<span style="text-align: left; display: block; font-size: 13px; font-family: Inter, sans-serif;">' + data.text + '</span>');
+        },
+        templateSelection: function (data) {
+            return $('<span style="text-align: left; display: block; font-size: 13px; font-family: Inter, sans-serif;">' + data.text + '</span>');
+        }
+    });
+}
+
+// Initialize Select2 for outlet autocomplete
+function initializeOutletSelect() {
+    $('#bu-outlet').select2({
+        placeholder: 'Type to search outlets...',
+        minimumInputLength: 0,
+        allowClear: true,
+        width: '100%',
+        ajax: {
+            url: '/odb/referral/backend.php?action=searchOutlets',
+            type: 'POST',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return { search_term: params.term || '' };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map(function (o) {
+                        return { id: o.id, text: o.code };
                     })
                 };
             },
@@ -208,33 +249,40 @@ function handleBusinessUnitSubmit(e) {
     var buId = $('#bu-id').val();
     var buData = {
         name: $('#bu-name').val().trim(),
-        staff_department_id: parseInt($('#bu-department').val()),
+        staff_department_id: $('#bu-department').val() ? parseInt($('#bu-department').val()) : null,
+        outlet_id: $('#bu-outlet').val() ? parseInt($('#bu-outlet').val()) : null,
         ending_code: $('#bu-ending-code').val().trim().toUpperCase(),
         is_active: parseInt($('input[name="bu_status"]:checked').val())
     };
 
     // Validation
-    if (!buData.name || !buData.staff_department_id || !buData.ending_code) {
+    if (!buData.name) {
         showBadgeMessage('Please fill all required fields', 'error');
         return;
     }
 
-    if (buData.ending_code.length !== 1 || !/^[A-Z0-9]$/.test(buData.ending_code)) {
+    if (buData.ending_code && (buData.ending_code.length !== 1 || !/^[A-Z0-9]$/.test(buData.ending_code))) {
         showBadgeMessage('Ending code must be a single alphanumeric character', 'error');
         return;
     }
 
-    // Get department name for confirmation dialog
-    var deptName = $('#bu-department option:selected').text() || $('#bu-department').select2('data')[0].text;
     var statusText = buData.is_active ? 'Active' : 'Inactive';
     var action = buId ? 'update' : 'create';
 
+    // Build confirmation detail lines
+    var confirmLines = 'Name: ' + buData.name + '\n';
+    if (buData.outlet_id) {
+        var outletText = $('#bu-outlet').select2('data')[0] ? $('#bu-outlet').select2('data')[0].text : buData.outlet_id;
+        confirmLines += 'Outlet: ' + outletText + '\n';
+    }
+    if (buData.staff_department_id) {
+        var deptText = $('#bu-department').select2('data')[0] ? $('#bu-department').select2('data')[0].text : buData.staff_department_id;
+        confirmLines += 'Department: ' + deptText + '\n';
+    }
+    confirmLines += 'Ending Code: ' + buData.ending_code + '\n' + 'Status: ' + statusText;
+
     // Show confirmation dialog
-    var confirmMessage = 'Are you sure you want to ' + action + ' this business unit?\n\n' +
-        'Name: ' + buData.name + '\n' +
-        'Department: ' + deptName + '\n' +
-        'Ending Code: ' + buData.ending_code + '\n' +
-        'Status: ' + statusText;
+    var confirmMessage = 'Are you sure you want to ' + action + ' this business unit?\n\n' + confirmLines;
 
     if (!confirm(confirmMessage)) {
         return;
@@ -319,6 +367,8 @@ function handleEditBusinessUnit() {
     var buDept = $(this).data('dept');
     var buCode = $(this).data('code');
     var buActive = $(this).data('active');
+    var buOutletId = $(this).data('outlet-id');
+    var buOutletCode = $(this).data('outlet-code');
 
     $('#bu-id').val(buId);
     $('#bu-name').val(buName);
@@ -330,26 +380,39 @@ function handleEditBusinessUnit() {
     // Store original values for change detection
     originalFormValues = {
         name: buName,
-        department: buDept.toString(),
+        department: buDept ? buDept.toString() : '',
+        outlet: buOutletId ? buOutletId.toString() : '',
         ending_code: buCode,
         status: buActive.toString()
     };
 
-    // For Select2, fetch and populate department name
-    $.ajax({
-        url: '/odb/referral/backend.php?action=getDepartments',
-        type: 'GET',
-        success: function (data) {
-            var dept = data.find(function (d) { return d.id == buDept; });
-            if (dept) {
-                var newOption = new Option(dept.name, dept.id, true, true);
-                $('#bu-department').append(newOption).trigger('change');
+    // Pre-populate outlet Select2 if set
+    if (buOutletId) {
+        var outletOption = new Option(buOutletCode, buOutletId, true, true);
+        $('#bu-outlet').append(outletOption).trigger('change');
+    } else {
+        $('#bu-outlet').val(null).trigger('change');
+    }
 
-                // Update original department value after Select2 is populated
-                originalFormValues.department = dept.id.toString();
+    // For Select2, fetch and populate department name
+    if (buDept) {
+        $.ajax({
+            url: '/odb/referral/backend.php?action=getDepartments',
+            type: 'GET',
+            success: function (data) {
+                var dept = data.find(function (d) { return d.id == buDept; });
+                if (dept) {
+                    var newOption = new Option(dept.name, dept.id, true, true);
+                    $('#bu-department').append(newOption).trigger('change');
+
+                    // Update original department value after Select2 is populated
+                    originalFormValues.department = dept.id.toString();
+                }
             }
-        }
-    });
+        });
+    } else {
+        $('#bu-department').val(null).trigger('change');
+    }
 
     $('#bu-submit-btn').text('Update').prop('disabled', true);
     $('#bu-cancel-btn').show();
@@ -366,6 +429,7 @@ function handleToggleStatus() {
     var buName = $(this).data('name');
     var buDept = $(this).data('dept');
     var buCode = $(this).data('code');
+    var buOutletId = $(this).data('outlet-id');
     var currentActive = $(this).data('active');
     var newActive = currentActive == 1 ? 0 : 1;
     var statusText = newActive == 1 ? 'active' : 'inactive';
@@ -377,7 +441,8 @@ function handleToggleStatus() {
     // Prepare complete business unit data for API call
     var buData = {
         name: buName,
-        staff_department_id: parseInt(buDept),
+        staff_department_id: buDept ? parseInt(buDept) : null,
+        outlet_id: buOutletId ? parseInt(buOutletId) : null,
         ending_code: buCode,
         is_active: newActive
     };
@@ -422,8 +487,9 @@ function resetBusinessUnitForm() {
     $('#bu-submit-btn').text('Create').prop('disabled', false);
     $('#bu-cancel-btn').hide();
 
-    // Clear Select2 selection
+    // Clear Select2 selections
     $('#bu-department').val(null).trigger('change');
+    $('#bu-outlet').val(null).trigger('change');
 
     // Reset status to Active
     $('#bu-status-active').prop('checked', true);
@@ -443,7 +509,8 @@ function checkFormChanges() {
 
     var currentValues = {
         name: $('#bu-name').val().trim(),
-        department: $('#bu-department').val(),
+        department: $('#bu-department').val() || '',
+        outlet: $('#bu-outlet').val() || '',
         ending_code: $('#bu-ending-code').val().trim().toUpperCase(),
         status: $('input[name="bu_status"]:checked').val()
     };
@@ -451,6 +518,7 @@ function checkFormChanges() {
     // Check if at least one field has changed
     var hasChanges = currentValues.name !== originalFormValues.name ||
         currentValues.department !== originalFormValues.department ||
+        currentValues.outlet !== originalFormValues.outlet ||
         currentValues.ending_code !== originalFormValues.ending_code ||
         currentValues.status !== originalFormValues.status;
 

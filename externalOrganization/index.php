@@ -52,7 +52,7 @@ if (isset($referral) && $referral == 0) {
                         </div>
                         <div class="mb-2">
                             <p class="r-text mb-1 text-start">Address</p>
-                            <textarea name="org_address" id="org-address" class="form-control form-control-sm" rows="2"></textarea>
+                            <textarea name="org_address" id="org-address" class="form-control form-control-sm" rows="10"></textarea>
                         </div>
                         <div class="row mb-2">
                             <div class="col">
@@ -230,7 +230,7 @@ if (isset($referral) && $referral == 0) {
                     </div>
                     <div class="mb-2">
                         <p class="r-text mb-1 text-start">Address</p>
-                        <textarea id="edit-org-address" class="form-control form-control-sm" rows="2"></textarea>
+                        <textarea id="edit-org-address" class="form-control form-control-sm" rows="10"></textarea>
                     </div>
                     <div class="row mb-2">
                         <div class="col">
