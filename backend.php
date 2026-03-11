@@ -150,7 +150,7 @@ function getLocations($ref_bus_id)
         $ending_code = $ref_bus_result['ending_code'];
         $outlet_id   = $ref_bus_result['outlet_id'];
 
-        if (!empty($ending_code)) {
+        if (isset($ending_code) && $ending_code !== '' && $ending_code !== null) {
             // Standard case: filter outlets by ending_code suffix
             $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE RIGHT(code, 1) = '$ending_code' ORDER BY comp_name ASC");
         } elseif (!empty($outlet_id)) {

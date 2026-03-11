@@ -1470,7 +1470,7 @@ function createBusinessUnit($data, $staff_id)
             $name            = mysqli_real_escape_string($conn, $data['name']);
             $dept_id_sql     = !empty($data['staff_department_id']) ? (int)$data['staff_department_id'] : 'NULL';
             $outlet_id_sql   = !empty($data['outlet_id']) ? (int)$data['outlet_id'] : 'NULL';
-            $ending_code_sql = !empty($data['ending_code']) ? "'" . mysqli_real_escape_string($conn, $data['ending_code']) . "'" : 'NULL';
+            $ending_code_sql = (isset($data['ending_code']) && $data['ending_code'] !== '' && $data['ending_code'] !== null) ? "'" . mysqli_real_escape_string($conn, $data['ending_code']) . "'" : 'NULL';
             $is_active       = isset($data['is_active']) ? (int)$data['is_active'] : 1;
 
             $query = "INSERT INTO ref_business_unit (id, name, staff_department_id, outlet_id, ending_code, is_active)
@@ -1534,7 +1534,7 @@ function updateBusinessUnit($business_unit_id, $data, $staff_id)
     $name            = mysqli_real_escape_string($conn, $data['name']);
     $dept_id_sql     = !empty($data['staff_department_id']) ? (int)$data['staff_department_id'] : 'NULL';
     $outlet_id_sql   = !empty($data['outlet_id']) ? (int)$data['outlet_id'] : 'NULL';
-    $ending_code_sql = !empty($data['ending_code']) ? "'" . mysqli_real_escape_string($conn, $data['ending_code']) . "'" : 'NULL';
+    $ending_code_sql = (isset($data['ending_code']) && $data['ending_code'] !== '' && $data['ending_code'] !== null) ? "'" . mysqli_real_escape_string($conn, $data['ending_code']) . "'" : 'NULL';
     $is_active       = (int)$data['is_active'];
 
     $updateQuery = "UPDATE ref_business_unit
@@ -1571,7 +1571,7 @@ function updateBusinessUnit($business_unit_id, $data, $staff_id)
         // API call failed, rollback local changes
         $rollback_dept_sql        = !empty($originalData['staff_department_id']) ? (int)$originalData['staff_department_id'] : 'NULL';
         $rollback_outlet_sql      = !empty($originalData['outlet_id']) ? (int)$originalData['outlet_id'] : 'NULL';
-        $rollback_ending_code_sql = !empty($originalData['ending_code']) ? "'" . mysqli_real_escape_string($conn, $originalData['ending_code']) . "'" : 'NULL';
+        $rollback_ending_code_sql = (isset($originalData['ending_code']) && $originalData['ending_code'] !== '' && $originalData['ending_code'] !== null) ? "'" . mysqli_real_escape_string($conn, $originalData['ending_code']) . "'" : 'NULL';
         $rollbackQuery = "UPDATE ref_business_unit
                           SET name='" . mysqli_real_escape_string($conn, $originalData['name']) . "',
                               staff_department_id=$rollback_dept_sql,
