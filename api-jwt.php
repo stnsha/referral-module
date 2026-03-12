@@ -893,9 +893,57 @@ function getReport($formData, $staff_id)
     }
 }
 
-function getSummaryReport($staff_id)
+function getMultiYearReport($staff_id)
 {
-    $result = getApiDataWithJWT('report/summary', null, 'GET', $staff_id);
+    $result = getApiDataWithJWT('report/multi-year', null, 'GET', $staff_id);
+
+    if (!$result['success']) {
+        return array('success' => false, 'message' => 'Failed to load multi-year report');
+    }
+
+    $decoded = json_decode($result['response'], true);
+    return array('success' => true, 'data' => isset($decoded) ? $decoded : array());
+}
+
+function getYearlyReport($year, $staff_id)
+{
+    $endpoint = 'report/yearly';
+    if ($year) {
+        $endpoint .= '?year=' . urlencode($year);
+    }
+
+    $result = getApiDataWithJWT($endpoint, null, 'GET', $staff_id);
+
+    if (!$result['success']) {
+        return array('success' => false, 'message' => 'Failed to load yearly report');
+    }
+
+    $decoded = json_decode($result['response'], true);
+    return array('success' => true, 'data' => isset($decoded) ? $decoded : array());
+}
+
+function getSummaryReport($business_unit_id, $staff_id, $filters = array())
+{
+    $queryParams = array();
+
+    if ($business_unit_id) {
+        $queryParams['business_unit_id'] = $business_unit_id;
+    }
+
+    if (!empty($filters)) {
+        foreach ($filters as $key => $value) {
+            if ($value !== null && $value !== '') {
+                $queryParams[$key] = $value;
+            }
+        }
+    }
+
+    $endpoint = 'report/summary';
+    if (!empty($queryParams)) {
+        $endpoint .= '?' . http_build_query($queryParams);
+    }
+
+    $result = getApiDataWithJWT($endpoint, null, 'GET', $staff_id);
 
     if (!$result['success']) {
         return array();
@@ -2121,10 +2169,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = getReport($_POST['formData'], $staff_id);
                 }
                 break;
+            case 'get-multi-year-report':
+                $response = getMultiYearReport($staff_id);
+                break;
+            case 'get-yearly-report':
+                $year = isset($_POST['year']) && $_POST['year'] !== '' ? $_POST['year'] : null;
+                $response = getYearlyReport($year, $staff_id);
+                break;
             case 'get-summary-report':
-                if (isset($_POST['business_unit_id'])) {
-                    $response = getSummaryReport($_POST['business_unit_id'], $staff_id);
-                }
+                $bu_id = isset($_POST['business_unit_id']) ? $_POST['business_unit_id'] : null;
+                $filters = array();
+                if (isset($_POST['month']) && $_POST['month'] !== '') $filters['month'] = $_POST['month'];
+                if (isset($_POST['year']) && $_POST['year'] !== '') $filters['year'] = $_POST['year'];
+                if (isset($_POST['location']) && $_POST['location'] !== '') $filters['location'] = $_POST['location'];
+                if (isset($_POST['status']) && $_POST['status'] !== '') $filters['status'] = $_POST['status'];
+                if (isset($_POST['priority']) && $_POST['priority'] !== '') $filters['priority'] = $_POST['priority'];
+                $response = getSummaryReport($bu_id, $staff_id, $filters);
                 break;
         }
         echo json_encode($response);

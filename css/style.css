@@ -48,6 +48,27 @@ body {
     color: white;
 }
 
+.referral-nav .dropdown-menu {
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    min-width: 160px;
+}
+
+.referral-nav .dropdown-item {
+    color: #173F5F;
+    padding: 6px 16px;
+}
+
+.referral-nav .dropdown-item:hover {
+    background-color: #173F5F;
+    color: white;
+}
+
+.referral-nav .dropdown-item.active {
+    background-color: #20639b;
+    color: white;
+}
+
 .referral-nav .navbar-toggler {
     border: 1px solid #173F5F;
     padding: 6px 10px;

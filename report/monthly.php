@@ -7,29 +7,27 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Referral</title>
+    <title>Referral - Monthly Report</title>
     <base href="/odb/">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" /> -->
     <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-
 </head>
 <?php
-require_once('../lock_adv.php');
+require_once('../../lock_adv.php');
 $connect = 1;
-include('../common/index_adv.php');
+include('../../common/index_adv.php');
 ?>
 
 <body>
-    <?php include('navbar.php'); ?>
+    <?php include('../navbar.php'); ?>
     <div class="referral-container mb-3">
         <div class="row mb-1">
             <div class="col-12">
                 <div class="d-flex justify-content-start align-items-center px-3">
-                    <span class="fw-bold text-start me-3" style="font-size:18px;">Report</span>
+                    <span class="fw-bold text-start me-3" style="font-size:18px;">Monthly Report</span>
                 </div>
             </div>
         </div>
@@ -51,7 +49,6 @@ include('../common/index_adv.php');
                             </select>
                             <select name="filter-priority" id="filter-priority"
                                 class="form-select form-select-sm text-capitalize">
-                                <option value="">All Priority</option>
                             </select>
                             <select name="filter-month" id="filter-month"
                                 class="form-select form-select-sm text-capitalize">
@@ -60,25 +57,12 @@ include('../common/index_adv.php');
                                 class="form-select form-select-sm text-capitalize">
                             </select>
                             <button type="button" id="resetFiltersBtn" class="btn btn-outline-secondary btn-sm me-1"
-                                style="white-space: nowrap; padding: 0.25rem 0.5rem; font-size: 0.875rem;">Reset
-                                Filters</button>
+                                style="white-space: nowrap; padding: 0.25rem 0.5rem; font-size: 0.875rem;">Reset Filters</button>
                         </div>
                         <div class="d-inline-flex align-items-center mt-2">
                             <?php if (!isset($referral) || $referral != 0): ?>
                                 <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Download Report</a>
                             <?php endif; ?>
-                            <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
-                                aria-expanded="false" aria-controls="generate-report">
-                                Generate Report
-                                </button>
-                                <div class="generate-report ms-2" id="generate-report" style="display: none;">
-                                    <select name="report-parameter" id="report-parameter"
-                                        class="form-select form-select-sm text-capitalize">
-                                        <option value="monthly">Monthly</option>
-                                        <option value="quarterly">Quarterly</option>
-                                        <option value="yearly">Yearly</option>
-                                    </select>
-                                </div> -->
                         </div>
                     </div>
                 </div>
@@ -87,19 +71,17 @@ include('../common/index_adv.php');
         <div class="row mb-1 mx-3 rounded-2 shadow">
             <div class="row mt-2 mb-3 px-3">
                 <div class="col-12">
-                    <span class="fw-bold text-start me-3" style="font-size:16px;">Monthly Summary of
-                        <?php echo date('F') . ', ' . date('Y'); ?>
+                    <span class="fw-bold text-start me-3" style="font-size:16px;" id="monthly-summary-title">
+                        Monthly Summary
                     </span>
                 </div>
             </div>
-            <!-- Charts Section -->
             <div class="row mb-3 px-3">
                 <div class="col-md-6 mb-3">
                     <div class="card border-0">
                         <div class="card-body">
                             <h6 class="card-title">Status Distribution</h6>
-                            <div
-                                style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <div style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
                                 <canvas id="statusChart"></canvas>
                             </div>
                         </div>
@@ -109,8 +91,7 @@ include('../common/index_adv.php');
                     <div class="card border-0">
                         <div class="card-body">
                             <h6 class="card-title">Priority Breakdown</h6>
-                            <div
-                                style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <div style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
                                 <canvas id="priorityChart"></canvas>
                             </div>
                         </div>
@@ -122,8 +103,7 @@ include('../common/index_adv.php');
                     <div class="card border-0">
                         <div class="card-body">
                             <h6 class="card-title">Sent vs Received</h6>
-                            <div
-                                style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <div style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
                                 <canvas id="sentReceivedChart"></canvas>
                             </div>
                         </div>
@@ -133,8 +113,7 @@ include('../common/index_adv.php');
                     <div class="card border-0">
                         <div class="card-body">
                             <h6 class="card-title">Location Summary</h6>
-                            <div
-                                style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <div style="height: 300px; position: relative; display: flex; justify-content: center; align-items: center;">
                                 <canvas id="locationChart"></canvas>
                             </div>
                         </div>
@@ -142,82 +121,9 @@ include('../common/index_adv.php');
                 </div>
             </div>
         </div>
-
-        <div class="row align-items-start text-start py-2 px-4">
-            <div class="d-flex justify-content-center align-items-center">
-
-            </div>
-        </div>
-        <!-- Yearly Cross-BU Comparison Section -->
-        <div class="row mb-1 mx-3 rounded-2 shadow mt-3" id="yearly-summary-section">
-            <div class="row mt-2 mb-2 px-3">
-                <div class="col-12">
-                    <span class="fw-bold text-start me-3" style="font-size:16px;">Yearly Business Unit Comparison &mdash; <span id="yearly-title-year"></span></span>
-                </div>
-            </div>
-            <!-- BU Total + Sent/Received -->
-            <div class="row mb-3 px-3">
-                <div class="col-md-6 mb-3">
-                    <div class="card border-0">
-                        <div class="card-body">
-                            <h6 class="card-title">Total Referrals by Business Unit</h6>
-                            <div style="position: relative;">
-                                <canvas id="yearlyBuTotalChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <div class="card border-0">
-                        <div class="card-body">
-                            <h6 class="card-title">Sent vs Received by Business Unit</h6>
-                            <div style="position: relative;">
-                                <canvas id="yearlyBuSentReceivedChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Monthly Trend -->
-            <div class="row mb-3 px-3">
-                <div class="col-12 mb-3">
-                    <div class="card border-0">
-                        <div class="card-body">
-                            <h6 class="card-title">Monthly Trend by Business Unit</h6>
-                            <div style="position: relative; height: 280px;">
-                                <canvas id="yearlyMonthlyTrendChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Top Locations + Status Distribution -->
-            <div class="row mb-3 px-3">
-                <div class="col-md-6 mb-3">
-                    <div class="card border-0">
-                        <div class="card-body">
-                            <h6 class="card-title">Top Locations (All Business Units)</h6>
-                            <div style="position: relative;">
-                                <canvas id="yearlyTopLocationsChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <div class="card border-0">
-                        <div class="card-body">
-                            <h6 class="card-title">Status Distribution by Business Unit</h6>
-                            <div style="position: relative;">
-                                <canvas id="yearlyStatusChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
-    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
@@ -226,14 +132,13 @@ include('../common/index_adv.php');
     <script>
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-        const staff_outlet =
-            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
+        const staff_outlet = <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>;
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
         const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
     </script>
 
     <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>
-    <script src="referral/js/report.js?v=<?php echo time(); ?>"></script>
+    <script src="referral/js/report-monthly.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>

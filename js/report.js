@@ -6,22 +6,6 @@ document.addEventListener('DOMContentLoaded', function () {
     loadMonths();
     loadYears();
 
-    $.ajax({
-        url: 'referral/backend.php?action=getBusinessUnit',
-        type: 'GET',
-        dataType: 'json',
-        data: {
-            staffDeptId: department
-        },
-        success: function (response) {
-            const businessUnitId = response;
-            loadSummary(businessUnitId);
-        },
-        error: function () {
-            logError(new Error('Error loading business unit ID'), { context: 'loadBusinessUnit' });
-        }
-    });
-
     // Business unit change handler
     $('#filter-business-unit').on('change', function () {
         const selectedOption = $(this).find('option:selected');
@@ -30,9 +14,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (businessUnitId && selectedOption.val() !== 'all') {
             loadLocations(businessUnitId);
         } else {
-            // Reset to default location option
-            $('#filter-location').html('<option value="">Select Location</option>');
+            $('#filter-location').html('<option value="">All Locations</option>');
         }
+
+        loadSummary();
+    });
+
+    // Filter change handlers - reload charts on any filter change
+    $('#filter-location, #filter-status, #filter-priority, #filter-month').on('change', function () {
+        loadSummary();
+    });
+
+    $('#filter-year').on('change', function () {
+        loadSummary();
+        loadYearlySummary();
     });
 
     // Reset filters button handler
@@ -50,48 +45,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Load business units
 function loadBusinessUnits() {
-    //display business unit
     $.ajax({
         url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'business-units' },
         success: function (response) {
             var busUnitFrom = $('#filter-business-unit');
+            busUnitFrom.empty();
 
-            // Add default "All" option
-            busUnitFrom.append('<option value="all">Select Business Unit</option>');
-            busUnitFrom.prop('disabled', true); // disable the dropdown
+            if (referralPermission === 1) {
+                // Superadmin: enable dropdown, allow selecting any BU or all
+                busUnitFrom.prop('disabled', false);
+                busUnitFrom.append('<option value="all" data-id="">All Business Units</option>');
+            } else {
+                // Non-superadmin: disable dropdown, auto-select their BU
+                busUnitFrom.prop('disabled', true);
+            }
 
-            let isSelected = false;
             let businessUnitId = '';
 
             $.each(response.data, function (index, businessUnit) {
                 let selected = '';
 
-                // Special logic for department 1 only (Audiology/Pharmacy department)
-                if (department == 1) {
-                    // Check if staff position contains 'audiologist' (any type)
-                    if (staffPosition.toLowerCase().includes('audiologist')) {
-                        // Audiologist -> assign to Alpro Audiology (ID = 1)
-                        if (businessUnit.id === 1) {
-                            selected = 'selected';
-                            businessUnitId = businessUnit.id;
-                            isSelected = true;
+                if (referralPermission !== 1) {
+                    // Special logic for department 1 only (Audiology/Pharmacy department)
+                    if (department == 1) {
+                        if (staffPosition.toLowerCase().includes('audiologist')) {
+                            if (businessUnit.id === 1) {
+                                selected = 'selected';
+                                businessUnitId = businessUnit.id;
+                            }
+                        } else {
+                            if (businessUnit.id === 5 && businessUnit.name.toLowerCase().includes('pharmacy')) {
+                                selected = 'selected';
+                                businessUnitId = businessUnit.id;
+                            }
                         }
                     } else {
-                        // Not audiologist -> assign to Alpro Pharmacy (ID = 5) 
-                        if (businessUnit.id === 5 && businessUnit.name.toLowerCase().includes('pharmacy')) {
+                        if (businessUnit.staff_department_id == department) {
                             selected = 'selected';
                             businessUnitId = businessUnit.id;
-                            isSelected = true;
                         }
-                    }
-                } else {
-                    // For other departments, match by staff_department_id
-                    if (businessUnit.staff_department_id == department) {
-                        selected = 'selected';
-                        businessUnitId = businessUnit.id;
-                        isSelected = true;
                     }
                 }
 
@@ -101,13 +95,16 @@ function loadBusinessUnits() {
                 );
             });
 
-            // Load locations for initially selected business unit
+            // Load locations for the initially selected business unit
             if (businessUnitId) {
                 loadLocations(businessUnitId);
             } else {
-                // Show default location option
-                $('#filter-location').html('<option value="">Select Location</option>');
+                $('#filter-location').html('<option value="">All Locations</option>');
             }
+
+            // Load summary charts with initial filter state
+            loadSummary();
+            loadYearlySummary();
         },
         error: function () {
             logError(new Error('Error loading business units'), { context: 'loadBusinessUnits' });
@@ -457,13 +454,26 @@ function generateReport() {
 }
 
 // Function to display report data
-function loadSummary(businessUnitId) {
+function loadSummary() {
+    var selectedBuOption = $('#filter-business-unit option:selected');
+    var businessUnitId = selectedBuOption.data('id') || '';
+    var location = $('#filter-location').val() || '';
+    var status = $('#filter-status').val() || '';
+    var priority = $('#filter-priority').val() || '';
+    var month = $('#filter-month').val() || '';
+    var year = $('#filter-year').val() || '';
+
     $.ajax({
         url: 'referral/api-jwt.php',
         type: 'POST',
         data: {
             action: 'get-summary-report',
-            business_unit_id: businessUnitId
+            business_unit_id: businessUnitId,
+            location: location,
+            status: status,
+            priority: priority,
+            month: month,
+            year: year
         },
         success: function (response) {
             // console.log('API Response:', response);
@@ -747,3 +757,206 @@ function createCharts(data) {
     }
 }
 
+// Palette for business units (up to 10 BUs)
+var BU_COLORS = [
+    '#36a2eb', '#ff6384', '#4bc0c0', '#ffce56',
+    '#9966ff', '#ff9f40', '#e83e8c', '#20c997',
+    '#fd7e14', '#6610f2'
+];
+
+function loadYearlySummary() {
+    var year = $('#filter-year').val() || new Date().getFullYear();
+
+    $.ajax({
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        data: {
+            action: 'get-yearly-report',
+            year: year
+        },
+        success: function (response) {
+            if (response && response.success && response.data) {
+                createYearlyCharts(response.data);
+            } else {
+                logError(new Error('Failed to load yearly report'), { context: 'loadYearlySummary', response: response });
+            }
+        },
+        error: function (xhr, status, error) {
+            logError(new Error('AJAX error loading yearly report'), {
+                context: 'loadYearlySummary',
+                status: status,
+                error: error,
+                responseText: xhr.responseText
+            });
+        }
+    });
+}
+
+function createYearlyCharts(data) {
+    var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    var buList = data.business_units || [];
+    var topLocations = data.top_locations || {};
+    var year = data.year || new Date().getFullYear();
+
+    $('#yearly-title-year').text(year);
+
+    // Destroy any existing yearly charts
+    ['yearlyBuTotalChart', 'yearlyBuSentReceivedChart',
+     'yearlyMonthlyTrendChart', 'yearlyTopLocationsChart', 'yearlyStatusChart'
+    ].forEach(function (id) {
+        if (window[id] && typeof window[id].destroy === 'function') {
+            window[id].destroy();
+            window[id] = null;
+        }
+    });
+
+    var buNames = buList.map(function (bu) { return bu.name; });
+
+    // 1. Total Referrals by BU (horizontal bar)
+    var totalEl = document.getElementById('yearlyBuTotalChart');
+    if (totalEl) {
+        window.yearlyBuTotalChart = new Chart(totalEl.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: buNames,
+                datasets: [{
+                    label: 'Total Referrals',
+                    data: buList.map(function (bu) { return bu.total; }),
+                    backgroundColor: buList.map(function (bu, i) { return BU_COLORS[i % BU_COLORS.length]; }),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                animation: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+
+    // 2. Sent vs Received per BU (grouped bar)
+    var srEl = document.getElementById('yearlyBuSentReceivedChart');
+    if (srEl) {
+        window.yearlyBuSentReceivedChart = new Chart(srEl.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: buNames,
+                datasets: [
+                    {
+                        label: 'Sent',
+                        data: buList.map(function (bu) { return bu.sent; }),
+                        backgroundColor: '#36a2eb',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Received',
+                        data: buList.map(function (bu) { return bu.received; }),
+                        backgroundColor: '#ff6384',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+
+    // 3. Monthly Trend by BU (line chart)
+    var trendEl = document.getElementById('yearlyMonthlyTrendChart');
+    if (trendEl) {
+        var trendDatasets = buList.map(function (bu, i) {
+            return {
+                label: bu.name,
+                data: bu.monthly_trend,
+                borderColor: BU_COLORS[i % BU_COLORS.length],
+                backgroundColor: 'transparent',
+                tension: 0.3,
+                pointRadius: 3,
+                borderWidth: 2
+            };
+        });
+
+        window.yearlyMonthlyTrendChart = new Chart(trendEl.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: MONTHS,
+                datasets: trendDatasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+
+    // 4. Top Locations Overall (horizontal bar)
+    var locEl = document.getElementById('yearlyTopLocationsChart');
+    if (locEl) {
+        var locLabels = Object.keys(topLocations);
+        var locValues = Object.values(topLocations);
+
+        window.yearlyTopLocationsChart = new Chart(locEl.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: locLabels,
+                datasets: [{
+                    label: 'Referrals',
+                    data: locValues,
+                    backgroundColor: '#4bc0c0',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                animation: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+
+    // 5. Status Distribution by BU (stacked bar)
+    var statusEl = document.getElementById('yearlyStatusChart');
+    if (statusEl) {
+        var statusKeys = ['Open', 'In Progress', 'Referred', 'Closed', 'Not Present'];
+        var statusColors = ['#36a2eb', '#ffce56', '#4bc0c0', '#ff6384', '#c9cbcf'];
+
+        var statusDatasets = statusKeys.map(function (statusName, i) {
+            return {
+                label: statusName,
+                data: buList.map(function (bu) { return bu.status[statusName] || 0; }),
+                backgroundColor: statusColors[i],
+                borderWidth: 1
+            };
+        });
+
+        window.yearlyStatusChart = new Chart(statusEl.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: buNames,
+                datasets: statusDatasets
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+    }
+}
