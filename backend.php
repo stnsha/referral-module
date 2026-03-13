@@ -881,6 +881,27 @@ function updateStaffReferral($staff_id, $referral_value)
 /**
  * Get outlet names from CSV string of IDs
  */
+function getOutletCodes($ids)
+{
+    global $conn;
+
+    if (empty($ids)) {
+        return array();
+    }
+
+    $ids = array_map('intval', $ids);
+    $ids_str = implode(',', $ids);
+
+    $result = mysqli_query($conn, "SELECT id, code FROM outlet WHERE id IN ($ids_str)");
+
+    $map = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $map[$row['id']] = $row['code'];
+    }
+
+    return $map;
+}
+
 function getOutletNames($outlet_csv)
 {
     global $conn;
@@ -1050,6 +1071,14 @@ if (isset($_GET['action']) && $_GET['action'] == 'getDepartments') {
 if (isset($_GET['action']) && $_GET['action'] == 'searchDepartments' && isset($_POST['search_term'])) {
     header('Content-Type: application/json');
     echo json_encode(searchDepartments($_POST['search_term']));
+    exit;
+}
+
+// Get outlet codes by IDs
+if (isset($_GET['action']) && $_GET['action'] == 'getOutletCodes') {
+    header('Content-Type: application/json');
+    $ids = isset($_POST['ids']) ? array_map('intval', explode(',', $_POST['ids'])) : array();
+    echo json_encode(getOutletCodes($ids));
     exit;
 }
 

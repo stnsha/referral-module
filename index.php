@@ -152,6 +152,9 @@ include('../common/index_adv.php');
                             <select name="filter-priority" id="filter-priority"
                                 class="form-select form-select-sm text-capitalize">
                             </select>
+                            <select name="filter-location" id="filter-location"
+                                class="form-select form-select-sm">
+                            </select>
                             <input type="text" class="form-control form-control-sm" name="filter-date-range"
                                 id="filter-date-range" placeholder="Select Date Range">
                             <input type="text" class="form-control form-control-sm" name="filter-referral-id"
@@ -197,23 +200,27 @@ include('../common/index_adv.php');
                                         style="font-size:12px;opacity:0.5;"></i>
                                 </th>
                                 <th class="sortable" data-column="from_business_unit"
-                                    style="font-size:14px;width: 13%;text-align:start;cursor:pointer;user-select:none;">
+                                    style="font-size:14px;width: 13%;text-align:start;cursor:pointer;user-select:none;white-space:nowrap;">
                                     Referred From <i class="bi bi-arrow-down-up"
                                         style="font-size:12px;opacity:0.5;"></i>
                                 </th>
                                 <th class="sortable" data-column="to_business_unit"
-                                    style="font-size:14px;width: 13%;text-align:start;cursor:pointer;user-select:none;">
+                                    style="font-size:14px;width: 13%;text-align:start;cursor:pointer;user-select:none;white-space:nowrap;">
                                     Referred To <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
                                 </th>
+                                <th class="sortable" data-column="created_at"
+                                    style="font-size:14px;width: 9%;text-align:start;cursor:pointer;user-select:none;white-space:nowrap;">
+                                    Created At <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
+                                </th>
                                 <th class="sortable" data-column="status"
-                                    style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
+                                    style="font-size:14px;width: 9%;text-align:start;cursor:pointer;user-select:none;">
                                     Status <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
                                 </th>
                                 <th class="sortable" data-column="priority"
-                                    style="font-size:14px;width: 10%;text-align:start;cursor:pointer;user-select:none;">
+                                    style="font-size:14px;width: 9%;text-align:start;cursor:pointer;user-select:none;">
                                     Priority <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
                                 </th>
-                                <th style="font-size:14px;width: 12%;text-align:start;">Action</th>
+                                <th style="font-size:14px;width: 10%;text-align:start;">Action</th>
                             </tr>
                         </thead>
                     </table>

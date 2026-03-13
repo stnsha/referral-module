@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Create loading row with spinner
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 40px;">
+                <td colspan="8" style="text-align: center; padding: 40px;">
                     <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                         <span class="visually-hidden">Loading...</span>
                     </div>
@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const sentCount = (data.sent && Array.isArray(data.sent)) ? data.sent.length : 0;
         const receivedCount = (data.received && Array.isArray(data.received)) ? data.received.length : 0;
 
-        // Update label text with counts
         const allLabel = document.querySelector('label[for="type-all"]');
         const sentLabel = document.querySelector('label[for="type-sent"]');
         const receivedLabel = document.querySelector('label[for="type-received"]');
@@ -85,14 +84,14 @@ document.addEventListener('DOMContentLoaded', function () {
         // console.log('DEBUG: Selected data length:', selectedData.length);
         // console.log('DEBUG: Original data length:', originalData.length);
 
-        // FORCE DISPLAY - Apply department filtering if needed and display
-        // console.log('DEBUG: Department variable:', department);
-
-        // Force display the data first
         allData = originalData;
         currentPage = 1;
-        displayPage(currentPage);
-        // console.log('DEBUG: Forced display with allData length:', allData.length);
+
+        if (typeof globalApplyFilters === 'function') {
+            globalApplyFilters();
+        } else {
+            displayPage(currentPage);
+        }
     }
 
     // Show loading state immediately
@@ -108,13 +107,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 statusMapping = response.data;
                 apisLoaded.statusMapping = true;
                 checkAllApisLoaded();
-                // Now fetch dashboard data
                 fetchDashboardData();
             }
         },
         error: function (xhr, status, error) {
-            // console.log('Error loading status mapping:', error);
-            // Set a basic fallback mapping
             statusMapping = {
                 '1': 'Open',
                 '2': 'In Progress',
@@ -124,10 +120,52 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             apisLoaded.statusMapping = true;
             checkAllApisLoaded();
-            // Fallback - still try to load dashboard data
             fetchDashboardData();
         }
     });
+
+    function updateDashboardFromData(rows) {
+        var statusCount = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+        var priorityCount = { '1': 0, '2': 0, '3': 0 };
+        var buCount = {};
+
+        rows.forEach(function (row) {
+            var s = String(row.status);
+            if (statusCount[s] !== undefined) statusCount[s]++;
+
+            var p = String(row.priority || '2');
+            if (priorityCount[p] !== undefined) priorityCount[p]++;
+
+            var bu = row.to_business_unit || row.from_business_unit;
+            if (bu) {
+                buCount[bu] = (buCount[bu] || 0) + 1;
+            }
+        });
+
+        var total = rows.length;
+        $('#total-referral-count').text(total);
+        $('#referral-open-count').text(statusCount['1']);
+        $('#referral-progress-count').text(statusCount['2']);
+        $('#referral-referred-count').text(statusCount['3']);
+        $('#referral-closed-count').text(statusCount['4']);
+        $('#referral-not-present-count').text(statusCount['5']);
+
+        var totalPriority = priorityCount['1'] + priorityCount['2'] + priorityCount['3'];
+        $('#total-priority-count').text(totalPriority);
+        $('#referral-low-count').text(priorityCount['1']);
+        $('#referral-medium-count').text(priorityCount['2']);
+        $('#referral-high-count').text(priorityCount['3']);
+
+        var buList = Object.keys(buCount).map(function (name) {
+            return { name: name, count: buCount[name] };
+        });
+        buList.sort(function (a, b) { return b.count - a.count; });
+        $('#total-business-unit-count').text(buList.length);
+        populateBusinessUnits(buList);
+
+        makeStatusItemsClickable(statusCount);
+        makePriorityItemsClickable(priorityCount);
+    }
 
     function fetchDashboardData() {
         $.ajax({
@@ -548,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (allData.length === 0) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td colspan="7" style="text-align: center; padding: 20px; color: #666; font-style: italic;">No data available</td>
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #666; font-style: italic;">No data available</td>
                 `;
                 document.querySelector('#referral-tbl tbody').appendChild(tr);
                 updatePagination();
@@ -581,8 +619,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const priorityInfo = priorityMap[priorityValue] || priorityMap['2'];
                 const priorityBadge = `<span class="${priorityInfo.class}">${priorityInfo.name}</span>`;
 
-                // Generate PDF button for all referrals (both internal and external)
-                const secondButton = `<a href="#" class="btn-icon btn-icon-download download-form-btn" data-id="${row.id}" data-ref-id="${row.ref_id}" data-timestamp="${row.ori_updated_at}" data-from-sequence="${row.from_sequence || ''}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Download MyReferral Letter"><i class="bi bi-file-earmark-arrow-down"></i></a>`;
+                const secondButton = ``;
 
                 // Calculate relative time using moment.js
                 // Remove 'Z' suffix and treat as Malaysia time (UTC+8)
@@ -594,19 +631,20 @@ document.addEventListener('DOMContentLoaded', function () {
                         ${row.reason}
                     </td>
                     <td style="font-size:13px;width: 13%;text-align:start;">
-                        <span style="font-size:13px;">${row.from_business_unit || 'N/A'}</span>
+                        <span style="font-size:13px;">${(window.outletCodeMap && row.from_location && window.outletCodeMap[row.from_location]) ? window.outletCodeMap[row.from_location] : (row.from_business_unit || 'N/A')}</span>
                     </td>
                     <td style="font-size:13px;width: 13%;text-align:start;">
-                        <span style="font-size:13px;">${row.to_business_unit || 'N/A'}</span>${externalBadge}
+                        <span style="font-size:13px;">${(window.outletCodeMap && row.to_location && window.outletCodeMap[row.to_location]) ? window.outletCodeMap[row.to_location] : (row.to_business_unit || 'N/A')}</span>${externalBadge}
                     </td>
-                    <td style="font-size:13px;width: 10%;text-align:start;">
+                    <td style="font-size:13px;width: 9%;text-align:start;">${row.created_at || 'N/A'}</td>
+                    <td style="font-size:13px;width: 9%;text-align:start;">
                         <span class="bdg-${statusClass}">${statusText}</span>
-                        <br><span style="color: #6c757d; font-size: 13px; margin-top: 4px; display: inline-block;">${relativeTime}</span>
+                        <br><span style="font-size:11px;color:#6c757d;font-style:italic;">${row.ori_updated_at ? 'Last updated: ' + row.ori_updated_at.substring(0, 10).split('-').reverse().join('-') : ''}</span>
                     </td>
-                    <td style="font-size:13px;width: 10%;text-align:start;">
+                    <td style="font-size:13px;width: 9%;text-align:start;">
                         ${priorityBadge}
                     </td>
-                    <td style="font-size:13px;width: 12%;text-align:start;">
+                    <td style="font-size:13px;width: 10%;text-align:start;">
                         <a href="referral/view.php?id=${row.id}" class="btn-icon btn-icon-edit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View/Edit MyReferral"><i class="bi bi-pencil-square"></i></a>
                         ${secondButton}
                     </td>
@@ -827,6 +865,36 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // Populate location filter from current user's outlets
+        $.ajax({
+            url: 'referral/backend.php?action=getStaffLocation',
+            type: 'GET',
+            dataType: 'json',
+            data: { staff_id: id_user },
+            success: function (response) {
+                var locationSelect = document.getElementById('filter-location');
+                if (locationSelect) {
+                    locationSelect.innerHTML = '<option value="all">All Location</option>';
+                    if (Array.isArray(response)) {
+                        window.userOutletIds = response.map(function (outlet) { return String(outlet.id); });
+                        response.forEach(function (outlet) {
+                            var option = document.createElement('option');
+                            option.value = outlet.id;
+                            option.textContent = outlet.code;
+                            locationSelect.appendChild(option);
+                        });
+                    }
+                }
+            },
+            error: function () {
+                var locationSelect = document.getElementById('filter-location');
+                if (locationSelect) {
+                    locationSelect.innerHTML = '<option value="all">All Location</option>';
+                }
+                window.userOutletIds = [];
+            }
+        });
+
         $.ajax({
             url: 'referral/api-jwt.php',
             type: 'POST',
@@ -851,9 +919,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.referralApiData = response.data;
                 window.initialReferralData = response;
 
-                // Mark API as loaded
-                apisLoaded.referralData = true;
-                checkAllApisLoaded();
+                // Collect unique outlet IDs from all referral rows
+                var allRows = (response.data.all || []).concat(response.data.sent || []).concat(response.data.received || []);
+                var locationIds = {};
+                allRows.forEach(function (row) {
+                    if (row.from_location) locationIds[row.from_location] = true;
+                    if (row.to_location) locationIds[row.to_location] = true;
+                });
+                var uniqueIds = Object.keys(locationIds).join(',');
+
+                if (uniqueIds) {
+                    $.ajax({
+                        url: 'referral/backend.php?action=getOutletCodes',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: { ids: uniqueIds },
+                        success: function (map) {
+                            window.outletCodeMap = map;
+                        },
+                        error: function () {
+                            window.outletCodeMap = {};
+                        },
+                        complete: function () {
+                            apisLoaded.referralData = true;
+                            checkAllApisLoaded();
+                        }
+                    });
+                } else {
+                    window.outletCodeMap = {};
+                    // Mark API as loaded
+                    apisLoaded.referralData = true;
+                    checkAllApisLoaded();
+                }
 
                 // console.log('DEBUG: Referral data loaded, waiting for other APIs...');
 
@@ -921,6 +1018,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
 
+                // Add filter functionality for location
+                const locationFilter = document.getElementById('filter-location');
+                if (locationFilter) {
+                    locationFilter.addEventListener('change', function () {
+                        applyFilters();
+                    });
+                }
+
                 // Add referral type filter functionality
                 const referralTypeFilters = document.querySelectorAll('input[name="referral-type"]');
                 referralTypeFilters.forEach(function (radio) {
@@ -943,6 +1048,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     document.getElementById('filter-priority').value = '';
                                     if (document.getElementById('filter-date-range')) {
                                         document.getElementById('filter-date-range').value = '';
+                                    }
+                                    if (document.getElementById('filter-location')) {
+                                        document.getElementById('filter-location').value = 'all';
                                     }
                                 }
 
@@ -979,6 +1087,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         document.getElementById('filter-status').value = '';
                         document.getElementById('filter-priority').value = '';
+                        if (document.getElementById('filter-location')) {
+                            document.getElementById('filter-location').value = 'all';
+                        }
                         document.getElementById('filter-date-range').value = '';
 
                         // Clear date range picker
@@ -1006,6 +1117,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const selectedBusinessUnit = document.getElementById('filter-business-unit').value;
                     const selectedStatus = document.getElementById('filter-status').value;
                     const selectedPriority = document.getElementById('filter-priority').value;
+                    const selectedLocation = document.getElementById('filter-location') ? document.getElementById('filter-location').value : 'all';
                     const dateRange = document.getElementById('filter-date-range').value;
 
                     // console.log('Applying filters:', {
@@ -1020,6 +1132,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         (selectedBusinessUnit !== '' && selectedBusinessUnit !== 'all') ||
                         selectedStatus !== '' ||
                         selectedPriority !== '' ||
+                        (selectedLocation !== '' && selectedLocation !== 'all') ||
                         dateRange !== '';
 
                     // console.log('DEBUG applyFilters: hasActiveFilters:', hasActiveFilters);
@@ -1030,10 +1143,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         document.getElementById('type-all').checked = true;
                         window.currentReferralType = 'all';
 
-                        // Use ALL data from API response
                         if (window.referralApiData && window.referralApiData.all) {
                             originalData = [...window.referralApiData.all];
-                            // console.log('DEBUG applyFilters: Using all data, length:', originalData.length);
                         }
                     }
 
@@ -1044,36 +1155,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // console.log('DEBUG: Status filter active, using ALL data without department filtering');
                         startingData = [...originalData];
                     } else if (selectedBusinessUnit === '' || selectedBusinessUnit === 'all') {
-                        // Use department-filtered data by getting current user's business unit
-                        if (department && department !== '') {
-                            $.ajax({
-                                url: 'referral/api-jwt.php',
-                                type: 'POST',
-                                async: false, // Make synchronous to get data immediately
-                                data: { action: 'business-units' },
-                                success: function (response) {
-                                    const businessUnits = response.data || [];
-                                    const userBusinessUnit = businessUnits.find(function (unit) {
-                                        return unit.staff_department_id == department;
-                                    });
-
-                                    if (userBusinessUnit) {
-                                        startingData = originalData.filter(function (row) {
-                                            const fromMatches = row.from_business_unit && row.from_business_unit.toLowerCase() === userBusinessUnit.name.toLowerCase();
-                                            const toMatches = row.to_business_unit && row.to_business_unit.toLowerCase() === userBusinessUnit.name.toLowerCase();
-                                            return fromMatches || toMatches;
-                                        });
-                                    } else {
-                                        startingData = [...originalData];
-                                    }
-                                },
-                                error: function () {
-                                    startingData = [...originalData];
-                                }
-                            });
-                        } else {
-                            startingData = [...originalData];
-                        }
+                        startingData = [...originalData];
                     } else {
                         // Business unit is explicitly selected, start from all data
                         startingData = [...originalData];
@@ -1145,6 +1227,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         filteredData = filteredData.filter(function (row) {
                             const matches = String(row.priority) === String(selectedPriority);
                             return matches;
+                        });
+                    }
+
+                    // Filter by location (outlet)
+                    if (selectedLocation !== '' && selectedLocation !== 'all') {
+                        filteredData = filteredData.filter(function (row) {
+                            return String(row.from_location) === String(selectedLocation) ||
+                                String(row.to_location) === String(selectedLocation);
                         });
                     }
 
@@ -1225,7 +1315,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     allData = filteredData;
                     currentPage = 1;
                     displayPage(currentPage);
-                    // console.log('Final filtered data count:', filteredData.length);
                 }
 
                 // Assign to global variable so date picker can access it
