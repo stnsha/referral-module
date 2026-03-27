@@ -178,6 +178,9 @@ $(document).ready(function () {
             }
 
             displayReferredFrom(businessUnitId);
+            if (businessUnitId) {
+                displayContent(businessUnitId);
+            }
 
             busUnitFrom.trigger('change'); // Trigger change to load assignees and display content
 
@@ -499,9 +502,6 @@ $(document).ready(function () {
         const selectedOption = $(this).find(':selected');
         var refBusId = selectedOption.data('id');
         var businessUnitId = $(this).val();
-        if (refBusId) {
-            displayContent(refBusId);
-        }
 
         if (refBusId) {
 

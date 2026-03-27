@@ -341,7 +341,7 @@ include('../common/index_adv.php');
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
                             <small class="form-text text-muted">
-                                Only state the purpose of referral. Do not include greetings such as “Dear Doctor".
+                                Only state the purpose of referral. <span style="color:red;font-weight:bold;">DO NOT</span> include greetings such as "Dear Doctor".
                             </small>
                         </div>
                         <div class="mb-2">

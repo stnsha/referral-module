@@ -146,7 +146,10 @@ foreach ($_POST as $key => $value) {
         'new_recipient_name',
         'new_recipient_email',
         'new_recipient_phone',
-        'new_recipient_position'
+        'new_recipient_position',
+        'consult_call_id',
+        'follow_up_id',
+        'id_type'
     ))) {
         $form_data[$key] = $value;
     }
