@@ -3,7 +3,8 @@
     "allow": [
       "Read(//c/xampp/htdocs/odb/**)",
       "Bash(grep:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

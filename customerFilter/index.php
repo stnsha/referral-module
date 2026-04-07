@@ -12,7 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" />
-    <link rel="stylesheet" media="screen" type="text/css" href="referral/customerFilter/css/style.css?v=<?php echo time(); ?>" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/customerFilter/css/style.css?v=<?php echo filemtime(__DIR__ . '/css/style.css'); ?>" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <?php
@@ -22,15 +22,20 @@ include('../../common/index_adv.php');
 ?>
 
 <body>
+    <div class="header" style="position: relative;">
+        <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
+        <h1 class="headerH1"><img src='common/img/myreferral.png' width='20px'>Search by Customer</h1>
+        <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
+    </div>
     <?php include('../navbar.php'); ?>
     <div class="referral-container mb-3">
-        <div class="row mb-3">
+        <!-- <div class="row mb-3">
             <div class="col-12">
                 <div class="d-flex justify-content-start align-items-center px-3">
                     <span class="fw-bold text-start me-3" style="font-size:18px;">Search by Customer</span>
                 </div>
             </div>
-        </div>
+        </div> -->
         <div class="row mb-3 px-3">
             <div class="col-12">
                 <div class="d-flex flex-column rounded-2 shadow p-3"

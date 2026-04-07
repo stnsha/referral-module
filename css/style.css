@@ -4,6 +4,12 @@ body {
     /* width: auto !important; */
 }
 
+/* Force Inter on the ODB page header used by consultcall pages */
+.headerH1 {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+}
+
 .referral-container {
     display: flex;
     flex-direction: column;

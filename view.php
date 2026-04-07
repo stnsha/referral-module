@@ -13,7 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" /> -->
-    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css?v=<?php echo filemtime(__DIR__ . '/css/style.css'); ?>" />
     <link rel="stylesheet" media="screen" type="text/css" href="referral/css/toast.css?v=<?php echo time(); ?>" />
 </head>
 <?php
@@ -24,6 +24,11 @@ include('../common/index_adv.php');
 ?>
 
 <body>
+    <div class="header" style="position: relative;">
+        <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
+        <h1 class="headerH1"><img src='common/img/myreferral.png' width='20px'>View MyReferral</h1>
+        <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
+    </div>
     <?php include('navbar.php'); ?>
     <div class="referral-container mb-3 text-center">
         <div class="col align-items-center">

@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <link rel="stylesheet" media="screen" type="text/css" href="common/css/layout.css" />
-    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="referral/css/style.css?v=<?php echo filemtime(__DIR__ . '/css/style.css'); ?>" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -27,11 +27,13 @@ if (isset($referral) && $referral == 0) {
 ?>
 
 <body>
+    <div class="header" style="position: relative;">
+        <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
+        <h1 class="headerH1"><img src='common/img/myreferral.png' width='20px'>Admin Panel</h1>
+        <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
+    </div>
     <?php include('navbar.php'); ?>
     <div class="referral-container mb-3">
-        <div class="d-flex justify-content-start align-items-center px-3 mb-3">
-            <span class="fw-bold text-start me-3" style="font-size:18px;">Admin Panel</span>
-        </div>
 
         <div class="row px-3 g-3">
             <!-- Left Column: Form -->

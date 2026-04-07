@@ -27,12 +27,17 @@ include('../common/index_adv.php');
 ?>
 
 <body>
+    <div class="header" style="position: relative;">
+        <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
+        <h1 class="headerH1"><img src='common/img/myreferral.png' width='20px'>MyReferral</h1>
+        <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
+    </div>
     <?php include('navbar.php'); ?>
     <div class="referral-container mb-3">
         <div class="row mb-3">
             <div class="col-12">
                 <div class="d-flex justify-content-start align-items-center px-3">
-                    <span class="fw-bold text-start me-3" style="font-size:18px;">MyReferral Dashboard</span>
+                    <span class="fw-bold text-start me-3" style="font-size:18px;">Dashboard</span>
                     <a href="referral/create.php" type="button" class="btn-new-referral">New Referral</a>
                 </div>
             </div>
@@ -237,11 +242,11 @@ include('../common/index_adv.php');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
     <script>
-    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-    const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-    const staff_outlet =
-        <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
-    const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+        const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+        const staff_outlet =
+            <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
     </script>
 
     <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>

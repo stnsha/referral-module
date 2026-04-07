@@ -22,7 +22,7 @@ $report_yearly_active = ($current_page == 'yearly.php' && $current_dir == 'repor
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link <?php echo $dashboard_active; ?>" href="referral/index.php">MyReferral
+                    <a class="nav-link <?php echo $dashboard_active; ?>" href="referral/index.php">
                         Dashboard</a>
                 </li>
                 <li class="nav-item">

@@ -303,21 +303,21 @@ function getAuthToken($staff_id)
 {
     // Check if token exists in session and is still valid (basic check)
     if (
-        isset($_SESSION['jwt_token']) && isset($_SESSION['jwt_expires']) &&
-        time() < $_SESSION['jwt_expires']
+        isset($_SESSION['referral_jwt_token']) && isset($_SESSION['referral_jwt_expires']) &&
+        time() < $_SESSION['referral_jwt_expires']
     ) {
         logJWTOperation(
             'getAuthToken',
             'Using cached token',
-            array('staff_id' => $staff_id, 'expiry' => date('Y-m-d H:i:s', $_SESSION['jwt_expires'])),
+            array('staff_id' => $staff_id, 'expiry' => date('Y-m-d H:i:s', $_SESSION['referral_jwt_expires'])),
             'INFO'
         );
-        return $_SESSION['jwt_token'];
-    } else if (isset($_SESSION['jwt_expires'])) {
+        return $_SESSION['referral_jwt_token'];
+    } else if (isset($_SESSION['referral_jwt_expires'])) {
         logJWTOperation(
             'getAuthToken',
             'Cached token expired, refreshing',
-            array('staff_id' => $staff_id, 'expired_at' => date('Y-m-d H:i:s', $_SESSION['jwt_expires'])),
+            array('staff_id' => $staff_id, 'expired_at' => date('Y-m-d H:i:s', $_SESSION['referral_jwt_expires'])),
             'WARNING'
         );
     }
@@ -341,14 +341,14 @@ function getAuthToken($staff_id)
 
     if ($token) {
         // Store token in session (expires in 1 hour - adjust as needed)
-        $_SESSION['jwt_token'] = $token;
-        $_SESSION['jwt_expires'] = time() + 3600; // 1 hour
-        $_SESSION['jwt_staff_id'] = $staff_id;
+        $_SESSION['referral_jwt_token'] = $token;
+        $_SESSION['referral_jwt_expires'] = time() + 3600; // 1 hour
+        $_SESSION['referral_jwt_staff_id'] = $staff_id;
 
         logJWTOperation(
             'getAuthToken',
             'New token cached',
-            array('staff_id' => $staff_id, 'expiry' => date('Y-m-d H:i:s', $_SESSION['jwt_expires'])),
+            array('staff_id' => $staff_id, 'expiry' => date('Y-m-d H:i:s', $_SESSION['referral_jwt_expires'])),
             'INFO'
         );
     } else {
@@ -459,9 +459,9 @@ function getApiDataWithJWT($endpoint, $data = null, $method = 'GET', $staff_id =
     $sentHeaders = curl_getinfo($ch, CURLINFO_HEADER_OUT);
 
     // If unauthorized, clear token and retry once
-    if ($httpCode === 401 && isset($_SESSION['jwt_token'])) {
-        unset($_SESSION['jwt_token']);
-        unset($_SESSION['jwt_expires']);
+    if ($httpCode === 401 && isset($_SESSION['referral_jwt_token'])) {
+        unset($_SESSION['referral_jwt_token']);
+        unset($_SESSION['referral_jwt_expires']);
 
         // Get new token and retry
         $token = getAuthToken($staff_id);
@@ -1886,8 +1886,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             case 'verify-session':
                 // Get current JWT token from session and verify it
-                if (isset($_SESSION['jwt_token'])) {
-                    $response = verifyToken($_SESSION['jwt_token']);
+                if (isset($_SESSION['referral_jwt_token'])) {
+                    $response = verifyToken($_SESSION['referral_jwt_token']);
                 } else {
                     $response = array(
                         'success' => false,
@@ -1905,7 +1905,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'message' => 'JWT token retrieved successfully',
                         'token' => $token,
                         'staff_id' => $staff_id,
-                        'expires_at' => isset($_SESSION['jwt_expires']) ? date('Y-m-d H:i:s', $_SESSION['jwt_expires']) : 'Unknown'
+                        'expires_at' => isset($_SESSION['referral_jwt_expires']) ? date('Y-m-d H:i:s', $_SESSION['referral_jwt_expires']) : 'Unknown'
                     );
                 } else {
                     $response = array(

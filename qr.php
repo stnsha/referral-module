@@ -142,7 +142,7 @@ if (file_exists($filepath) && (time() - filemtime($filepath)) < 3600) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" />
-    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="css/style.css?v=<?php echo filemtime(__DIR__ . '/css/style.css'); ?>" />
 </head>
 <?php
 require_once('../lock_adv.php');
@@ -151,6 +151,12 @@ include('../common/index_adv.php');
 ?>
 
 <body>
+    <div class="header" style="position: relative;">
+        <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
+        <h1 class="headerH1"><img src='common/img/myreferral.png' width='20px'>Referral QR Code</h1>
+        <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
+    </div>
+    <?php include('navbar.php'); ?>
     <div class="text-center bg-white rounded p-2">
         <div class="col align-items-center">
             <span class="r-main-title">Referral #REF<?php echo str_pad($_GET['id'], 4, 0, STR_PAD_LEFT) ?></span>
