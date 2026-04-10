@@ -473,6 +473,12 @@ $(document).ready(function () {
                             css: { color: 'red', fontSize: '12px' }
                         }));
                         formContainer.after(consultWrapper);
+
+                        // Strip all non-digit characters on input (e.g. "#CC12" becomes "12")
+                        $(document).off('input.consultCallId').on('input.consultCallId', '#consult_call_id_visible', function () {
+                            var stripped = $(this).val().replace(/\D/g, '');
+                            $(this).val(stripped);
+                        });
                     }
                 });
 
@@ -1470,8 +1476,13 @@ function validateForm(event) {
 
     // Validate consult_call_id when shown for clinic form (form_id=1, form_details_id=3)
     if ($('#consult-call-id-wrapper').is(':visible')) {
-        var consultCallIdVal = $('#consult_call_id_visible').val() || '';
-        markError("consult-call-id", isEmpty(consultCallIdVal), "Consult Call ID is required.");
+        var consultCallIdVal = ($('#consult_call_id_visible').val() || '').replace(/\D/g, '');
+        $('#consult_call_id_visible').val(consultCallIdVal);
+        if (isEmpty(consultCallIdVal)) {
+            markError("consult-call-id", true, "Consult Call ID is required.");
+        } else if (!/^\d+$/.test(consultCallIdVal) || parseInt(consultCallIdVal) <= 0) {
+            markError("consult-call-id", true, "Consult Call ID must be a positive number.");
+        }
     }
 
     if (!hasError) {
