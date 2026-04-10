@@ -326,6 +326,8 @@ $(document).ready(function () {
                 }
 
                 $('.content').hide();
+                // Remove consult_call_id wrapper on business unit switch; will be re-injected if form_id=1 is present
+                $('#consult-call-id-wrapper').remove();
                 const targetDiv = $('.business-unit-' + businessUnitId);
                 targetDiv.show();
                 targetDiv.find('[data-required="true"]').prop('required', true);
@@ -453,6 +455,25 @@ $(document).ready(function () {
                         formContainer.find('input, select, textarea').prop('disabled', true);
                     }
                     targetDiv.append(formContainer);
+
+                    // Inject consult_call_id field after form_id=1 container
+                    if (form_id === 1) {
+                        var consultWrapper = $('<div>', { id: 'consult-call-id-wrapper', class: 'mb-2', css: { display: 'none' } });
+                        consultWrapper.append($('<p>', { class: 'r-text' }).html('Consult Call ID<span style="color:red;">*</span>'));
+                        consultWrapper.append($('<input>', {
+                            type: 'text',
+                            name: 'consult_call_id',
+                            id: 'consult_call_id_visible',
+                            class: 'form-control form-control-sm',
+                            disabled: true
+                        }));
+                        consultWrapper.append($('<div>', {
+                            id: 'error-consult-call-id',
+                            class: 'error-message',
+                            css: { color: 'red', fontSize: '12px' }
+                        }));
+                        formContainer.after(consultWrapper);
+                    }
                 });
 
                 // Attach change handler once after all forms are rendered
@@ -495,6 +516,17 @@ $(document).ready(function () {
             $(this).toggle(shouldShow);
             $(this).find('input, select, textarea').prop('disabled', !shouldShow);
         });
+
+        // Hardcoded: show consult_call_id input when form_id=1, form_details_id=3 is selected (Clinic)
+        var clinicDetail3Checked = $('[data-form-id="1"] input[value="3"]:checked').length > 0;
+        var consultWrapper = $('#consult-call-id-wrapper');
+        if (clinicDetail3Checked) {
+            consultWrapper.show();
+            $('#consult_call_id_visible').prop('disabled', false);
+        } else {
+            consultWrapper.hide();
+            $('#consult_call_id_visible').prop('disabled', true).val('');
+        }
     }
 
     // For Refer To
@@ -1436,6 +1468,12 @@ function validateForm(event) {
     markError("customer-email", !isEmpty(email) && !isEmail(email), "Invalid email format.");
     markError("customer-address", isEmpty(form["customer_address"].value), "This field cannot be left blank.");
 
+    // Validate consult_call_id when shown for clinic form (form_id=1, form_details_id=3)
+    if ($('#consult-call-id-wrapper').is(':visible')) {
+        var consultCallIdVal = $('#consult_call_id_visible').val() || '';
+        markError("consult-call-id", isEmpty(consultCallIdVal), "Consult Call ID is required.");
+    }
+
     if (!hasError) {
         $(this).find(':input').each(function () {
             if ($(this).is(':hidden')) {
@@ -1487,11 +1525,30 @@ function validateForm(event) {
                     $('#attachmentPreview').empty();
 
                     const redirectUrl = 'referral/successful.php?id=' + inner.id + '&sequence=1';
+                    const ccIdVisible = parseInt($('#consult_call_id_visible').val());
                     const ccId = parseInt($('#consult_call_id').val());
                     const fuId = parseInt($('#follow_up_id').val());
                     const locationTo = $('#location_to').val();
 
-                    if (ccId && fuId && inner.id) {
+                    if (ccIdVisible && inner.id) {
+                        // User manually entered consult call ID via the form (form_id=1, form_details_id=3)
+                        const payload = {
+                            action: 'link-referral-by-call',
+                            consult_call_id: ccIdVisible,
+                            my_referral_id: inner.id,
+                            referral_to: locationTo ? parseInt(locationTo) : null
+                        };
+                        $.ajax({
+                            url: 'consultcall/api-jwt.php',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(payload),
+                            complete: function() {
+                                window.location.href = redirectUrl;
+                            }
+                        });
+                    } else if (ccId && fuId && inner.id) {
+                        // Consult call ID and follow-up ID supplied via URL params (linked from consultcall app)
                         const payload = {
                             action: 'link-referral',
                             consult_call_id: ccId,
