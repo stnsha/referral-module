@@ -151,8 +151,15 @@ function getLocations($ref_bus_id)
         $outlet_id   = $ref_bus_result['outlet_id'];
 
         if (isset($ending_code) && $ending_code !== '' && $ending_code !== null) {
-            // Standard case: filter outlets by ending_code suffix
-            $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE RIGHT(code, 1) = '$ending_code' ORDER BY comp_name ASC");
+            $codes = array_map('trim', explode(',', $ending_code));
+            $escaped = array();
+            foreach ($codes as $c) {
+                if ($c !== '') {
+                    $escaped[] = "'" . mysqli_real_escape_string($conn, $c) . "'";
+                }
+            }
+            $in_clause = implode(',', $escaped);
+            $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE RIGHT(code, 1) IN ($in_clause) ORDER BY comp_name ASC");
         } elseif (!empty($outlet_id)) {
             // Special case (e.g., HQ): return the directly linked outlet
             $outlet_id_int = intval($outlet_id);

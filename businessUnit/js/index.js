@@ -251,7 +251,7 @@ function handleBusinessUnitSubmit(e) {
         name: $('#bu-name').val().trim(),
         staff_department_id: $('#bu-department').val() ? parseInt($('#bu-department').val()) : null,
         outlet_id: $('#bu-outlet').val() ? parseInt($('#bu-outlet').val()) : null,
-        ending_code: $('#bu-ending-code').val().trim().toUpperCase(),
+        ending_code: $('#bu-ending-code').val().trim().toUpperCase().replace(/\s*,\s*/g, ','),
         is_active: parseInt($('input[name="bu_status"]:checked').val())
     };
 
@@ -261,9 +261,19 @@ function handleBusinessUnitSubmit(e) {
         return;
     }
 
-    if (buData.ending_code && (buData.ending_code.length !== 1 || !/^[A-Z0-9]$/.test(buData.ending_code))) {
-        showBadgeMessage('Ending code must be a single alphanumeric character', 'error');
-        return;
+    if (buData.ending_code) {
+        var parts = buData.ending_code.split(',');
+        var valid = true;
+        for (var i = 0; i < parts.length; i++) {
+            if (!/^[A-Z0-9]$/.test(parts[i].trim())) {
+                valid = false;
+                break;
+            }
+        }
+        if (!valid) {
+            showBadgeMessage('Ending code must be single alphanumeric characters separated by commas (e.g. 1,2,F)', 'error');
+            return;
+        }
     }
 
     var statusText = buData.is_active ? 'Active' : 'Inactive';
@@ -511,7 +521,7 @@ function checkFormChanges() {
         name: $('#bu-name').val().trim(),
         department: $('#bu-department').val() || '',
         outlet: $('#bu-outlet').val() || '',
-        ending_code: $('#bu-ending-code').val().trim().toUpperCase(),
+        ending_code: $('#bu-ending-code').val().trim().toUpperCase().replace(/\s*,\s*/g, ','),
         status: $('input[name="bu_status"]:checked').val()
     };
 

@@ -123,7 +123,7 @@ include('../../common/index_adv.php');
                             <label class="col-sm-3 r-text text-start">Ending Code</label>
                             <div class="col-sm-8">
                                 <input type="text" class="form-control form-control-sm r-text" id="bu-ending-code"
-                                    name="bu_ending_code" maxlength="1" placeholder="Single character (A-Z, 0-9)">
+                                    name="bu_ending_code" maxlength="20" placeholder="e.g. 1 or 1,2,3,F (comma-separated)">
                                 <!-- <small class="form-text text-muted text-start">Single character (A-Z, 0-9)</small> -->
                             </div>
                         </div>
