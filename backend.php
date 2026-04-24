@@ -180,6 +180,38 @@ function getLocations($ref_bus_id)
     return array();
 }
 
+function searchCustomerAuto($query)
+{
+    global $conn;
+
+    $query = trim($query);
+    if (strlen($query) < 2) {
+        return array();
+    }
+
+    $escaped = mysqli_real_escape_string($conn, $query);
+    $sql = "SELECT id, customer_name, ic, phone FROM customer
+            WHERE ic LIKE '$escaped%' OR customer_name LIKE '%$escaped%'
+            ORDER BY customer_name ASC
+            LIMIT 10";
+
+    $result = mysqli_query($conn, $sql);
+    if (!$result) {
+        return array();
+    }
+
+    $customers = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $customers[] = array(
+            'id'    => $row['id'],
+            'name'  => $row['customer_name'],
+            'ic'    => $row['ic'],
+            'phone' => $row['phone']
+        );
+    }
+    return $customers;
+}
+
 function searchCustomer($icno = null, $customer_id = null, $id_type = 'nric')
 {
     global $conn;
@@ -216,7 +248,7 @@ function searchCustomer($icno = null, $customer_id = null, $id_type = 'nric')
         return array();
     }
 
-    $query = "SELECT id, customer_name, ic, gender, birth_date, phone, email, c_addr FROM customer WHERE " . implode(" OR ", $conditions);
+    $query = "SELECT id, customer_name, ic, gender, birth_date, phone, email, c_addr, race, nationality FROM customer WHERE " . implode(" OR ", $conditions);
 
     $searchIcno = mysqli_query($conn, $query);
 
@@ -240,10 +272,12 @@ function searchCustomer($icno = null, $customer_id = null, $id_type = 'nric')
             'ic' => $row['ic'],
             'gender' => $row['gender'],
             'birth_date' => $row['birth_date'],
-            'age' => $age,  // Add calculated age to response
+            'age' => $age,
             'phone' => $row['phone'],
             'email' => $row['email'],
-            'address' => $row['c_addr']
+            'address' => $row['c_addr'],
+            'race' => $row['race'],
+            'nationality' => $row['nationality']
         );
     }
 
@@ -301,7 +335,9 @@ function updateCustomer($customer_id, $field, $value)
         'customer_email' => 'email',
         'customer_age' => 'birth_date', // Special handling needed
         'customer_gender' => 'gender',
-        'customer_address' => 'c_addr'
+        'customer_address' => 'c_addr',
+        'customer_race' => 'race',
+        'customer_nationality' => 'nationality'
     );
 
     if (!isset($field_mapping[$field])) {
@@ -345,6 +381,18 @@ function updateCustomer($customer_id, $field, $value)
             $trimmed_value = trim($value);
             if (empty($trimmed_value)) {
                 return array('success' => false, 'message' => 'Address is required');
+            }
+            break;
+        case 'customer_race':
+            $allowed_races = array('MALAY', 'CHINESE', 'INDIAN', 'SABAH ETHNIC', 'SARAWAK ETHNIC', 'OTHERS');
+            if (!in_array($value, $allowed_races)) {
+                return array('success' => false, 'message' => 'Invalid race value');
+            }
+            break;
+        case 'customer_nationality':
+            $allowed_nationalities = array('MALAYSIA', 'SINGAPORE', 'INDONESIA', 'BRUNEI', 'PHILIPPINES', 'THAILAND');
+            if (!in_array($value, $allowed_nationalities)) {
+                return array('success' => false, 'message' => 'Invalid nationality value');
             }
             break;
         case 'customer_ic':
@@ -399,7 +447,7 @@ function extractDetailsFromIC($ic)
     return array('age' => $age, 'gender' => $gender, 'birthday' => $birthday);
 }
 
-function createCustomer($ic, $name, $phone, $email, $address, $age = null, $gender = null)
+function createCustomer($ic, $name, $phone, $email, $address, $age = null, $gender = null, $race = null, $nationality = null)
 {
     global $conn;
 
@@ -409,6 +457,8 @@ function createCustomer($ic, $name, $phone, $email, $address, $age = null, $gend
     $phone = trim($phone);
     $email = trim($email);
     $address = trim($address);
+    $race = $race ? trim($race) : null;
+    $nationality = $nationality ? trim($nationality) : null;
 
     if (empty($ic)) {
         return array('success' => false, 'message' => 'I/C No. is required');
@@ -429,6 +479,16 @@ function createCustomer($ic, $name, $phone, $email, $address, $age = null, $gend
     // Validate email format if provided
     if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return array('success' => false, 'message' => 'Invalid email format');
+    }
+
+    $allowed_races = array('MALAY', 'CHINESE', 'INDIAN', 'SABAH ETHNIC', 'SARAWAK ETHNIC', 'OTHERS');
+    if (!empty($race) && !in_array($race, $allowed_races)) {
+        return array('success' => false, 'message' => 'Invalid race value');
+    }
+
+    $allowed_nat = array('MALAYSIA', 'SINGAPORE', 'INDONESIA', 'BRUNEI', 'PHILIPPINES', 'THAILAND');
+    if (!empty($nationality) && !in_array($nationality, $allowed_nat)) {
+        return array('success' => false, 'message' => 'Invalid nationality value');
     }
 
     // Check if customer with this IC already exists
@@ -461,19 +521,31 @@ function createCustomer($ic, $name, $phone, $email, $address, $age = null, $gend
     $email_escaped = mysqli_real_escape_string($conn, $email);
     $address_escaped = mysqli_real_escape_string($conn, $address);
     $gender_escaped = mysqli_real_escape_string($conn, $gender);
-
-    // birth_date is already set from IC extraction above
+    $race_escaped = $race ? mysqli_real_escape_string($conn, $race) : null;
+    $nationality_escaped = $nationality ? mysqli_real_escape_string($conn, $nationality) : null;
 
     // Get current timestamp for created date
     $current_timestamp = date('Y-m-d H:i:s');
     $timestamp_escaped = mysqli_real_escape_string($conn, $current_timestamp);
 
-    // Insert new customer
-    $insert_query = "INSERT INTO customer (ic, customer_name, phone, email, c_addr, gender, date" .
-        ($birth_date ? ", birth_date" : "") . ") VALUES " .
-        "('$ic_escaped', '$name_escaped', '$phone_escaped', '$email_escaped', '$address_escaped', '$gender_escaped', '$timestamp_escaped'" .
-        ($birth_date ? ", '$birth_date'" : "") . ")";
+    // Build INSERT dynamically
+    $cols = "ic, customer_name, phone, email, c_addr, gender, date";
+    $vals = "'$ic_escaped', '$name_escaped', '$phone_escaped', '$email_escaped', '$address_escaped', '$gender_escaped', '$timestamp_escaped'";
 
+    if ($birth_date) {
+        $cols .= ", birth_date";
+        $vals .= ", '$birth_date'";
+    }
+    if ($race_escaped) {
+        $cols .= ", race";
+        $vals .= ", '$race_escaped'";
+    }
+    if ($nationality_escaped) {
+        $cols .= ", nationality";
+        $vals .= ", '$nationality_escaped'";
+    }
+
+    $insert_query = "INSERT INTO customer ($cols) VALUES ($vals)";
     $result = mysqli_query($conn, $insert_query);
 
     if ($result) {
@@ -490,7 +562,9 @@ function createCustomer($ic, $name, $phone, $email, $address, $age = null, $gend
                 'email' => $email,
                 'address' => $address,
                 'gender' => $gender,
-                'age' => $age
+                'age' => $age,
+                'race' => $race,
+                'nationality' => $nationality
             )
         );
     } else {
@@ -944,6 +1018,12 @@ if (isset($_GET['action']) && $_GET['action'] == 'getBusinessUnits') {
     exit;
 }
 
+if (isset($_GET['action']) && $_GET['action'] == 'searchCustomerAuto' && isset($_POST['query'])) {
+    header('Content-Type: application/json');
+    echo json_encode(searchCustomerAuto($_POST['query']));
+    exit;
+}
+
 if (
     isset($_GET['action']) && $_GET['action'] == 'searchCustomer' &&
     (isset($_POST['icno']) || isset($_POST['customer_id']))
@@ -1034,9 +1114,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'createCustomer') {
     $address = isset($_POST['address']) ? $_POST['address'] : '';
     $age = isset($_POST['age']) ? $_POST['age'] : null;
     $gender = isset($_POST['gender']) ? $_POST['gender'] : null;
+    $race = isset($_POST['race']) ? $_POST['race'] : null;
+    $nationality = isset($_POST['nationality']) ? $_POST['nationality'] : null;
 
     header('Content-Type: application/json');
-    echo json_encode(createCustomer($ic, $name, $phone, $email, $address, $age, $gender));
+    echo json_encode(createCustomer($ic, $name, $phone, $email, $address, $age, $gender, $race, $nationality));
     exit;
 }
 

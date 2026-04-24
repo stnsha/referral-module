@@ -235,103 +235,120 @@ include('../common/index_adv.php');
                     </div>
                     <div class=" border-bottom pb-3 mb-3">
                         <p class="r-title">Customer Information</p>
-                        <div class="d-flex mb-2">
-                            <div class="me-2 flex-grow-1">
-                                <!-- <p class="r-text">NRIC/Passport<span style="color:red;">*</span></p> -->
 
-                                <!-- Radio buttons for ID type selection -->
-                                <div class="mb-2">
-                                    <label class="me-3 r-text" style="display: inline-flex; align-items: center;">
-                                        <input type="radio" name="id_type" value="nric" checked
-                                            style="margin-right: 5px;"> NRIC<span style="color:red;">*</span>
-                                    </label>
-                                    <label class="r-text" style="display: inline-flex; align-items: center;">
-                                        <input type="radio" name="id_type" value="passport" style="margin-right: 5px;">
-                                        Passport<span style="color:red;">*</span>
-                                    </label>
-                                </div>
-
-                                <div class="d-flex gap-2">
-                                    <input type="hidden" name="customer_id">
-                                    <input type="text" name="customer_ic" class="form-control form-control-sm"
-                                        placeholder="Enter NRIC or Passport number">
-                                    <button type="button" id="clear-customer-btn" class="btn btn-sm btn-outline-danger"
-                                        title="Clear customer information">Clear</button>
-                                </div>
-                                <div class="error-message" id="error-customer-ic" style="color: red;font-size:12px;">
-                                </div>
-
-                                <!-- Create customer link (shown when not found) -->
-                                <div id="create-customer-link-container" style="display: none; margin-top: 8px;">
-                                    <a href="../customer/add.php" id="create-customer-link"
-                                        class="btn btn-sm btn-primary" target="_blank">
-                                        Create New Customer
-                                    </a>
-                                </div>
-                            </div>
-                            <!-- <div class="text-center align-self-end w-auto">
-                                <span class="r-text">or</span>
-                            </div>
-                            <div class="flex-grow-1 ms-2">
-                                <p class="r-text">Alpro VIP Number</p>
-                                <input type="text" name="" class="form-control form-control-sm">
-                            </div> -->
+                        <!-- Mode radios — always visible -->
+                        <div class="mb-3">
+                            <label class="me-3 r-text" style="display:inline-flex;align-items:center;">
+                                <input type="radio" name="customer_mode" value="existing" style="margin-right:5px;"> Existing Customer
+                            </label>
+                            <label class="r-text" style="display:inline-flex;align-items:center;">
+                                <input type="radio" name="customer_mode" value="new" style="margin-right:5px;"> New Customer
+                            </label>
                         </div>
-                        <!-- <div class="mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="">
-                                <label class="form-check-label r-text">
-                                    New Customer/Patient?
+
+                        <!-- Customer form — hidden until mode is chosen -->
+                        <div id="customer-form-section" style="display:none;">
+                            <!-- ID type radios -->
+                            <div class="mb-2">
+                                <label class="me-3 r-text" style="display:inline-flex;align-items:center;">
+                                    <input type="radio" name="id_type" value="nric" checked style="margin-right:5px;"> NRIC<span style="color:red;">*</span>
+                                </label>
+                                <label class="r-text" style="display:inline-flex;align-items:center;">
+                                    <input type="radio" name="id_type" value="passport" style="margin-right:5px;"> Passport<span style="color:red;">*</span>
                                 </label>
                             </div>
-                        </div> -->
-                        <div class="mb-2">
-                            <p class="r-text">Name<span style="color:red;">*</span></p>
-                            <input type="text" name="customer_name" class="form-control form-control-sm">
-                            <div class="error-message" id="error-customer-name" style="color: red;font-size:12px;">
+
+                            <!-- IC / Passport input with autocomplete -->
+                            <div class="mb-2">
+                                <div class="d-flex gap-2">
+                                    <input type="hidden" name="customer_id">
+                                    <div style="flex:1;position:relative;">
+                                        <input type="text" name="customer_ic" id="customer_ic_input" class="form-control form-control-sm"
+                                            placeholder="Enter NRIC or Passport number" autocomplete="off">
+                                        <div id="customer-autocomplete-list" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:1050;background:#fff;border:1px solid #dee2e6;border-top:none;border-radius:0 0 4px 4px;max-height:220px;overflow-y:auto;box-shadow:0 4px 8px rgba(0,0,0,0.08);"></div>
+                                    </div>
+                                    <button type="button" id="clear-customer-btn" class="btn btn-sm btn-outline-danger" title="Clear customer information">Clear</button>
+                                </div>
+                                <div class="error-message" id="error-customer-ic" style="color:red;font-size:12px;"></div>
+                                <div id="create-customer-link-container" style="display:none;margin-top:8px;">
+                                    <a href="../customer/add.php" id="create-customer-link" class="btn btn-sm btn-primary" target="_blank">Create New Customer</a>
+                                </div>
+                            </div>
+
+                            <!-- Customer detail fields -->
+                            <div class="mb-2">
+                                <p class="r-text">Name<span style="color:red;">*</span></p>
+                                <input type="text" name="customer_name" class="form-control form-control-sm">
+                                <div class="error-message" id="error-customer-name" style="color:red;font-size:12px;"></div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col">
                                     <p class="r-text">Phone No.<span style="color:red;">*</span></p>
                                     <input type="text" name="customer_phone" class="form-control form-control-sm">
-                                    <div class="error-message" id="error-customer-phone"
-                                        style="color: red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-phone" style="color:red;font-size:12px;"></div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Email</p>
                                     <input type="text" name="customer_email" class="form-control form-control-sm">
-                                    <div class="error-message" id="error-customer-email"
-                                        style="color: red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-email" style="color:red;font-size:12px;"></div>
                                 </div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col">
                                     <p class="r-text">Age</p>
                                     <input type="text" name="customer_age" class="form-control form-control-sm">
-                                    <div class="error-message" id="error-customer-age"
-                                        style="color: red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-age" style="color:red;font-size:12px;"></div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Gender</p>
                                     <input type="text" name="customer_gender" class="form-control form-control-sm">
-                                    <div class="error-message" id="error-customer-gender"
-                                        style="color: red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-gender" style="color:red;font-size:12px;"></div>
                                 </div>
                             </div>
                             <div class="mb-2">
                                 <p class="r-text">Address<span style="color:red;">*</span></p>
-                                <textarea name="customer_address" class="form-control form-control-sm"
-                                    rows="3"></textarea>
-                                <div class="error-message" id="error-customer-address"
-                                    style="color: red;font-size:12px;"></div>
+                                <textarea name="customer_address" class="form-control form-control-sm" rows="3"></textarea>
+                                <div class="error-message" id="error-customer-address" style="color:red;font-size:12px;"></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col">
+                                    <p class="r-text">Race<span style="color:red;">*</span></p>
+                                    <select name="customer_race" id="customer_race" class="form-select form-select-sm">
+                                        <option value="">Select Race</option>
+                                        <option value="1">MALAY</option>
+                                        <option value="2">CHINESE</option>
+                                        <option value="3">INDIAN</option>
+                                        <option value="4">SABAH ETHNIC</option>
+                                        <option value="5">SARAWAK ETHNIC</option>
+                                        <option value="6">OTHERS</option>
+                                    </select>
+                                    <div class="error-message" id="error-customer-race" style="color:red;font-size:12px;"></div>
+                                </div>
+                                <div class="col">
+                                    <p class="r-text">Nationality<span style="color:red;">*</span></p>
+                                    <select name="customer_nationality" id="customer_nationality" class="form-select form-select-sm">
+                                        <option value="">Select Nationality</option>
+                                        <option value="MALAYSIA">MALAYSIA</option>
+                                        <option value="SINGAPORE">SINGAPORE</option>
+                                        <option value="INDONESIA">INDONESIA</option>
+                                        <option value="BRUNEI">BRUNEI</option>
+                                        <option value="PHILIPPINES">PHILIPPINES</option>
+                                        <option value="THAILAND">THAILAND</option>
+                                    </select>
+                                    <div class="error-message" id="error-customer-nationality" style="color:red;font-size:12px;"></div>
+                                </div>
+                            </div>
+                            <div id="save-customer-section" style="display:none;" class="mt-2">
+                                <button type="button" id="save-customer-btn" class="btn btn-sm btn-success">Save Customer</button>
+                                <div class="error-message" id="error-save-customer" style="color:red;font-size:12px;margin-top:4px;"></div>
                             </div>
                         </div>
+
                         <div class="mb-3">
                             <p class="r-title">Attachments</p>
                             <input name="attachments[]" class="form-control mb-2 r-text" type="file" multiple
                                 id="attachmentInput">
                             <!--png/jpeg/jpg/pdf/word/excel-->
-
                             <div class="col m-4" id="attachmentPreview"></div>
                         </div>
                     </div>

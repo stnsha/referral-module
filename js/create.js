@@ -66,6 +66,8 @@ $(document).ready(function () {
         $('input[name="customer_age"]').val('');
         $('input[name="customer_gender"]').val('');
         $('textarea[name="customer_address"]').val('');
+        $('#customer_race').val('');
+        $('#customer_nationality').val('');
 
         // Clear all error messages
         $('#error-customer-ic').text('');
@@ -75,6 +77,8 @@ $(document).ready(function () {
         $('#error-customer-age').text('');
         $('#error-customer-gender').text('');
         $('#error-customer-address').text('');
+        $('#error-customer-race').text('');
+        $('#error-customer-nationality').text('');
 
         // Clear any stored original values for inline edit
         $('input[name="customer_ic"]').removeData('original-value');
@@ -85,8 +89,13 @@ $(document).ready(function () {
         $('input[name="customer_gender"]').removeData('original-value');
         $('textarea[name="customer_address"]').removeData('original-value');
 
-        // Hide create customer link
+        // Hide create customer link and autocomplete
         hideCreateCustomerLink();
+        hideAutocomplete();
+
+        // Reset save button state (stays visible if in new mode)
+        $('#save-customer-btn').prop('disabled', false).text('Save Customer').css('background-color', '');
+        $('#error-save-customer').text('');
 
         // Reset radio button to NRIC (default)
         $('input[name="id_type"][value="nric"]').prop('checked', true);
@@ -107,6 +116,148 @@ $(document).ready(function () {
         if (confirm('Are you sure you want to clear all customer information?')) {
             clearCustomerInformation();
         }
+    });
+
+    // Existing / New Customer mode toggle
+    $('input[name="customer_mode"]').on('change', function () {
+        var mode = $(this).val();
+
+        // Clear fields and errors from previous state
+        clearCustomerFields();
+        $('#error-customer-ic, #error-customer-name, #error-customer-phone, ' +
+          '#error-customer-email, #error-customer-age, #error-customer-gender, ' +
+          '#error-customer-address, #error-customer-race, #error-customer-nationality, ' +
+          '#error-save-customer').text('');
+        hideCreateCustomerLink();
+        hideAutocomplete();
+        $('input[name="customer_age"]').prop('readonly', false);
+        $('input[name="customer_gender"]').prop('readonly', false);
+        $('input[name="id_type"][value="nric"]').prop('checked', true);
+
+        // Show the form section
+        $('#customer-form-section').show();
+
+        if (mode === 'new') {
+            $('#save-customer-section').show();
+            $('#save-customer-btn').prop('disabled', false).text('Save Customer').css('background-color', '');
+        } else {
+            $('#save-customer-section').hide();
+        }
+
+        $('input[name="customer_ic"]').focus();
+    });
+
+    // Autocomplete helpers
+    function hideAutocomplete() {
+        $('#customer-autocomplete-list').hide().empty();
+    }
+
+    function showAutocomplete(results) {
+        var $list = $('#customer-autocomplete-list');
+        $list.empty();
+        results.forEach(function (c) {
+            var $item = $('<div>', {
+                style: 'padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f3f3f3;',
+                html: '<strong>' + $('<span>').text(c.name).html() + '</strong>' +
+                      ' <span style="color:#888;font-size:12px;">' + $('<span>').text(c.ic).html() + '</span>'
+            });
+            $item.on('mouseenter', function () { $(this).css('background', '#f0f4ff'); })
+                 .on('mouseleave', function () { $(this).css('background', ''); });
+            $item.on('mousedown', function (e) {
+                e.preventDefault();
+                hideAutocomplete();
+                $('input[name="customer_ic"]').val(c.ic).trigger('change');
+            });
+            $list.append($item);
+        });
+        $list.show();
+    }
+
+    // Autocomplete on input (existing mode only)
+    var _acTimer = null;
+    $(document).on('input', 'input[name="customer_ic"]', function () {
+        var mode = $('input[name="customer_mode"]:checked').val();
+        if (mode !== 'existing') { hideAutocomplete(); return; }
+
+        var q = $(this).val().trim();
+        clearTimeout(_acTimer);
+        if (q.length < 2) { hideAutocomplete(); return; }
+
+        _acTimer = setTimeout(function () {
+            $.ajax({
+                type: 'POST',
+                url: 'referral/backend.php?action=searchCustomerAuto',
+                data: { query: q },
+                dataType: 'json',
+                success: function (results) {
+                    if (results && results.length > 0) {
+                        showAutocomplete(results);
+                    } else {
+                        hideAutocomplete();
+                    }
+                },
+                error: function () { hideAutocomplete(); }
+            });
+        }, 300);
+    });
+
+    // Dismiss autocomplete on outside click
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#customer-autocomplete-list, input[name="customer_ic"]').length) {
+            hideAutocomplete();
+        }
+    });
+
+    // Save Customer button (New Customer mode)
+    $('#save-customer-btn').on('click', function () {
+        var idType = $('input[name="id_type"]:checked').val();
+        var ic = $('input[name="customer_ic"]').val().trim();
+        var name = $('input[name="customer_name"]').val().trim();
+        var phone = $('input[name="customer_phone"]').val().trim();
+        var email = $('input[name="customer_email"]').val().trim();
+        var age = $('input[name="customer_age"]').val().trim();
+        var gender = $('input[name="customer_gender"]').val().trim();
+        var address = $('textarea[name="customer_address"]').val().trim();
+        var raceNum = $('#customer_race').val();
+        var nationality = $('#customer_nationality').val();
+
+        var raceMap = {'1':'MALAY','2':'CHINESE','3':'INDIAN','4':'SABAH ETHNIC','5':'SARAWAK ETHNIC','6':'OTHERS'};
+        var race = raceMap[raceNum] || '';
+
+        $('#error-save-customer').css('color', 'red').text('');
+
+        if (!ic || !name || !phone || !address || !race || !nationality) {
+            $('#error-save-customer').text('Please fill in all required fields before saving.');
+            return;
+        }
+
+        $('#save-customer-btn').prop('disabled', true).text('Saving...');
+
+        $.ajax({
+            type: 'POST',
+            url: 'referral/backend.php?action=createCustomer',
+            data: {
+                ic: ic, name: name, phone: phone, email: email,
+                address: address, age: age, gender: gender,
+                id_type: idType, race: race, nationality: nationality
+            },
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    $('input[name="customer_id"]').val(response.customer_id);
+                    $('#save-customer-btn').text('Saved').css('background-color', '#28a745');
+                    setupCustomerInlineEdit();
+                    $('#error-save-customer').css('color', 'green').text('Customer saved successfully.');
+                } else {
+                    $('#save-customer-btn').prop('disabled', false).text('Save Customer');
+                    $('#error-save-customer').text(response.message || 'Failed to save customer.');
+                }
+            },
+            error: function () {
+                $('#save-customer-btn').prop('disabled', false).text('Save Customer');
+                $('#error-save-customer').text('Network error. Please try again.');
+            }
+        });
     });
 
     // Display business unit
@@ -656,6 +807,15 @@ $(document).ready(function () {
         showFieldMessage('customer-ic', '', 'info');
         hideCreateCustomerLink();
 
+        // In New Customer mode, only extract age/gender for NRIC — no search
+        var customerMode = $('input[name="customer_mode"]:checked').val();
+        if (customerMode === 'new') {
+            if (idType === 'nric' && idNumber.length === 12) {
+                extractAgeGenderFromIC(idNumber);
+            }
+            return;
+        }
+
         // AJAX search for customer
         $.ajax({
             type: 'POST',
@@ -686,6 +846,11 @@ $(document).ready(function () {
                 $('input[name="customer_gender"]').val(customer.gender || '');
                 $('textarea[name="customer_address"]').val(customer.address || '');
                 $('input[name="customer_ic"]').val(customer.ic || '');
+
+                var cRace = customer.race || '';
+                if(cRace=='MALAY'){cRace='1';} else if(cRace=='CHINESE'){cRace='2';} else if(cRace=='INDIAN'){cRace='3';} else if(cRace=='SABAH ETHNIC'){cRace='4';} else if(cRace=='SARAWAK ETHNIC'){cRace='5';} else if(cRace=='OTHERS'){cRace='6';}
+                $('#customer_race').val(cRace);
+                $('#customer_nationality').val(customer.nationality || '');
 
                 // Age handling
                 if (idType === 'nric' && customer.birth_date) {
@@ -762,6 +927,8 @@ $(document).ready(function () {
         $('input[name="customer_age"]').val('');
         $('input[name="customer_gender"]').val('');
         $('textarea[name="customer_address"]').val('');
+        $('#customer_race').val('');
+        $('#customer_nationality').val('');
 
         // Remove readonly attributes
         $('input[name="customer_age"]').prop('readonly', false);
@@ -865,6 +1032,46 @@ $(document).ready(function () {
                 if ($(this).data('original-value') === undefined) {
                     $(this).data('original-value', $(this).val());
                 }
+            });
+        });
+
+        // Inline update for race and nationality dropdowns
+        var raceMap = {'1':'MALAY','2':'CHINESE','3':'INDIAN','4':'SABAH ETHNIC','5':'SARAWAK ETHNIC','6':'OTHERS'};
+        var dropdownFields = [
+            { id: 'customer_race', field: 'customer_race' },
+            { id: 'customer_nationality', field: 'customer_nationality' }
+        ];
+
+        dropdownFields.forEach(function(item) {
+            $('#' + item.id).on('change', function() {
+                var customerId = $('input[name="customer_id"]').val();
+                if (!customerId) {
+                    return;
+                }
+
+                var numericVal = $(this).val();
+                var valueToSend = (item.field === 'customer_race' && numericVal) ? (raceMap[numericVal] || numericVal) : numericVal;
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'referral/backend.php?action=updateCustomer',
+                    data: {
+                        customer_id: customerId,
+                        field: item.field,
+                        value: valueToSend
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            showFieldMessage(item.field, response.message || 'Updated', 'success');
+                        } else {
+                            showFieldMessage(item.field, response.message || 'Update failed', 'error');
+                        }
+                    },
+                    error: function() {
+                        showFieldMessage(item.field, 'Network error. Please try again.', 'error');
+                    }
+                });
             });
         });
     }
@@ -1115,6 +1322,8 @@ $(document).ready(function () {
         var consultCallId = params.get('consult_call_id');
         var followUpId = params.get('follow_up_id');
         if (ic) {
+            $('input[name="customer_mode"][value="existing"]').prop('checked', true);
+            $('#customer-form-section').show();
             $('input[name="customer_ic"]').val(ic).trigger('change');
         }
         if (reason) {
@@ -1466,13 +1675,39 @@ function validateForm(event) {
 
     // Validate customer_id - must exist and be a positive integer
     var customerId = getFieldValue("customer_id");
-    markError("customer-ic", !customerId || !isInteger(customerId) || parseInt(customerId) === 0,
-        "Please search for a customer before submitting.");
+    var customerMode = $('input[name="customer_mode"]:checked').val();
+    var customerIdMsg = (customerMode === 'new')
+        ? 'Please save the new customer before submitting.'
+        : 'Please search for a customer before submitting.';
+    markError("customer-ic", !customerId || !isInteger(customerId) || parseInt(customerId) === 0, customerIdMsg);
     markError("customer-name", isEmpty(form["customer_name"].value), "This field cannot be left blank.");
     markError("customer-phone", isEmpty(form["customer_phone"].value), "This field cannot be left blank.");
     var email = form["customer_email"].value;
     markError("customer-email", !isEmpty(email) && !isEmail(email), "Invalid email format.");
     markError("customer-address", isEmpty(form["customer_address"].value), "This field cannot be left blank.");
+    markError("customer-race", isEmpty(form["customer_race"].value), "This field cannot be left blank.");
+    markError("customer-nationality", isEmpty(form["customer_nationality"].value), "This field cannot be left blank.");
+
+    // Validate required dynamic form detail fields (rendered by displayContent)
+    var processedNames = {};
+    $('.form-container:visible').find('[data-required="true"]:not(:disabled), [data-required="1"]:not(:disabled)').each(function() {
+        var $field = $(this);
+        var rawName = $field.attr('name') || '';
+        var baseName = rawName.replace(/\[\]$/, '');
+        if (!baseName || processedNames[baseName]) { return; }
+        processedNames[baseName] = true;
+
+        var fieldType = ($field.attr('type') || $field.prop('tagName')).toLowerCase();
+        var isValid;
+
+        if (fieldType === 'radio' || fieldType === 'checkbox') {
+            isValid = $('[name="' + rawName + '"]:checked').length > 0;
+        } else {
+            isValid = ($field.val() || '').trim() !== '';
+        }
+
+        markError(baseName, !isValid, 'This field is required.');
+    });
 
     // Validate consult_call_id when shown for clinic form (form_id=1, form_details_id=3)
     if ($('#consult-call-id-wrapper').is(':visible')) {
