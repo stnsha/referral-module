@@ -647,13 +647,13 @@ $(document).ready(function () {
 
     function evaluateConditions() {
         var selectedIds = [];
-        $('input[type="radio"]:checked, input[type="checkbox"]:checked').each(function () {
+        $('.content .form-container input[type="radio"]:checked, .content .form-container input[type="checkbox"]:checked').each(function () {
             var val = parseInt($(this).val(), 10);
             if (!isNaN(val)) {
                 selectedIds.push(val);
             }
         });
-        $('select').each(function () {
+        $('.content .form-container select').each(function () {
             var val = parseInt($(this).val(), 10);
             if (!isNaN(val)) {
                 selectedIds.push(val);

@@ -344,103 +344,138 @@ $(document).ready(function () {
 
             const referralHistoryContainer = $('#referralHistoryContainer');
 
-            // Process referral history (only include filled sequences)
-            const referralHistoryItems = sortedReferrals.filter(rd => rd.is_filled === true);
-            let processedCount = 0;
-            const totalItems = referralHistoryItems.length;
+            // Process referral history (include filled sequences and unfilled external referral sequences)
+            const referralHistoryItems = sortedReferrals.filter(function(rd) {
+                return rd.is_filled === true || (rd.external_referral && rd.external_referral.length > 0);
+            });
+
+            function renderAccordionQueue(accordionQueue, totalItems, sortedReferrals, referral_id, referralHistoryContainer) {
+                if (accordionQueue.length < totalItems) return;
+                accordionQueue.sort(function(a, b) { return a.sequence - b.sequence; });
+
+                // Pre-pass: when sequence N is followed by an external sequence N+1,
+                // suppress createForm on N and hand it to N+1 for display.
+                var seqMap = {};
+                accordionQueue.forEach(function(item) { seqMap[item.sequence] = item; });
+                accordionQueue.forEach(function(item) {
+                    var nextItem = seqMap[item.sequence + 1];
+                    if (nextItem && nextItem.rd.external_referral && nextItem.rd.external_referral.length > 0) {
+                        item.suppressCreateForm = true;
+                        nextItem.inheritedCreateForm = item.rd.createForm;
+                    }
+                });
+
+                accordionQueue.forEach(function(accordionData, sortedIndex) {
+                    var rd = accordionData.rd;
+                    var staff = accordionData.staff;
+                    var businessUnit = accordionData.businessUnit;
+                    var outlet = accordionData.outlet;
+
+                    // For sequence N where the next sequence is an external referral, generate the external letter (seq+1)
+                    var downloadSeq = rd.sequence;
+                    for (var i = 0; i < sortedReferrals.length; i++) {
+                        if (sortedReferrals[i].sequence === rd.sequence + 1 &&
+                            sortedReferrals[i].external_referral &&
+                            sortedReferrals[i].external_referral.length > 0) {
+                            downloadSeq = rd.sequence + 1;
+                            break;
+                        }
+                    }
+
+                    // External referral entries are informational — do not apply the disabled class
+                    var isExternal = rd.external_referral && rd.external_referral.length > 0;
+                    var disabledClass = (!isExternal && rd.is_filled == 0) ? ' disabled' : '';
+
+                    var downloadButtonHtml = isExternal ? '' : (
+                        '<a href="#" class="btn-icon btn-icon-download download-history-pdf-btn"' +
+                        ' data-id="' + referral_id + '"' +
+                        ' data-sequence="' + downloadSeq + '"' +
+                        ' data-timestamp="' + rd.updated_at + '"' +
+                        ' data-bs-toggle="tooltip"' +
+                        ' data-bs-placement="top"' +
+                        ' data-bs-title="Download PDF">' +
+                        '<i class="bi bi-file-earmark-arrow-down"></i>' +
+                        '</a>'
+                    );
+
+                    var accordionHtml =
+                        '<div class="referral-history" data-sequence="' + rd.sequence + '">' +
+                        '<button type="button" class="referral-accordion' + disabledClass + '">' +
+                        '<div class="referral-accordion-content">' +
+                        '<div class="referral-text">' +
+                        '<span class="referral-title">' + businessUnit + ', ' + staff + (outlet ? ', ' + outlet : '') + '</span>' +
+                        '<span class="referral-date">' + rd.updated_at + '</span>' +
+                        '</div>' +
+                        '<div class="referral-actions">' +
+                        downloadButtonHtml +
+                        '<span class="accordion-arrow"></span>' +
+                        '</div>' +
+                        '</div>' +
+                        '</button>' +
+                        '<div class="referral-panel">' +
+                        '<div class="referral-panel-item" data-bu="' + (rd.business_unit_id || '') + '"></div>' +
+                        '<div class="referral-pic"></div>' +
+                        '</div>' +
+                        '</div>';
+
+                    referralHistoryContainer.append(accordionHtml);
+
+                    var panel = $('[data-sequence="' + rd.sequence + '"] .referral-panel-item');
+                    var accordion = $('[data-sequence="' + rd.sequence + '"]');
+                    var shouldAutoOpen = (sortedIndex === accordionQueue.length - 1);
+                    processAccordionContent(accordionData, panel, accordion, shouldAutoOpen);
+                });
+            }
+
+            var accordionQueue = [];
+            var processedCount = 0;
+            var totalItems = referralHistoryItems.length;
 
             if (totalItems > 0) {
-                const accordionQueue = [];
+                referralHistoryItems.forEach(function(rd, index) {
+                    if (rd.external_referral && rd.external_referral.length > 0) {
+                        // External referral — derive header info from org/referee data directly, no API call needed
+                        var extRef = rd.external_referral[0];
+                        var extStaff = extRef.referee || 'External Referee';
+                        var extBusinessUnit = 'External Referral';
+                        var extOutlet = extRef.organization ? extRef.organization.name : '';
+                        var extContact = extRef.organization ? (extRef.organization.phone || '') : '';
 
-                referralHistoryItems.forEach((rd, index) => {
-                    // Get staff details first to populate accordion header
-                    getReferredFrom(rd.staff_id, rd.location, rd.business_unit_id, function (staffResponse) {
-                        const staff = staffResponse && staffResponse.length > 0 ? staffResponse[0].staff : 'Unknown';
-                        const contact = staffResponse && staffResponse.length > 0 ? staffResponse[0].contact : '';
-                        const businessUnit = staffResponse && staffResponse.length > 0 ? staffResponse[0].business_unit : '';
-                        const outlet = staffResponse && staffResponse.length > 0 ? staffResponse[0].outlet : '';
-
-                        // Store accordion data in queue instead of immediately appending
-                        const accordionData = {
+                        accordionQueue.push({
                             sequence: rd.sequence,
                             rd: rd,
-                            staff: staff,
-                            businessUnit: businessUnit,
-                            outlet: outlet,
-                            contact: contact,
+                            staff: extStaff,
+                            businessUnit: extBusinessUnit,
+                            outlet: extOutlet,
+                            contact: extContact,
                             staff_department_id: rd.business_unit_id,
                             createdAt: rd.updated_at,
                             originalIndex: index
-                        };
-
-                        accordionQueue.push(accordionData);
+                        });
                         processedCount++;
+                        renderAccordionQueue(accordionQueue, totalItems, sortedReferrals, referral_id, referralHistoryContainer);
+                    } else {
+                        getReferredFrom(rd.staff_id, rd.location, rd.business_unit_id, function(staffResponse) {
+                            var staff = staffResponse && staffResponse.length > 0 ? staffResponse[0].staff : 'Unknown';
+                            var contact = staffResponse && staffResponse.length > 0 ? staffResponse[0].contact : '';
+                            var businessUnit = staffResponse && staffResponse.length > 0 ? staffResponse[0].business_unit : '';
+                            var outlet = staffResponse && staffResponse.length > 0 ? staffResponse[0].outlet : '';
 
-                        // When all AJAX calls are complete, sort and display accordions
-                        if (processedCount === totalItems) {
-                            // Sort by sequence to maintain order
-                            accordionQueue.sort((a, b) => a.sequence - b.sequence);
-
-                            // Now append accordions in correct sequence order
-                            accordionQueue.forEach((accordionData, sortedIndex) => {
-                                const { rd, staff, businessUnit, outlet, contact } = accordionData;
-
-                                // Generate download button HTML
-                                const downloadButtonHtml = `
-                                    <a href="#" class="btn-icon btn-icon-download download-history-pdf-btn"
-                                       data-id="${referral_id}"
-                                       data-sequence="${rd.sequence}"
-                                       data-timestamp="${rd.updated_at}"
-                                       data-bs-toggle="tooltip"
-                                       data-bs-placement="top"
-                                       data-bs-title="Download PDF">
-                                        <i class="bi bi-file-earmark-arrow-down"></i>
-                                    </a>
-                                `;
-
-                                const accordionHtml = `
-                                    <div class="referral-history" data-sequence="${rd.sequence}">
-                                        <button type="button" class="referral-accordion${rd.is_filled == 0 ? ' disabled' : ''}">
-                                            <div class="referral-accordion-content">
-                                                <div class="referral-text">
-                                                    <span class="referral-title">
-                                                        ${businessUnit}, ${staff}, ${outlet}</span>
-                                                    <span class="referral-date">${rd.updated_at}</span>
-                                                </div>
-                                                <div class="referral-actions">
-                                                    ${downloadButtonHtml}
-                                                    <span class="accordion-arrow"></span>
-                                                </div>
-                                            </div>
-                                        </button>
-                                        <div class="referral-panel">
-                                            <div class="referral-panel-item" data-bu="${rd.business_unit_id}"></div>
-                                            <div class="referral-pic"></div>
-                                        </div>
-                                    </div>
-                                `;
-
-                                referralHistoryContainer.append(accordionHtml);
-
-                                // Prepare data for processAccordionContent function
-                                const queueItem = {
-                                    rd: rd,
-                                    staff: staff,
-                                    businessUnit: businessUnit,
-                                    outlet: outlet,
-                                    contact: contact,
-                                    staff_department_id: rd.business_unit_id,
-                                    createdAt: rd.updated_at
-                                };
-
-                                const panel = $(`[data-sequence="${rd.sequence}"] .referral-panel-item`);
-                                const accordion = $(`[data-sequence="${rd.sequence}"]`);
-                                const shouldAutoOpen = (sortedIndex === accordionQueue.length - 1); // Auto-open last accordion (highest sequence)
-
-                                processAccordionContent(queueItem, panel, accordion, shouldAutoOpen);
+                            accordionQueue.push({
+                                sequence: rd.sequence,
+                                rd: rd,
+                                staff: staff,
+                                businessUnit: businessUnit,
+                                outlet: outlet,
+                                contact: contact,
+                                staff_department_id: rd.business_unit_id,
+                                createdAt: rd.updated_at,
+                                originalIndex: index
                             });
-                        }
-                    });
+                            processedCount++;
+                            renderAccordionQueue(accordionQueue, totalItems, sortedReferrals, referral_id, referralHistoryContainer);
+                        });
+                    }
                 });
             }
 
@@ -758,6 +793,51 @@ $(document).ready(function () {
 function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = false) {
     const { rd, staff, businessUnit, outlet, contact, staff_department_id, createdAt } = queueItem;
 
+    // External referral destination entry — show inherited referral info then org/referee details
+    if (rd.external_referral && rd.external_referral.length > 0) {
+        var cf = queueItem.inheritedCreateForm;
+        if (cf && (cf.referral_reason || cf.referral_condition || cf.medical_history)) {
+            panel.append(`
+                <div class="referral-info-section border-bottom pb-3 mb-3">
+                    <p class="r-title">Referral Information</p>
+                    <div class="mb-2">
+                        <p class="r-text">Purpose of Referral</p>
+                        <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${cf.referral_reason || 'N/A'}</textarea>
+                    </div>
+                    <div class="mb-2">
+                        <p class="r-text">Details of Patient's Condition</p>
+                        <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${cf.referral_condition || 'N/A'}</textarea>
+                    </div>
+                    <div class="mb-2">
+                        <p class="r-text">Relevant Medical History</p>
+                        <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${cf.medical_history || 'N/A'}</textarea>
+                    </div>
+                </div>
+            `);
+        }
+        var extRef = rd.external_referral[0];
+        var orgName = extRef.organization ? extRef.organization.name : 'N/A';
+        var orgAddress = extRef.organization ? (extRef.organization.address || 'N/A') : 'N/A';
+        var orgState = extRef.organization ? (extRef.organization.state || 'N/A') : 'N/A';
+        var refereeName = extRef.referee || 'N/A';
+        panel.append(
+            '<div class="referral-info-section border-bottom pb-3 mb-3">' +
+            '<p class="r-title">External Referral Destination</p>' +
+            '<div class="mb-2"><p class="r-text">Organization: ' + orgName + '</p></div>' +
+            '<div class="mb-2"><p class="r-text">Address: ' + orgAddress + '</p></div>' +
+            '<div class="mb-2"><p class="r-text">State: ' + orgState + '</p></div>' +
+            '<div class="mb-2"><p class="r-text">Referee: ' + refereeName + '</p></div>' +
+            '</div>'
+        );
+        var extAccordionButton = accordion.find('.referral-accordion');
+        var extAccordionPanel = accordion.find('.referral-panel');
+        if (shouldAutoOpen) {
+            extAccordionButton.addClass('active');
+            extAccordionPanel.css('maxHeight', extAccordionPanel[0].scrollHeight + 'px');
+        }
+        return;
+    }
+
     // Display Referral Feedback from replyForm object
     if (rd.replyForm && Object.keys(rd.replyForm).length > 0 && (rd.replyForm.post_diagnosis || rd.replyForm.outcome || rd.replyForm.feedback)) {
         panel.append(`
@@ -780,7 +860,8 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
     }
 
     // Display Referral Information from createForm object
-    if (rd.createForm && Object.keys(rd.createForm).length > 0 && (rd.createForm.referral_reason || rd.createForm.referral_condition || rd.createForm.medical_history)) {
+    // Suppressed when the next sequence is an external referral (data is moved there instead)
+    if (!queueItem.suppressCreateForm && rd.createForm && Object.keys(rd.createForm).length > 0 && (rd.createForm.referral_reason || rd.createForm.referral_condition || rd.createForm.medical_history)) {
         panel.append(`
             <div class="referral-info-section border-bottom pb-3 mb-3">
                 <p class="r-title">Referral Information</p>
@@ -2042,6 +2123,19 @@ function getBusinessUnits() {
     });
 }
 
+function prefillReferralInfo() {
+    var $form = $('.refer-form');
+    // Only pre-populate when fields are still empty to avoid overwriting user edits
+    if ($form.find('textarea[name="referral_reason"]').val() !== '') return;
+    if (!referralDetails || referralDetails.length === 0) return;
+    var lastSeq = referralDetails[referralDetails.length - 1];
+    if (!lastSeq || !lastSeq.createForm) return;
+    var cf = lastSeq.createForm;
+    $form.find('textarea[name="referral_reason"]').val(cf.referral_reason || '');
+    $form.find('textarea[name="referral_condition"]').val(cf.referral_condition || '');
+    $form.find('textarea[name="medical_history"]').val(cf.medical_history || '');
+}
+
 function toggleReferForm() {
     const isChecked = $('#refer_another').is(':checked');
     const hasBusinessUnit = $('#refer_business_unit').val();
@@ -2049,6 +2143,7 @@ function toggleReferForm() {
     if (isChecked && hasBusinessUnit) {
         $('.refer-form').show();
         loadReferralPriorities();
+        prefillReferralInfo();
     } else {
         $('.refer-form').hide();
         $('.refer-form').find('input[type="text"], textarea').val('');
@@ -2267,6 +2362,39 @@ function validateForm(event) {
         });
     }
 
+    // Validate refer another section
+    var isReferAnother = $('#refer_another').is(':checked');
+    if (isReferAnother) {
+        var isReferExternal = $('#refer_external_referral').is(':checked');
+        if (isReferExternal) {
+            var isNewReferOrgVisible = $('#refer-new-organization-section').is(':visible');
+            if (isNewReferOrgVisible) {
+                var newReferOrgName = $('#refer-new-org-name').val().trim();
+                if (!newReferOrgName) {
+                    $('#error-refer-new-org-name').text('Organization name is required.');
+                    isValid = false;
+                }
+            } else {
+                var referOrgVal = $('#refer_organization').val();
+                if (!referOrgVal) {
+                    $('#error-refer-organization').text('Please select an organization.');
+                    isValid = false;
+                }
+            }
+        } else {
+            var referBusUnit = $('#refer_business_unit').val();
+            if (!referBusUnit) {
+                $('#error-refer-business-unit').text('Please select a business unit.');
+                isValid = false;
+            }
+            var referLoc = $('#refer_location').val();
+            if (!referLoc) {
+                $('#error-refer-location').text('Please select a location.');
+                isValid = false;
+            }
+        }
+    }
+
     if (isValid) {
         // form.submit();
 
@@ -2344,7 +2472,11 @@ function validateForm(event) {
 
                 if (successCode === 200 || successCode === 201) {
                     // Success - redirect (no need to hide overlay, page will redirect)
-                    if (statusValue === '3' && referralId) {
+                    if (inner.new_sequence && inner.referral_id) {
+                        // refer_another was submitted - pass from-sequence (new_sequence - 1) so the
+                        // successful endpoint resolves the new TO hierarchy (new_sequence)
+                        window.location.href = 'referral/successful.php?id=' + inner.referral_id + '&sequence=' + (inner.new_sequence - 1);
+                    } else if (statusValue === '3' && referralId) {
                         // Status 3 (Referred) - redirect to successful.php with referral ID and sequence
 
                         // Get the current/latest sequence (the one being submitted)
@@ -2405,6 +2537,7 @@ function toggleReferExternalReferralSection() {
             // Show the referring indication form (referral_reason, referral_condition, medical_history)
             $('.refer-form').show();
             loadReferralPriorities();
+            prefillReferralInfo();
 
             var externalOrganizations = [];
 
