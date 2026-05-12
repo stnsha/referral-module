@@ -13,6 +13,21 @@ $outletPhone = null;
 $organizationPhone = null;
 $refereePhone = null;
 
+// Load token secret from .env
+$_envPath = __DIR__ . '/.env';
+$_envConfig = (is_file($_envPath) && is_readable($_envPath)) ? parse_ini_file($_envPath, false, INI_SCANNER_RAW) : array();
+$_tokenSecret = isset($_envConfig['TOKEN_SECRET']) ? $_envConfig['TOKEN_SECRET'] : '';
+
+function generate_referral_token($id, $secret)
+{
+    $timestamp = time();
+    $hmac = substr(hash_hmac('sha256', $id . ':' . $timestamp, $secret), 0, 16);
+    return base64_encode($id . ':' . $timestamp . ':' . $hmac);
+}
+
+// Generate signed token for referral viewer URL
+$encodedReferralId = $_tokenSecret ? generate_referral_token((int)$referral_id, $_tokenSecret) : base64_encode($referral_id);
+
 // Fetch referral successful data
 if ($referral_id) {
     $result = getReferralSuccessful($referral_id, $staff_id, $sequence);
@@ -97,7 +112,7 @@ if ($customer_id) {
             <?php endif; ?>
 
             <?php if ($patientPhone): ?>
-            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $patientPhone); ?>?text=<?php echo urlencode('Dear Patient, your healthcare referral document has been issued. Kindly review the attached PDF for further instructions. https://mytotalhealth.com.my/referral-api/view/' . $referral_id); ?>"
+            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $patientPhone); ?>?text=<?php echo urlencode('Dear Patient, your healthcare referral document has been issued. Kindly review the attached PDF for further instructions. https://edu.alpropharmacy.com/MyReferral/index.php?id=' . $encodedReferralId); ?>"
                 target="_blank" class="btn-new-referral mt-2">
                 <i class="bi bi-whatsapp"></i> Send WhatsApp to Patient
             </a>
