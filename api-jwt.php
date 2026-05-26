@@ -295,6 +295,95 @@ function getJWTToken($staff_id, $staff_department_id, $status_semasa, $outlet, $
 }
 
 /**
+ * Get JWT token using pre-resolved business_unit_id (ending_code strategy)
+ * @param int $staff_id Staff ID
+ * @param int|null $business_unit_id Business unit ID resolved by lock_adv.php
+ * @param string $status_semasa Staff status
+ * @param array $outlet Outlet IDs array
+ * @param int $referral role
+ * @return string|null JWT token or null on failure
+ */
+function getJWTTokenByBU($staff_id, $business_unit_id, $status_semasa, $outlet, $referral)
+{
+    logJWTOperation(
+        'getJWTTokenByBU',
+        'Requesting new JWT token',
+        array('staff_id' => $staff_id, 'business_unit_id' => $business_unit_id),
+        'INFO'
+    );
+
+    $host = getApiHost();
+    $url = $host . 'auth/referral';
+
+    $authData = array(
+        'staff_id'         => (int)$staff_id,
+        'business_unit_id' => $business_unit_id !== null ? (int)$business_unit_id : null,
+        'status_semasa'    => $status_semasa,
+        'outlet'           => $outlet,
+        'referral'         => $referral
+    );
+
+    $headers = array(
+        'Accept: application/json',
+        'Content-Type: application/json'
+    );
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($authData));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+    logJWTOperation(
+        'getJWTTokenByBU',
+        'Calling auth/referral API',
+        array(
+            'endpoint' => $url,
+            'method'   => 'POST',
+            'staff_id' => $staff_id
+        ),
+        'INFO'
+    );
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false || $httpCode !== 200) {
+        $error_data = json_decode($response, true);
+        logJWTOperation(
+            'getJWTTokenByBU',
+            'Failed to obtain JWT token',
+            array(
+                'httpCode' => $httpCode,
+                'staff_id' => $staff_id,
+                'error'    => $error ? $error : (isset($error_data['message']) ? $error_data['message'] : 'Unknown error'),
+                'response' => $response
+            ),
+            'ERROR'
+        );
+
+        error_log("JWT Auth (BU) failed: HTTP $httpCode, Error: $error, Response: $response");
+        return null;
+    }
+
+    logJWTOperation(
+        'getJWTTokenByBU',
+        'JWT token obtained successfully',
+        array('httpCode' => $httpCode, 'staff_id' => $staff_id),
+        'INFO'
+    );
+
+    $decoded = json_decode($response, true);
+    return isset($decoded['token']) ? $decoded['token'] : null;
+}
+
+/**
  * Get or refresh JWT token with caching
  * @param int $staff_id Staff ID from session
  * @return string|null JWT token or null on failure
@@ -330,13 +419,24 @@ function getAuthToken($staff_id)
         return null;
     }
 
+    // business_unit_id resolved by lock_adv.php via ending_code strategy
+    global $businessUnitId;
+    global $outlet;
+    global $department;
+
+    // dept=16 at outlet 77 restores old ODBController superadmin behaviour
+    $outletArr = array_filter(array_map('intval', explode(',', $outlet)));
+    $effectiveReferral = ($department == 16 && in_array(77, $outletArr))
+        ? 1
+        : $staffData['referral'];
+
     // Get new JWT token
-    $token = getJWTToken(
+    $token = getJWTTokenByBU(
         $staffData['staff_id'],
-        $staffData['staff_department_id'],
+        $businessUnitId,
         $staffData['status_semasa'],
         $staffData['outlet'],
-        $staffData['referral']
+        $effectiveReferral
     );
 
     if ($token) {

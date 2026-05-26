@@ -274,32 +274,10 @@ $(document).ready(function () {
             $.each(response.data, function (index, businessUnit) {
                 let selected = '';
 
-                // Special logic for department 1 only (Audiology/Pharmacy department)
-                if (department == 1) {
-                    // Check if staff position contains 'audiologist' (any type)
-                    if (staffPosition.toLowerCase().includes('audiologist')) {
-                        // Audiologist -> assign to Alpro Audiology (ID = 1)
-                        if (businessUnit.id === 1) {
-                            console.log('DEBUG: Found Audiology unit, selecting it');
-                            selected = 'selected';
-                            businessUnitId = businessUnit.id;
-                            isSelected = true;
-                        }
-                    } else {
-                        // Not audiologist -> assign to Alpro Pharmacy (ID = 5) 
-                        if (businessUnit.id === 5 && businessUnit.name.toLowerCase().includes('pharmacy')) {
-                            selected = 'selected';
-                            businessUnitId = businessUnit.id;
-                            isSelected = true;
-                        }
-                    }
-                } else {
-                    // For other departments, match by staff_department_id
-                    if (businessUnit.staff_department_id == department) {
-                        selected = 'selected';
-                        businessUnitId = businessUnit.id;
-                        isSelected = true;
-                    }
+                if (staffBusinessUnitId && businessUnit.id === staffBusinessUnitId) {
+                    selected = 'selected';
+                    businessUnitId = businessUnit.id;
+                    isSelected = true;
                 }
 
                 busUnitFrom.append(

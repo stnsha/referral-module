@@ -68,24 +68,9 @@ function loadBusinessUnits() {
                 let selected = '';
 
                 if (referralPermission !== 1) {
-                    // Special logic for department 1 only (Audiology/Pharmacy department)
-                    if (department == 1) {
-                        if (staffPosition.toLowerCase().includes('audiologist')) {
-                            if (businessUnit.id === 1) {
-                                selected = 'selected';
-                                businessUnitId = businessUnit.id;
-                            }
-                        } else {
-                            if (businessUnit.id === 5 && businessUnit.name.toLowerCase().includes('pharmacy')) {
-                                selected = 'selected';
-                                businessUnitId = businessUnit.id;
-                            }
-                        }
-                    } else {
-                        if (businessUnit.staff_department_id == department) {
-                            selected = 'selected';
-                            businessUnitId = businessUnit.id;
-                        }
+                    if (staffBusinessUnitId && businessUnit.id === staffBusinessUnitId) {
+                        selected = 'selected';
+                        businessUnitId = businessUnit.id;
                     }
                 }
 

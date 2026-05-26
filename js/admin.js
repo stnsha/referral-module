@@ -14,15 +14,7 @@ function loadBusinessUnits() {
             $.each(data.data, function (i, unit) {
                 var isMatch = false;
 
-                if (department == 1) {
-                    if (staffPosition.toLowerCase().includes('audiologist')) {
-                        if (unit.id === 1) { isMatch = true; }
-                    } else {
-                        if (unit.id === 5 && unit.name.toLowerCase().includes('pharmacy')) { isMatch = true; }
-                    }
-                } else {
-                    if (unit.staff_department_id == department) { isMatch = true; }
-                }
+                if (staffBusinessUnitId && unit.id === staffBusinessUnitId) { isMatch = true; }
 
                 if (isMatch) { preSelectedIds.push(unit.id); }
 

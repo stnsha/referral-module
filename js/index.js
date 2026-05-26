@@ -484,7 +484,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (response && response.data && Array.isArray(response.data)) {
                 $.each(response.data, function (index, businessUnit) {
                     // Remove default selection
-                    if (department && businessUnit.staff_department_id == department) {
+                    if (staffBusinessUnitId && businessUnit.id === staffBusinessUnitId) {
                         businessUnitId = businessUnit.id;
                     }
 

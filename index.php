@@ -247,6 +247,7 @@ include('../common/index_adv.php');
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
         const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const staffBusinessUnitId = <?php echo json_encode(isset($businessUnitId) ? (int)$businessUnitId : null); ?>;
     </script>
 
     <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>

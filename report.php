@@ -230,6 +230,7 @@ include('../common/index_adv.php');
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
         const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const staffBusinessUnitId = <?php echo json_encode(isset($businessUnitId) ? (int)$businessUnitId : null); ?>;
     </script>
 
     <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>
