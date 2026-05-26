@@ -421,6 +421,9 @@ function getAuthToken($staff_id)
 
     // business_unit_id resolved by lock_adv.php via ending_code strategy
     global $businessUnitId;
+    if ($businessUnitId === null) {
+        $businessUnitId = isset($_SESSION['referral_business_unit_id']) ? (int)$_SESSION['referral_business_unit_id'] : null;
+    }
     global $outlet;
     global $department;
 
