@@ -492,7 +492,11 @@ $(document).ready(function () {
                 // If referral is In Progress (status 2), show reply form and enable status only to
                 // the assigned staff of the last sequence whose staff_id and business unit match.
                 // Submitting will create a new sequence via the backend.
-                if (status == 2 && String(lastSequence.business_unit_id) === String(businessUnitId) && String(lastSequence.location) === String(staffOutlet)) {
+                // staffOutlet may be a comma-separated list (staff can be assigned to multiple outlets),
+                // so check membership rather than exact string equality - mirrors the backend's
+                // in_array($rh->location, $listOutlets) check in ReferralController::update().
+                const staffOutletList = String(staffOutlet || '').split(',').map(function (o) { return o.trim(); });
+                if (status == 2 && String(lastSequence.business_unit_id) === String(businessUnitId) && staffOutletList.indexOf(String(lastSequence.location)) !== -1) {
                     window.hasReplyForms = true;
                     window.isLastSequence = true;
                     if (!viewOnly) {
@@ -517,7 +521,7 @@ $(document).ready(function () {
                 else if (lastSequence.is_filled === true) {
                     window.hasReplyForms = false;
                     $('.reply-form-container').hide();
-                    if (lastSequence.staff_id && lastSequence.staff_id === staffId) {
+                    if (lastSequence.staff_id && String(lastSequence.staff_id) === String(staffId)) {
                         window.isLastSequence = true;
                     } else {
                         window.isLastSequence = false;
@@ -529,7 +533,7 @@ $(document).ready(function () {
                 else if (!lastSequence.referral_details || (lastSequence.referral_details.length === 0 && lastSequence.staff_id !== null)) {
                     window.hasReplyForms = false;
                     $('.reply-form-container').hide();
-                    if (lastSequence.staff_id && lastSequence.staff_id === staffId) {
+                    if (lastSequence.staff_id && String(lastSequence.staff_id) === String(staffId)) {
                         window.isLastSequence = true;
                     } else {
                         window.isLastSequence = false;
@@ -538,7 +542,7 @@ $(document).ready(function () {
                 // Only show reply form if current user is the staff in last sequence
                 else if (lastSequence.staff_id) {
                     // Check if current user matches the staff_id in last sequence
-                    if (lastSequence.staff_id === staffId) {
+                    if (String(lastSequence.staff_id) === String(staffId)) {
                         // Current user is the staff in last sequence
                         window.hasReplyForms = true;
                         window.isLastSequence = true;
