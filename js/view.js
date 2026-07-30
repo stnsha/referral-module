@@ -523,6 +523,10 @@ $(document).ready(function () {
                     $('.reply-form-container').hide();
                     if (lastSequence.staff_id && String(lastSequence.staff_id) === String(staffId)) {
                         window.isLastSequence = true;
+                        // Reply form/displayContent() is intentionally not (re)rendered here since it was
+                        // already filled in, but the backend still requires business_unit_id_reply on every
+                        // status-change submission, so the hidden field must be present regardless.
+                        $('.reply-content').append('<input type="text" name="bu_id_reply" hidden value="' + lastSequence.business_unit_id + '" readonly/>');
                     } else {
                         window.isLastSequence = false;
                     }
@@ -535,6 +539,9 @@ $(document).ready(function () {
                     $('.reply-form-container').hide();
                     if (lastSequence.staff_id && String(lastSequence.staff_id) === String(staffId)) {
                         window.isLastSequence = true;
+                        // displayContent() is not called here (no form to render), but the backend still
+                        // requires business_unit_id_reply on every status-change submission.
+                        $('.reply-content').append('<input type="text" name="bu_id_reply" hidden value="' + lastSequence.business_unit_id + '" readonly/>');
                     } else {
                         window.isLastSequence = false;
                     }
