@@ -849,6 +849,42 @@ function unhideForm($form_id, $staff_id)
     }
 }
 
+/**
+ * Update a form's label name (and other required fields, unchanged)
+ * @param int $form_id Form ID
+ * @param array $data Form data including label_name, is_hidden, display_on, field_name, field_type, is_required
+ * @param int $staff_id Staff ID for authentication
+ * @return array Result
+ */
+function updateFormLabel($form_id, $data, $staff_id)
+{
+    $formattedData = array(
+        'label_name'  => $data['label_name'],
+        'is_hidden'   => isset($data['is_hidden']) ? (int)$data['is_hidden'] : 0,
+        'is_required' => isset($data['is_required']) ? (int)$data['is_required'] : 0,
+        'field_name'  => isset($data['field_name']) ? $data['field_name'] : '',
+        'field_type'  => isset($data['field_type']) ? $data['field_type'] : '',
+        'display_on'  => isset($data['display_on']) ? $data['display_on'] : 'creation',
+    );
+
+    $result = getApiDataWithJWT('form/' . (int)$form_id, $formattedData, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Label updated successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update label'
+        );
+    }
+}
+
 function getFormDetails($business_unit_id, $staff_id)
 {
     $result = getApiDataWithJWT('form/show/' . $business_unit_id, null, 'GET', $staff_id);
@@ -2214,6 +2250,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = removeFormBusinessUnit($jsonData['form_id'], $jsonData['business_unit_id'], $staff_id);
                 } else {
                     $response = array('success' => false, 'message' => 'Missing form_id or business_unit_id');
+                }
+                break;
+            case 'update-form-label':
+                if (isset($jsonData['form_id']) && isset($jsonData['label_name'])) {
+                    $response = updateFormLabel($jsonData['form_id'], $jsonData, $staff_id);
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing form_id or label_name');
                 }
                 break;
         }

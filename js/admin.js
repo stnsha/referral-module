@@ -221,7 +221,14 @@ function openEditModal(form) {
         if (vals.length > 0) { detail = vals[0]; }
     }
 
-    var bodyHtml = '<p class="r-text mb-1"><strong>Label:</strong> ' + form.label_name + '</p>';
+    var bodyHtml = '<div class="mb-2 d-flex align-items-center flex-wrap">' +
+        '<label class="r-text me-2 mb-0" style="font-size:14px;"><strong>Label:</strong></label>' +
+        '<input type="text" class="form-control form-control-sm me-2 mb-1" id="edit-label-input" ' +
+        'style="max-width:250px;">' +
+        '<button type="button" id="btn-save-label" class="btn btn-sm btn-primary mb-1" ' +
+        'data-form-id="' + form.form_id + '">Save</button>' +
+        '</div>' +
+        '<div id="label-edit-message" class="mb-2" style="font-size:12px;"></div>';
 
     // Business unit management section
     bodyHtml += '<hr><p class="r-text fw-bold mb-2" style="font-size:14px;">Business Units</p>';
@@ -291,10 +298,75 @@ function openEditModal(form) {
     }
 
     $('#editModalBody').html(bodyHtml);
+    $('#edit-label-input').val(form.label_name);
     $('#editModalLabel').text('Edit Form: ' + form.label_name);
     var editModalEl = document.getElementById('editModal');
     bootstrap.Modal.getOrCreateInstance(editModalEl).show();
 }
+
+// Save edited label name
+$(document).on('click', '#btn-save-label', function () {
+    var $btn = $(this);
+    var formId = parseInt($btn.data('form-id'), 10);
+    var newLabel = $('#edit-label-input').val().trim();
+    var $msg = $('#label-edit-message');
+
+    if (newLabel === '') {
+        $msg.text('Label name cannot be empty.').css('color', 'red');
+        return;
+    }
+
+    var form = (window.allFormsData || []).find(function (f) { return f.form_id === formId; });
+    if (!form) { return; }
+
+    var detail = null;
+    if (Array.isArray(form.form_details) && form.form_details.length > 0) {
+        detail = form.form_details[0];
+    } else if (form.form_details && typeof form.form_details === 'object') {
+        var vals = Object.values(form.form_details);
+        if (vals.length > 0) { detail = vals[0]; }
+    }
+
+    if (newLabel === form.label_name) {
+        $msg.text('No changes to save.').css('color', 'green');
+        return;
+    }
+
+    $btn.prop('disabled', true).text('Saving...');
+    $msg.text('');
+
+    $.ajax({
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'update-form-label',
+            form_id: formId,
+            label_name: newLabel,
+            is_hidden: form.is_hidden ? 1 : 0,
+            display_on: form.display_on || 'creation',
+            field_name: detail ? detail.field_name : '',
+            field_type: detail ? detail.field_type : '',
+            is_required: detail && detail.is_required ? 1 : 0
+        }),
+        success: function (data) {
+            $btn.prop('disabled', false).text('Save');
+            if (data.success) {
+                $msg.text('Label updated successfully.').css('color', 'green');
+                form.label_name = newLabel;
+                $('#editModalLabel').text('Edit Form: ' + newLabel);
+                loadAllForms();
+            } else {
+                $msg.text('Error: ' + (data.message || 'Failed to update label.')).css('color', 'red');
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).text('Save');
+            $msg.text('Request failed. Please try again.').css('color', 'red');
+        }
+    });
+});
 
 // Add More value row in edit modal
 $(document).on('click', '#btn-add-edit-value', function () {
