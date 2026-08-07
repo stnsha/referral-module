@@ -221,14 +221,38 @@ function openEditModal(form) {
         if (vals.length > 0) { detail = vals[0]; }
     }
 
-    var bodyHtml = '<div class="mb-2 d-flex align-items-center flex-wrap">' +
-        '<label class="r-text me-2 mb-0" style="font-size:14px;"><strong>Label:</strong></label>' +
-        '<input type="text" class="form-control form-control-sm me-2 mb-1" id="edit-label-input" ' +
-        'style="max-width:250px;">' +
-        '<button type="button" id="btn-save-label" class="btn btn-sm btn-primary mb-1" ' +
-        'data-form-id="' + form.form_id + '">Save</button>' +
+    var bodyHtml = '<div class="row mb-2 align-items-center">' +
+        '<label class="col-sm-3 r-text mb-0" style="font-size:14px;"><strong>Label</strong></label>' +
+        '<div class="col-sm-9">' +
+        '<input type="text" class="form-control form-control-sm" id="edit-label-input">' +
+        '</div></div>';
+
+    bodyHtml += '<div class="row mb-2 align-items-center">' +
+        '<label class="col-sm-3 r-text mb-0" style="font-size:14px;"><strong>Hidden?</strong></label>' +
+        '<div class="col-sm-9">' +
+        '<input class="form-check-input mt-0" type="checkbox" id="edit-is-hidden-input" value="1"> Yes' +
+        '</div></div>';
+
+    bodyHtml += '<div class="row mb-2 align-items-center">' +
+        '<label class="col-sm-3 r-text mb-0" style="font-size:14px;"><strong>Display On</strong></label>' +
+        '<div class="col-sm-9">' +
+        '<select id="edit-display-on-input" class="form-select form-select-sm">' +
+        '<option value="creation">Creation only</option>' +
+        '<option value="reply">Reply only</option>' +
+        '<option value="both">Both</option>' +
+        '</select></div></div>';
+
+    bodyHtml += '<div class="mb-2 d-flex justify-content-end">' +
+        '<button type="button" id="btn-save-label" class="btn btn-sm btn-primary" ' +
+        'data-form-id="' + form.form_id + '">Save Changes</button>' +
         '</div>' +
-        '<div id="label-edit-message" class="mb-2" style="font-size:12px;"></div>';
+        '<div id="label-edit-message" class="mb-2 text-end" style="font-size:12px;"></div>';
+
+    bodyHtml += '<div class="mb-2 d-flex justify-content-between align-items-center">' +
+        '<p class="r-text fw-bold mb-0" style="font-size:14px;">Conditions</p>' +
+        '<button type="button" class="btn btn-sm btn-secondary btn-manage-conditions-from-edit" ' +
+        'data-form-id="' + form.form_id + '" data-form-name="' + form.label_name + '">Manage Conditions</button>' +
+        '</div>';
 
     // Business unit management section
     bodyHtml += '<hr><p class="r-text fw-bold mb-2" style="font-size:14px;">Business Units</p>';
@@ -299,16 +323,32 @@ function openEditModal(form) {
 
     $('#editModalBody').html(bodyHtml);
     $('#edit-label-input').val(form.label_name);
+    $('#edit-is-hidden-input').prop('checked', !!form.is_hidden);
+    $('#edit-display-on-input').val(form.display_on || 'creation');
     $('#editModalLabel').text('Edit Form: ' + form.label_name);
     var editModalEl = document.getElementById('editModal');
     bootstrap.Modal.getOrCreateInstance(editModalEl).show();
 }
 
-// Save edited label name
+// Open Conditions modal from within Edit modal
+$(document).on('click', '.btn-manage-conditions-from-edit', function () {
+    var formId = $(this).data('form-id');
+    var formName = $(this).data('form-name');
+    var editModalEl = document.getElementById('editModal');
+    editModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+        editModalEl.removeEventListener('hidden.bs.modal', onHidden);
+        openConditionModal(formId, formName);
+    });
+    bootstrap.Modal.getOrCreateInstance(editModalEl).hide();
+});
+
+// Save edited label/hidden/display-on settings
 $(document).on('click', '#btn-save-label', function () {
     var $btn = $(this);
     var formId = parseInt($btn.data('form-id'), 10);
     var newLabel = $('#edit-label-input').val().trim();
+    var newIsHidden = $('#edit-is-hidden-input').is(':checked') ? 1 : 0;
+    var newDisplayOn = $('#edit-display-on-input').val();
     var $msg = $('#label-edit-message');
 
     if (newLabel === '') {
@@ -327,7 +367,8 @@ $(document).on('click', '#btn-save-label', function () {
         if (vals.length > 0) { detail = vals[0]; }
     }
 
-    if (newLabel === form.label_name) {
+    if (newLabel === form.label_name && newIsHidden === (form.is_hidden ? 1 : 0) &&
+        newDisplayOn === (form.display_on || 'creation')) {
         $msg.text('No changes to save.').css('color', 'green');
         return;
     }
@@ -344,25 +385,27 @@ $(document).on('click', '#btn-save-label', function () {
             action: 'update-form-label',
             form_id: formId,
             label_name: newLabel,
-            is_hidden: form.is_hidden ? 1 : 0,
-            display_on: form.display_on || 'creation',
+            is_hidden: newIsHidden,
+            display_on: newDisplayOn,
             field_name: detail ? detail.field_name : '',
             field_type: detail ? detail.field_type : '',
             is_required: detail && detail.is_required ? 1 : 0
         }),
         success: function (data) {
-            $btn.prop('disabled', false).text('Save');
+            $btn.prop('disabled', false).text('Save Changes');
             if (data.success) {
-                $msg.text('Label updated successfully.').css('color', 'green');
+                $msg.text('Changes saved successfully.').css('color', 'green');
                 form.label_name = newLabel;
+                form.is_hidden = newIsHidden ? true : false;
+                form.display_on = newDisplayOn;
                 $('#editModalLabel').text('Edit Form: ' + newLabel);
                 loadAllForms();
             } else {
-                $msg.text('Error: ' + (data.message || 'Failed to update label.')).css('color', 'red');
+                $msg.text('Error: ' + (data.message || 'Failed to save changes.')).css('color', 'red');
             }
         },
         error: function () {
-            $btn.prop('disabled', false).text('Save');
+            $btn.prop('disabled', false).text('Save Changes');
             $msg.text('Request failed. Please try again.').css('color', 'red');
         }
     });
