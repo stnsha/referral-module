@@ -855,7 +855,7 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
             <div class="referral-feedback-section border-bottom pb-3 mb-3">
                 <p class="r-title">Previous Feedback</p>
                 <div class="mb-2">
-                    <p class="r-text">Post Diagnosis</p>
+                    <p class="r-text">Diagnosis</p>
                     <textarea class="form-control form-control-sm" rows="10" style="white-space:pre-wrap;" readonly>${rd.replyForm.post_diagnosis || 'N/A'}</textarea>
                 </div>
                 <div class="mb-2">
@@ -1747,10 +1747,10 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
                 targetDiv.append(formContainer);
             });
 
-            // Add compulsory fields: Post Diagnosis, Outcome, Feedback
+            // Add compulsory fields: Diagnosis, Outcome, Feedback
             const postDiagnosisWrapper = $(`
                 <div class="mb-2">
-                    <p class="r-text">Post Diagnosis<span style="color:red;">*</span></p>
+                    <p class="r-text">Diagnosis<span style="color:red;">*</span></p>
                     <textarea name="post_diagnosis" id="post_diagnosis"
                         class="form-control form-control-sm" rows="10"></textarea>
                     <div id="error-post_diagnosis" class="error-message" style="color: red;font-size:12px;"></div>
@@ -1759,7 +1759,7 @@ function displayContent(businessUnitId, targetSelector, referralDetails = null) 
 
             const outcomeWrapper = $(`
                 <div class="mb-2">
-                    <p class="r-text">Outcome</p>
+                    <p class="r-text">Outcome<span style="color:red;">*</span></p>
                     <textarea name="outcome" id="outcome"
                         class="form-control form-control-sm" rows="10"></textarea>
                     <div id="error-outcome" class="error-message" style="color: red;font-size:12px;"></div>
@@ -2324,12 +2324,19 @@ function validateForm(event) {
         }
     }
 
-    // Validate Post Diagnosis field when status is not 5
+    // Validate Diagnosis field when status is not 5
     if (!selectedStatus || selectedStatus.value !== '5') {
         const postDiagnosis = document.getElementById('post_diagnosis');
 
         if (postDiagnosis && !postDiagnosis.value.trim()) {
-            document.getElementById('error-post_diagnosis').textContent = 'Post Diagnosis is required.';
+            document.getElementById('error-post_diagnosis').textContent = 'Diagnosis is required.';
+            isValid = false;
+        }
+
+        const outcome = document.getElementById('outcome');
+
+        if (outcome && !outcome.value.trim()) {
+            document.getElementById('error-outcome').textContent = 'Outcome is required.';
             isValid = false;
         }
     }
