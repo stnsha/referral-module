@@ -338,6 +338,18 @@ include('../common/index_adv.php');
                                     <div class="error-message" id="error-customer-nationality" style="color:red;font-size:12px;"></div>
                                 </div>
                             </div>
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <p class="r-text">Contact Method<span style="color:red;">*</span></p>
+                                    <select name="contact_method" id="contact_method" class="form-select form-select-sm" required>
+                                        <option value="0">Pick One</option>
+                                        <option value="1" selected>Call & WhatsApp</option>
+                                        <option value="2">Call Only</option>
+                                        <option value="3">WhatsApp Only</option>
+                                    </select>
+                                    <div class="error-message" id="error-contact-method" style="color:red;font-size:12px;"></div>
+                                </div>
+                            </div>
                             <div id="save-customer-section" style="display:none;" class="mt-2">
                                 <button type="button" id="save-customer-btn" class="btn btn-sm btn-success">Save Customer</button>
                                 <div class="error-message" id="error-save-customer" style="color:red;font-size:12px;margin-top:4px;"></div>
