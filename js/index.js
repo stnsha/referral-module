@@ -449,13 +449,10 @@ document.addEventListener('DOMContentLoaded', function () {
             );
 
             $('#' + rowId).parent().css('cursor', 'pointer').off('click').on('click', function () {
+                resetAllFilterInputs();
                 const select = document.getElementById('filter-referral-type');
-                if (select) {
-                    select.value = item.name;
-                    if (typeof globalApplyFilters === 'function') {
-                        globalApplyFilters();
-                    }
-                }
+                if (select) select.value = item.name;
+                applyFiltersWhenReady();
             });
         });
     }
@@ -1215,42 +1212,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const resetFiltersBtn = document.getElementById('dashResetFiltersBtn');
                 if (resetFiltersBtn) {
                     resetFiltersBtn.addEventListener('click', function () {
-                        // console.log('Resetting all filters');
-
-                        // Clear all filter inputs
-                        document.getElementById('filter-referral-id').value = '';
-
-                        // Reset referral type to 'all' to maintain consistency with filtering
-                        document.getElementById('type-all').checked = true;
-                        window.currentReferralType = 'all';
-                        if (window.referralApiData) {
-                            originalData = [...window.referralApiData.all];
-                        }
-
-                        // Reset business unit / outlet / date filters
-                        if (document.getElementById('filter-bu-from')) document.getElementById('filter-bu-from').value = 'all';
-                        if (document.getElementById('filter-bu-to')) document.getElementById('filter-bu-to').value = 'all';
-                        document.getElementById('filter-status').value = '';
-                        document.getElementById('filter-priority').value = '';
-                        resetOutletDropdown('filter-outlet-from');
-                        resetOutletDropdown('filter-outlet-to');
-                        if (document.getElementById('filter-date-from')) {
-                            document.getElementById('filter-date-from').value = '';
-                        }
-                        if (document.getElementById('filter-date-to')) {
-                            document.getElementById('filter-date-to').value = '';
-                        }
-                        if (document.getElementById('filter-referral-type')) {
-                            document.getElementById('filter-referral-type').value = '';
-                        }
-                        window.currentBuClickFilter = null;
+                        resetAllFilterInputs();
 
                         // Reset to original data
                         allData = [...originalData];
                         currentPage = 1;
                         displayPage(currentPage);
-
-                        // console.log('Filters reset', allData.length, 'items');
                     });
                 }
 
