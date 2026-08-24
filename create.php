@@ -474,6 +474,29 @@ include('../common/index_adv.php');
 
     </div>
 
+    <div class="modal fade" id="referralGuidelinesModal" data-bs-backdrop="static" data-bs-keyboard="false"
+        tabindex="-1" aria-labelledby="referralGuidelinesModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title r-text" id="referralGuidelinesModalLabel">Before You Continue</h5>
+                </div>
+                <div class="modal-body r-text text-start">
+                    <ul class="mb-0 ps-3">
+                        <li>Do <strong>not</strong> use greetings such as "Dear Doctor".</li>
+                        <li>Do <strong>not</strong> include customer personal details in the patient condition
+                            (e.g. full name, IC no, contact number) - these are already generated automatically
+                            when the referral letter is created.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-new-referral" id="referralGuidelinesAckBtn"
+                        data-bs-dismiss="modal">I Understand</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

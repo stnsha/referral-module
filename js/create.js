@@ -3,6 +3,11 @@ let firstLoad = true;
 $(document).ready(function () {
     localStorage.clear();
     sessionStorage.clear();
+
+    var guidelinesModalEl = document.getElementById('referralGuidelinesModal');
+    if (guidelinesModalEl) {
+        new bootstrap.Modal(guidelinesModalEl).show();
+    }
     $('#organization, #referee').prop('disabled', true);
     $('#add-new-recipient-btn').prop('disabled', true);
     toggleExternalReferralSection();
