@@ -232,7 +232,7 @@ function displayStaffInfo(staff) {
     $('#info-outlet').text(staff.outlet || 'None');
 
     var referralText = staff.referral === 1 ? 'Super Admin (1)' :
-        staff.referral === 2 ? 'Admin (2)' :
+        staff.referral === 2 ? 'HQ Admin (2)' :
             'Normal User (0)';
     $('#info-referral').text(referralText);
 

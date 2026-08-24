@@ -454,7 +454,7 @@ include('../common/index_adv.php');
         const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
         const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
         const staffOutlet = <?php echo json_encode(isset($outlet) ? $outlet : ''); ?>;
         const staffBusinessUnitId = <?php echo json_encode(isset($businessUnitId) ? (int)$businessUnitId : null); ?>;
     </script>

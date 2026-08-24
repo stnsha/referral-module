@@ -565,7 +565,7 @@ include('../common/index_adv.php');
         const businessUnitId = <?php echo json_encode(isset($businessUnitId) ? $businessUnitId : ''); ?>;
         const staffOutlet = <?php echo json_encode(isset($outlet) ? $outlet : ''); ?>;
         const viewOnly = <?php echo json_encode(isset($_GET['view_only']) ? $_GET['view_only'] : null); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
         </script>
         <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>
         <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>

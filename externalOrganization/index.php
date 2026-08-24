@@ -20,11 +20,6 @@ require_once('../../lock_adv.php');
 $connect = 1;
 include('../../common/index_adv.php');
 
-// Check if user has admin permission (referral must be 1 or 2)
-if (isset($referral) && $referral == 0) {
-    header('Location: /odb/referral/403.php');
-    exit();
-}
 ?>
 
 <body>
@@ -281,7 +276,7 @@ if (isset($referral) && $referral == 0) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>
     <script>
-    const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+    const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
     </script>
     <script src="referral/externalOrganization/js/index.js?v=<?php echo time(); ?>"></script>
 </body>

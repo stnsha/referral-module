@@ -218,7 +218,7 @@ include('../../common/index_adv.php');
                                         <input class="form-check-input border" type="radio" name="referral_permission"
                                             id="permission-2" value="2">
                                         <label class="form-check-label r-text" for="permission-2">
-                                            Admin (2)
+                                            HQ Admin (2)
                                         </label>
                                     </div>
                                 </div>
@@ -243,7 +243,7 @@ include('../../common/index_adv.php');
 
     <script>
         const id_user = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
     </script>
 
     <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>

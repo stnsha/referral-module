@@ -190,7 +190,7 @@ function getStaffAuthData($staff_id)
         'staff_department_id' => (int)$row['department'],
         'status_semasa' => $row['status_semasa'],
         'outlet' => $outlet,
-        'referral' => isset($row['referral']) ? (int)$row['referral'] : 2
+        'referral' => isset($row['referral']) ? (int)$row['referral'] : 0
     );
 
     // logJWTOperation(
@@ -427,18 +427,38 @@ function getAuthToken($staff_id)
     global $outlet;
     global $department;
 
+    // Dev role override (localhost only, real SuperAdmin only) takes top
+    // priority so a SuperAdmin can simulate Normal User behaviour for testing.
+    $devServerName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+    $devHttpHost   = isset($_SERVER['HTTP_HOST'])   ? $_SERVER['HTTP_HOST']   : '';
+    $devIsLocal    = in_array($devServerName, array('localhost', '127.0.0.1'))
+        || strpos($devServerName, 'localhost') !== false
+        || strpos($devHttpHost,   'localhost') !== false
+        || strpos($devHttpHost,   '127.0.0.1') !== false;
+    $devRoleOverride = ($devIsLocal && (int)$staffData['referral'] === 1 && isset($_SESSION['referral_dev_role_override']))
+        ? (int)$_SESSION['referral_dev_role_override']
+        : null;
+    $devBuOverride = ($devIsLocal && (int)$staffData['referral'] === 1 && isset($_SESSION['referral_dev_bu_override']))
+        ? (int)$_SESSION['referral_dev_bu_override']
+        : null;
+    $devOutletOverride = ($devIsLocal && (int)$staffData['referral'] === 1 && isset($_SESSION['referral_dev_outlet_override']))
+        ? $_SESSION['referral_dev_outlet_override']
+        : null;
+
     // dept=16 at outlet 77 restores old ODBController superadmin behaviour
     $outletArr = array_filter(array_map('intval', explode(',', $outlet)));
-    $effectiveReferral = ($department == 16 && in_array(77, $outletArr))
-        ? 1
-        : $staffData['referral'];
+    $effectiveReferral = $devRoleOverride !== null
+        ? $devRoleOverride
+        : (($department == 16 && in_array(77, $outletArr)) ? 1 : $staffData['referral']);
+    $effectiveBusinessUnitId = $devBuOverride !== null ? $devBuOverride : $businessUnitId;
+    $effectiveOutlet = $devOutletOverride !== null ? $devOutletOverride : $staffData['outlet'];
 
     // Get new JWT token
     $token = getJWTTokenByBU(
         $staffData['staff_id'],
-        $businessUnitId,
+        $effectiveBusinessUnitId,
         $staffData['status_semasa'],
-        $staffData['outlet'],
+        $effectiveOutlet,
         $effectiveReferral
     );
 

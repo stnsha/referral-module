@@ -20,8 +20,29 @@ require_once('../lock_adv.php');
 $connect = 1;
 include('../common/index_adv.php');
 
-// Check if user has admin permission (referral must be 1 or 2)
-if (isset($referral) && $referral == 0) {
+// Dev role override (localhost + real SuperAdmin only), same session key as
+// navbar.php's toolbar / api-jwt.php / backend.php. Applied here too so the
+// Admin Panel gate below actually reflects a simulated role, not just the
+// real DB value.
+$_admin_realReferral = isset($referral) ? (int)$referral : 0;
+$_admin_serverName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+$_admin_httpHost   = isset($_SERVER['HTTP_HOST'])   ? $_SERVER['HTTP_HOST']   : '';
+$_admin_isLocal    = in_array($_admin_serverName, array('localhost', '127.0.0.1'))
+    || strpos($_admin_serverName, 'localhost') !== false
+    || strpos($_admin_httpHost,   'localhost') !== false
+    || strpos($_admin_httpHost,   '127.0.0.1') !== false;
+
+if ($_admin_isLocal) {
+    if (session_id() == '') {
+        session_start();
+    }
+    if ($_admin_realReferral === 1 && isset($_SESSION['referral_dev_role_override'])) {
+        $referral = (int)$_SESSION['referral_dev_role_override'];
+    }
+}
+
+// Admin Panel is SuperAdmin-only (referral = 1); HQ Admin (2) is excluded
+if (!isset($referral) || (int)$referral !== 1) {
     header('Location: /odb/referral/403.php');
     exit();
 }
@@ -232,7 +253,7 @@ if (isset($referral) && $referral == 0) {
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
         const staffBusinessUnitId = <?php echo json_encode(isset($businessUnitId) ? (int)$businessUnitId : null); ?>;
     </script>
     <script src="referral/js/admin.js?v=<?php echo time(); ?>"></script>

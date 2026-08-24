@@ -41,7 +41,7 @@ function loadBusinessUnits() {
             var busUnitFrom = $('#filter-business-unit');
             busUnitFrom.empty();
 
-            if (referralPermission === 1) {
+            if (referralPermission === 1 || referralPermission === 2) {
                 busUnitFrom.prop('disabled', false);
                 busUnitFrom.append('<option value="all" data-id="">All Business Units</option>');
             } else {
@@ -53,7 +53,7 @@ function loadBusinessUnits() {
             $.each(response.data, function (index, businessUnit) {
                 let selected = '';
 
-                if (referralPermission !== 1) {
+                if (referralPermission !== 1 && referralPermission !== 2) {
                     if (department == 1) {
                         if (staffPosition.toLowerCase().includes('audiologist')) {
                             if (businessUnit.id === 1) {

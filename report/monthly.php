@@ -65,9 +65,7 @@ include('../../common/index_adv.php');
                                 style="white-space: nowrap; padding: 0.25rem 0.5rem; font-size: 0.875rem;">Reset Filters</button>
                         </div>
                         <div class="d-inline-flex align-items-center mt-2">
-                            <?php if (!isset($referral) || $referral != 0): ?>
-                                <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Download Report</a>
-                            <?php endif; ?>
+                            <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Download Report</a>
                         </div>
                     </div>
                 </div>
@@ -139,7 +137,7 @@ include('../../common/index_adv.php');
         const id_u = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
         const staff_outlet = <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>;
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
     </script>
 
     <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>

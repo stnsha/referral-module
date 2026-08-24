@@ -64,9 +64,7 @@ include('../common/index_adv.php');
                                 Filters</button>
                         </div>
                         <div class="d-inline-flex align-items-center mt-2">
-                            <?php if (!isset($referral) || $referral != 0): ?>
-                                <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Download Report</a>
-                            <?php endif; ?>
+                            <a href="#" type="button" class="btn-referral me-1" id="viewReportbtn">Download Report</a>
                             <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
                                 aria-expanded="false" aria-controls="generate-report">
                                 Generate Report
@@ -229,7 +227,7 @@ include('../common/index_adv.php');
         const staff_outlet =
             <?php echo json_encode(isset($staff_outlet) ? $staff_outlet : ''); ?>; //add staff_outlet in lock.php
         const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 2); ?>;
+        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
         const staffBusinessUnitId = <?php echo json_encode(isset($businessUnitId) ? (int)$businessUnitId : null); ?>;
     </script>
 

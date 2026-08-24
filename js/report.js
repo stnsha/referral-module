@@ -53,7 +53,7 @@ function loadBusinessUnits() {
             var busUnitFrom = $('#filter-business-unit');
             busUnitFrom.empty();
 
-            if (referralPermission === 1) {
+            if (referralPermission === 1 || referralPermission === 2) {
                 // Superadmin: enable dropdown, allow selecting any BU or all
                 busUnitFrom.prop('disabled', false);
                 busUnitFrom.append('<option value="all" data-id="">All Business Units</option>');
@@ -67,7 +67,7 @@ function loadBusinessUnits() {
             $.each(response.data, function (index, businessUnit) {
                 let selected = '';
 
-                if (referralPermission !== 1) {
+                if (referralPermission !== 1 && referralPermission !== 2) {
                     if (staffBusinessUnitId && businessUnit.id === staffBusinessUnitId) {
                         selected = 'selected';
                         businessUnitId = businessUnit.id;

@@ -578,28 +578,55 @@ function getStaffLocation($staff_id)
 
     $staff_id = mysqli_real_escape_string($conn, $staff_id);
 
-    $staff_query = mysqli_query($conn, "SELECT outlet FROM staff WHERE id = $staff_id");
+    $staff_query = mysqli_query($conn, "SELECT outlet, referral FROM staff WHERE id = $staff_id");
 
     if ($staff_row = mysqli_fetch_assoc($staff_query)) {
-        $outlet = trim($staff_row['outlet']);
+        $referral = isset($staff_row['referral']) ? (int)$staff_row['referral'] : 0;
 
-        // Remove spaces and split by comma
-        $outlets = array_map('trim', explode(',', $outlet));
+        // Dev role override (localhost + real SuperAdmin only), same session key
+        // as referral/dev-switch-role.php / navbar.php's toolbar. backend.php
+        // never starts a session on its own, so it must be started here to see it.
+        $devServerName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+        $devHttpHost   = isset($_SERVER['HTTP_HOST'])   ? $_SERVER['HTTP_HOST']   : '';
+        $devIsLocal    = in_array($devServerName, array('localhost', '127.0.0.1'))
+            || strpos($devServerName, 'localhost') !== false
+            || strpos($devHttpHost,   'localhost') !== false
+            || strpos($devHttpHost,   '127.0.0.1') !== false;
 
-        // Filter out empty values
-        $outlets = array_filter($outlets);
-
-        // Reindex array
-        $outlets = array_values($outlets);
-
-        if (empty($outlets)) {
-            return array();
+        if ($devIsLocal && $referral === 1) {
+            if (session_id() == '') {
+                session_start();
+            }
+            if (isset($_SESSION['referral_dev_role_override'])) {
+                $referral = (int)$_SESSION['referral_dev_role_override'];
+            }
         }
 
-        // Convert to comma-separated string for SQL
-        $outlet_ids = implode(',', array_map('intval', $outlets));
+        if ($referral === 1 || $referral === 2) {
+            // SuperAdmin / HQ Admin: every active outlet, not just the staff's own
+            $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE recycle != 1 ORDER BY comp_name ASC");
+        } else {
+            // Normal user: only outlets listed in staff.outlet (comma-separated ids)
+            $outlet = trim($staff_row['outlet']);
 
-        $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE id IN ($outlet_ids) ORDER BY comp_name ASC");
+            // Remove spaces and split by comma
+            $outlets = array_map('trim', explode(',', $outlet));
+
+            // Filter out empty values
+            $outlets = array_filter($outlets);
+
+            // Reindex array
+            $outlets = array_values($outlets);
+
+            if (empty($outlets)) {
+                return array();
+            }
+
+            // Convert to comma-separated string for SQL
+            $outlet_ids = implode(',', array_map('intval', $outlets));
+
+            $outlet_results = mysqli_query($conn, "SELECT id, code FROM outlet WHERE id IN ($outlet_ids) ORDER BY comp_name ASC");
+        }
 
         $all_locations = array();
 
@@ -630,7 +657,7 @@ function getAssignees($location_id)
     return $staffs;
 }
 
-function getStaffDetails($staff_id, $location_id, $bu_id = null, $deptId, $checkOutletAccess = true)
+function getStaffDetails($staff_id, $location_id, $deptId, $bu_id = null, $checkOutletAccess = true)
 {
     global $conn;
 
@@ -1054,7 +1081,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'getStaffDetails' && isset($_GE
     header('Content-Type: application/json');
     $bu_id = isset($_GET['bu_id']) ? $_GET['bu_id'] : null;
     $checkOutletAccess = isset($_GET['check_outlet_access']) ? (bool)$_GET['check_outlet_access'] : true;
-    echo json_encode(getStaffDetails($_GET['staff_id'], $_GET['location_id'], $bu_id, $_GET['deptId'], $checkOutletAccess));
+    echo json_encode(getStaffDetails($_GET['staff_id'], $_GET['location_id'], $_GET['deptId'], $bu_id, $checkOutletAccess));
     exit;
 }
 
