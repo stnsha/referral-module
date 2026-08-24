@@ -239,10 +239,12 @@ include('../common/index_adv.php');
                         <!-- Mode radios — always visible -->
                         <div class="mb-3">
                             <label class="me-3 r-text" style="display:inline-flex;align-items:center;">
-                                <input type="radio" name="customer_mode" value="existing" style="margin-right:5px;"> Existing Customer
+                                <input type="radio" name="customer_mode" value="existing" style="margin-right:5px;">
+                                Existing Customer
                             </label>
                             <label class="r-text" style="display:inline-flex;align-items:center;">
-                                <input type="radio" name="customer_mode" value="new" style="margin-right:5px;"> New Customer
+                                <input type="radio" name="customer_mode" value="new" style="margin-right:5px;"> New
+                                Customer
                             </label>
                         </div>
 
@@ -251,10 +253,12 @@ include('../common/index_adv.php');
                             <!-- ID type radios -->
                             <div class="mb-2">
                                 <label class="me-3 r-text" style="display:inline-flex;align-items:center;">
-                                    <input type="radio" name="id_type" value="nric" checked style="margin-right:5px;"> NRIC<span style="color:red;">*</span>
+                                    <input type="radio" name="id_type" value="nric" checked style="margin-right:5px;">
+                                    NRIC<span style="color:red;">*</span>
                                 </label>
                                 <label class="r-text" style="display:inline-flex;align-items:center;">
-                                    <input type="radio" name="id_type" value="passport" style="margin-right:5px;"> Passport<span style="color:red;">*</span>
+                                    <input type="radio" name="id_type" value="passport" style="margin-right:5px;">
+                                    Passport<span style="color:red;">*</span>
                                 </label>
                             </div>
 
@@ -263,15 +267,21 @@ include('../common/index_adv.php');
                                 <div class="d-flex gap-2">
                                     <input type="hidden" name="customer_id">
                                     <div style="flex:1;position:relative;">
-                                        <input type="text" name="customer_ic" id="customer_ic_input" class="form-control form-control-sm"
+                                        <input type="text" name="customer_ic" id="customer_ic_input"
+                                            class="form-control form-control-sm"
                                             placeholder="Enter NRIC or Passport number" autocomplete="off">
-                                        <div id="customer-autocomplete-list" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:1050;background:#fff;border:1px solid #dee2e6;border-top:none;border-radius:0 0 4px 4px;max-height:220px;overflow-y:auto;box-shadow:0 4px 8px rgba(0,0,0,0.08);"></div>
+                                        <div id="customer-autocomplete-list"
+                                            style="display:none;position:absolute;top:100%;left:0;right:0;z-index:1050;background:#fff;border:1px solid #dee2e6;border-top:none;border-radius:0 0 4px 4px;max-height:220px;overflow-y:auto;box-shadow:0 4px 8px rgba(0,0,0,0.08);">
+                                        </div>
                                     </div>
-                                    <button type="button" id="clear-customer-btn" class="btn btn-sm btn-outline-danger" title="Clear customer information">Clear</button>
+                                    <button type="button" id="clear-customer-btn" class="btn btn-sm btn-outline-danger"
+                                        title="Clear customer information">Clear</button>
                                 </div>
-                                <div class="error-message" id="error-customer-ic" style="color:red;font-size:12px;"></div>
+                                <div class="error-message" id="error-customer-ic" style="color:red;font-size:12px;">
+                                </div>
                                 <div id="create-customer-link-container" style="display:none;margin-top:8px;">
-                                    <a href="../customer/add.php" id="create-customer-link" class="btn btn-sm btn-primary" target="_blank">Create New Customer</a>
+                                    <a href="../customer/add.php" id="create-customer-link"
+                                        class="btn btn-sm btn-primary" target="_blank">Create New Customer</a>
                                 </div>
                             </div>
 
@@ -279,36 +289,43 @@ include('../common/index_adv.php');
                             <div class="mb-2">
                                 <p class="r-text">Name<span style="color:red;">*</span></p>
                                 <input type="text" name="customer_name" class="form-control form-control-sm">
-                                <div class="error-message" id="error-customer-name" style="color:red;font-size:12px;"></div>
+                                <div class="error-message" id="error-customer-name" style="color:red;font-size:12px;">
+                                </div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col">
                                     <p class="r-text">Phone No.<span style="color:red;">*</span></p>
                                     <input type="text" name="customer_phone" class="form-control form-control-sm">
-                                    <div class="error-message" id="error-customer-phone" style="color:red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-phone"
+                                        style="color:red;font-size:12px;"></div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Email</p>
                                     <input type="text" name="customer_email" class="form-control form-control-sm">
-                                    <div class="error-message" id="error-customer-email" style="color:red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-email"
+                                        style="color:red;font-size:12px;"></div>
                                 </div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col">
                                     <p class="r-text">Age</p>
                                     <input type="text" name="customer_age" class="form-control form-control-sm">
-                                    <div class="error-message" id="error-customer-age" style="color:red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-age"
+                                        style="color:red;font-size:12px;"></div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Gender</p>
                                     <input type="text" name="customer_gender" class="form-control form-control-sm">
-                                    <div class="error-message" id="error-customer-gender" style="color:red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-gender"
+                                        style="color:red;font-size:12px;"></div>
                                 </div>
                             </div>
                             <div class="mb-2">
                                 <p class="r-text">Address<span style="color:red;">*</span></p>
-                                <textarea name="customer_address" class="form-control form-control-sm" rows="3"></textarea>
-                                <div class="error-message" id="error-customer-address" style="color:red;font-size:12px;"></div>
+                                <textarea name="customer_address" class="form-control form-control-sm"
+                                    rows="3"></textarea>
+                                <div class="error-message" id="error-customer-address"
+                                    style="color:red;font-size:12px;"></div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col">
@@ -322,11 +339,13 @@ include('../common/index_adv.php');
                                         <option value="5">SARAWAK ETHNIC</option>
                                         <option value="6">OTHERS</option>
                                     </select>
-                                    <div class="error-message" id="error-customer-race" style="color:red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-race"
+                                        style="color:red;font-size:12px;"></div>
                                 </div>
                                 <div class="col">
                                     <p class="r-text">Nationality<span style="color:red;">*</span></p>
-                                    <select name="customer_nationality" id="customer_nationality" class="form-select form-select-sm">
+                                    <select name="customer_nationality" id="customer_nationality"
+                                        class="form-select form-select-sm">
                                         <option value="">Select Nationality</option>
                                         <option value="MALAYSIA">MALAYSIA</option>
                                         <option value="SINGAPORE">SINGAPORE</option>
@@ -335,24 +354,29 @@ include('../common/index_adv.php');
                                         <option value="PHILIPPINES">PHILIPPINES</option>
                                         <option value="THAILAND">THAILAND</option>
                                     </select>
-                                    <div class="error-message" id="error-customer-nationality" style="color:red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-customer-nationality"
+                                        style="color:red;font-size:12px;"></div>
                                 </div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col-6">
                                     <p class="r-text">Contact Method<span style="color:red;">*</span></p>
-                                    <select name="contact_method" id="contact_method" class="form-select form-select-sm" required>
+                                    <select name="contact_method" id="contact_method" class="form-select form-select-sm"
+                                        required>
                                         <option value="0">Pick One</option>
                                         <option value="1" selected>Call & WhatsApp</option>
                                         <option value="2">Call Only</option>
                                         <option value="3">WhatsApp Only</option>
                                     </select>
-                                    <div class="error-message" id="error-contact-method" style="color:red;font-size:12px;"></div>
+                                    <div class="error-message" id="error-contact-method"
+                                        style="color:red;font-size:12px;"></div>
                                 </div>
                             </div>
                             <div id="save-customer-section" style="display:none;" class="mt-2">
-                                <button type="button" id="save-customer-btn" class="btn btn-sm btn-success">Save Customer</button>
-                                <div class="error-message" id="error-save-customer" style="color:red;font-size:12px;margin-top:4px;"></div>
+                                <button type="button" id="save-customer-btn" class="btn btn-sm btn-success">Save
+                                    Customer</button>
+                                <div class="error-message" id="error-save-customer"
+                                    style="color:red;font-size:12px;margin-top:4px;"></div>
                             </div>
                         </div>
 
@@ -369,24 +393,27 @@ include('../common/index_adv.php');
                     <div class="border-bottom pb-3 mb-3">
                         <p class="r-title">Referring Indication</p>
                         <div class="mb-2">
-                            <p class="r-text">Purpose of Referral<span style="color:red;">*</span></p>
-                            <textarea name="referral_reason" id="referral_reason" class="form-control form-control-sm" rows="10"></textarea>
+                            <p class="r-text">Purpose of Referral<span style="color:red;">*</span> <small
+                                    class="form-text text-muted"><span style="color:red;font-weight:bold;">DO
+                                        NOT</span> include greetings such as "Dear Doctor" or "Dear Team".</small></p>
+                            <textarea name="referral_reason" id="referral_reason" class="form-control form-control-sm"
+                                rows="10"></textarea>
                             <div class="error-message" id="error-referral-reason" style="color: red;font-size:12px;">
                             </div>
-                            <small class="form-text text-muted">
-                                Only state the purpose of referral. <span style="color:red;font-weight:bold;">DO NOT</span> include greetings such as "Dear Doctor".
-                            </small>
                         </div>
                         <div class="mb-2">
-                            <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span></p>
-                            <textarea name="referral_condition" id="referral_condition" class="form-control form-control-sm"
-                                rows="10"></textarea>
+                            <p class="r-text">Details of Patient's Condition<span style="color:red;">*</span> <small
+                                    class="form-text text-muted"><span style="color:red;font-weight:bold;">DO
+                                        NOT</span> include greetings such as "Dear Doctor" or "Dear Team".</small></p>
+                            <textarea name="referral_condition" id="referral_condition"
+                                class="form-control form-control-sm" rows="10"></textarea>
                             <div class="error-message" id="error-referral-condition" style="color: red;font-size:12px;">
                             </div>
                         </div>
                         <div class="mb-2">
                             <p class="r-text">Relevant Medical History (if applicable)</p>
-                            <textarea name="medical_history" id="medical_history" class="form-control form-control-sm" rows="10"></textarea>
+                            <textarea name="medical_history" id="medical_history" class="form-control form-control-sm"
+                                rows="10"></textarea>
                             <div class="error-message" id="error-medical-history" style="color: red;font-size:12px;">
                             </div>
                         </div>
@@ -451,12 +478,12 @@ include('../common/index_adv.php');
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
-        const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
-        const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
-        const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
-        const staffOutlet = <?php echo json_encode(isset($outlet) ? $outlet : ''); ?>;
-        const staffBusinessUnitId = <?php echo json_encode(isset($businessUnitId) ? (int)$businessUnitId : null); ?>;
+    const department = <?php echo json_encode(isset($department) ? $department : ''); ?>;
+    const staffId = <?php echo json_encode(isset($id_user) ? $id_user : ''); ?>;
+    const staffPosition = <?php echo json_encode(isset($status_semasa) ? $status_semasa : ''); ?>;
+    const referralPermission = <?php echo json_encode(isset($referral) ? (int)$referral : 0); ?>;
+    const staffOutlet = <?php echo json_encode(isset($outlet) ? $outlet : ''); ?>;
+    const staffBusinessUnitId = <?php echo json_encode(isset($businessUnitId) ? (int)$businessUnitId : null); ?>;
     </script>
     <script src="referral/js/toast.js?v=<?php echo time(); ?>"></script>
     <script src="referral/js/errorLogger.js?v=<?php echo time(); ?>"></script>

@@ -1637,6 +1637,12 @@ function validateForm(event) {
 
     markError("referral-reason", isEmpty(form["referral_reason"].value), "This field cannot be left blank.");
     markError("referral-condition", isEmpty(form["referral_condition"].value), "This field cannot be left blank.");
+
+    function hasGreeting(val) {
+        return /\bdear\b/i.test(val);
+    }
+    markError("referral-reason", !isEmpty(form["referral_reason"].value) && hasGreeting(form["referral_reason"].value), "Do not include greetings such as \"Dear Doctor\".");
+    markError("referral-condition", !isEmpty(form["referral_condition"].value) && hasGreeting(form["referral_condition"].value), "Do not include greetings such as \"Dear Doctor\".");
     markError("priority", isEmpty(form["priority"].value), "This field cannot be left blank.");
     // Get ID type and IC/Passport value
     var idType = $('input[name="id_type"]:checked').val();
@@ -1695,6 +1701,15 @@ function validateForm(event) {
             markError("consult-call-id", true, "Consult Call ID is required.");
         } else if (!/^\d+$/.test(consultCallIdVal) || parseInt(consultCallIdVal) <= 0) {
             markError("consult-call-id", true, "Consult Call ID must be a positive number.");
+        }
+    }
+
+    if (hasError) {
+        var firstError = Array.from(document.querySelectorAll('.error-message')).find(function (el) {
+            return el.textContent.trim() !== '';
+        });
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 
