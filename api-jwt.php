@@ -301,9 +301,11 @@ function getJWTToken($staff_id, $staff_department_id, $status_semasa, $outlet, $
  * @param string $status_semasa Staff status
  * @param array $outlet Outlet IDs array
  * @param int $referral role
+ * @param int|null $staff_department_id Staff department ID, used by the API
+ *        to derive business_unit_id server-side when it's null here
  * @return string|null JWT token or null on failure
  */
-function getJWTTokenByBU($staff_id, $business_unit_id, $status_semasa, $outlet, $referral)
+function getJWTTokenByBU($staff_id, $business_unit_id, $status_semasa, $outlet, $referral, $staff_department_id = null)
 {
     logJWTOperation(
         'getJWTTokenByBU',
@@ -316,11 +318,12 @@ function getJWTTokenByBU($staff_id, $business_unit_id, $status_semasa, $outlet, 
     $url = $host . 'auth/referral';
 
     $authData = array(
-        'staff_id'         => (int)$staff_id,
-        'business_unit_id' => $business_unit_id !== null ? (int)$business_unit_id : null,
-        'status_semasa'    => $status_semasa,
-        'outlet'           => $outlet,
-        'referral'         => $referral
+        'staff_id'             => (int)$staff_id,
+        'business_unit_id'     => $business_unit_id !== null ? (int)$business_unit_id : null,
+        'status_semasa'        => $status_semasa,
+        'outlet'               => $outlet,
+        'referral'             => $referral,
+        'staff_department_id'  => $staff_department_id !== null ? (int)$staff_department_id : null
     );
 
     $headers = array(
@@ -459,7 +462,8 @@ function getAuthToken($staff_id)
         $effectiveBusinessUnitId,
         $staffData['status_semasa'],
         $effectiveOutlet,
-        $effectiveReferral
+        $effectiveReferral,
+        $staffData['staff_department_id']
     );
 
     if ($token) {

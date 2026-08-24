@@ -73,7 +73,8 @@ $report_yearly_active = ($current_page == 'yearly.php' && $current_dir == 'repor
         echo ' / ';
         echo isset($_SESSION['referral_dev_outlet_override']) ? 'Outlet ' . htmlspecialchars(implode(',', $_SESSION['referral_dev_outlet_override'])) : 'Outlet: DB Default';
     ?>]</strong>
-    <form method="POST" action="/odb/referral/dev-switch-role.php" style="display:inline-flex;gap:4px;align-items:center;margin:0;">
+    <form method="POST" action="/odb/referral/dev-switch-role.php"
+        style="display:inline-flex;gap:4px;align-items:center;margin:0;">
         <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($_navbar_currentUri); ?>">
         <input type="text" name="bu_id" placeholder="BU id"
             value="<?php echo isset($_SESSION['referral_dev_bu_override']) ? (int)$_SESSION['referral_dev_bu_override'] : ''; ?>"
@@ -120,7 +121,7 @@ $report_yearly_active = ($current_page == 'yearly.php' && $current_dir == 'repor
                     <a class="nav-link <?php echo $external_active; ?>"
                         href="referral/externalOrganization/index.php">External Organization</a>
                 </li>
-                <li class="nav-item dropdown">
+                <!-- <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle <?php echo $report_active; ?>" href="referral/report/monthly.php" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         Report
@@ -135,14 +136,14 @@ $report_yearly_active = ($current_page == 'yearly.php' && $current_dir == 'repor
                                 href="referral/report/yearly.php">Yearly Comparison</a>
                         </li>
                     </ul>
-                </li>
+                </li> -->
             </ul>
             <ul class="navbar-nav ms-auto">
-                <?php if (isset($referral) && ($referral == 1 || $referral == 2) && $department == 16) { ?>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo $business_units_active; ?>"
-                            href="referral/businessUnit/index.php">Business Units</a>
-                    </li>
+                <?php if (isset($referral) && $referral == 1 && $department == 16) { ?>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo $business_units_active; ?>"
+                        href="referral/businessUnit/index.php">Business Units</a>
+                </li>
                 <?php } ?>
             </ul>
         </div>

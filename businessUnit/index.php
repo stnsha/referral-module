@@ -22,15 +22,42 @@
 require_once('../../lock_adv.php');
 $connect = 1;
 include('../../common/index_adv.php');
+
+// Dev role override (localhost + real SuperAdmin only), same session key as
+// navbar.php's toolbar / api-jwt.php / backend.php. Applied here too so the
+// Business Units gate below actually reflects a simulated role, not just
+// the real DB value.
+$_bu_realReferral = isset($referral) ? (int)$referral : 0;
+$_bu_serverName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+$_bu_httpHost   = isset($_SERVER['HTTP_HOST'])   ? $_SERVER['HTTP_HOST']   : '';
+$_bu_isLocal    = in_array($_bu_serverName, array('localhost', '127.0.0.1'))
+    || strpos($_bu_serverName, 'localhost') !== false
+    || strpos($_bu_httpHost,   'localhost') !== false
+    || strpos($_bu_httpHost,   '127.0.0.1') !== false;
+
+if ($_bu_isLocal) {
+    if (session_id() == '') {
+        session_start();
+    }
+    if ($_bu_realReferral === 1 && isset($_SESSION['referral_dev_role_override'])) {
+        $referral = (int)$_SESSION['referral_dev_role_override'];
+    }
+}
+
+// Business Units management is SuperAdmin-only (referral = 1); HQ Admin (2) is excluded
+if (!isset($referral) || (int)$referral !== 1) {
+    header('Location: /odb/referral/403.php');
+    exit();
+}
 ?>
 
 <body>
+    <?php include('../navbar.php'); ?>
     <div class="header" style="position: relative;">
         <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
         <h1 class="headerH1"><img src='common/img/myreferral.png' width='20px'>Business Unit Management</h1>
         <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
     </div>
-    <?php include('../navbar.php'); ?>
 
     <div class="referral-container mb-3">
         <!-- Title Row -->

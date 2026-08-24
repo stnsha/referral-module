@@ -1,4 +1,10 @@
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     //dashboard summary
     // window.FORCE_EMPTY_RESPONSE = true;
@@ -65,12 +71,38 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Populate the "Type of Referral" filter with the values actually present
+    // in the loaded data (e.g. General / Blood Test / ConsultCall / Vaccination
+    // from the admin-configured "Type of Referral" form)
+    function populateTypeOfReferralFilter(rows) {
+        const select = document.getElementById('filter-referral-type');
+        if (!select || !Array.isArray(rows)) return;
+
+        const previousValue = select.value;
+        const uniqueValues = [...new Set(rows.map(function (row) { return row.type_of_referral; }).filter(Boolean))].sort();
+
+        select.innerHTML = '<option value="">All</option>';
+        uniqueValues.forEach(function (value) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            select.appendChild(option);
+        });
+
+        if (uniqueValues.includes(previousValue)) {
+            select.value = previousValue;
+        }
+    }
+
     // Initialize referral table once all APIs are loaded
     function initializeReferralTable(response) {
         // console.log('DEBUG: All APIs loaded, initializing table...');
 
         // Update counts in radio button labels
         updateReferralTypeCounts(response.data);
+
+        // Populate Type of Referral filter options
+        populateTypeOfReferralFilter(response.data && response.data.all);
 
         // Initialize with all data by default
         const checkedRadio = document.querySelector('input[name="referral-type"]:checked');
@@ -218,6 +250,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (response.data.business_units && Array.isArray(response.data.business_units)) {
                             populateBusinessUnits(response.data.business_units);
                         }
+
+                        // Update Type of Referral card
+                        if (response.data.total_type_of_referral !== undefined) {
+                            $('#total-type-of-referral-count').text(response.data.total_type_of_referral);
+                        }
+                        if (response.data.type_of_referral && Array.isArray(response.data.type_of_referral)) {
+                            populateTypeOfReferralCard(response.data.type_of_referral);
+                        }
                     } else {
                         // Handle empty data condition - display 0 for all columns
                         handleEmptyData();
@@ -270,90 +310,73 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Function to filter table by status
-    function filterTableByStatus(statusId) {
-        // console.log('DEBUG filterTableByStatus: Called with statusId:', statusId);
-        if (document.getElementById('filter-status')) {
-            // Set the status filter
-            document.getElementById('filter-status').value = statusId;
+    // Clear every filter input (but don't re-render) - used by all card
+    // click-to-filter handlers so each click starts from a clean slate
+    // instead of stacking on top of whatever was already selected.
+    function resetAllFilterInputs() {
+        document.getElementById('filter-referral-id').value = '';
 
-            // Reset other filters to show all data for this status
-            document.getElementById('filter-referral-id').value = '';
-            document.getElementById('filter-business-unit').value = 'all';
-
-            // Switch to "All" view and use all data
-            document.getElementById('type-all').checked = true;
-            window.currentReferralType = 'all';
-
-            // Use ALL data from API response
-            if (window.referralApiData && window.referralApiData.all) {
-                originalData = [...window.referralApiData.all];
-                allData = [...originalData];
-                // console.log('DEBUG filterTableByStatus: Switched to All view, data length:', originalData.length);
-            }
-
-            // console.log('DEBUG filterTableByStatus: About to apply filters');
-            if (typeof globalApplyFilters === 'function') {
-                globalApplyFilters();
-            } else {
-                // console.log('DEBUG filterTableByStatus: globalApplyFilters not ready, waiting...');
-                // If globalApplyFilters is not ready yet, wait for it
-                const checkAndApply = setInterval(function () {
-                    if (typeof globalApplyFilters === 'function') {
-                        // console.log('DEBUG filterTableByStatus: globalApplyFilters now ready, applying...');
-                        globalApplyFilters();
-                        clearInterval(checkAndApply);
-                    }
-                }, 100); // Check every 100ms
-
-                // Clear interval after 5 seconds to prevent infinite loop
-                setTimeout(function () {
-                    clearInterval(checkAndApply);
-                }, 5000);
-            }
-        }
-    }
-
-    // Function to filter table by priority
-    function filterTableByPriority(priorityId) {
-        // Reset other filters
-        if (document.getElementById('filter-referral-id')) {
-            document.getElementById('filter-referral-id').value = '';
-        }
-        if (document.getElementById('filter-business-unit')) {
-            document.getElementById('filter-business-unit').value = 'all';
-        }
-        if (document.getElementById('filter-status')) {
-            document.getElementById('filter-status').value = '';
-        }
-
-        // Set priority filter to clicked priority
-        if (document.getElementById('filter-priority')) {
-            document.getElementById('filter-priority').value = priorityId;
-        }
-
-        // Switch to "All" view and use all data
         document.getElementById('type-all').checked = true;
         window.currentReferralType = 'all';
-
-        if (window.referralApiData && window.referralApiData.all) {
+        if (window.referralApiData) {
             originalData = [...window.referralApiData.all];
         }
 
-        // Apply filters using unified logic
+        if (document.getElementById('filter-bu-from')) document.getElementById('filter-bu-from').value = 'all';
+        if (document.getElementById('filter-bu-to')) document.getElementById('filter-bu-to').value = 'all';
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-priority').value = '';
+        resetOutletDropdown('filter-outlet-from');
+        resetOutletDropdown('filter-outlet-to');
+        if (document.getElementById('filter-date-from')) document.getElementById('filter-date-from').value = '';
+        if (document.getElementById('filter-date-to')) document.getElementById('filter-date-to').value = '';
+        if (document.getElementById('filter-referral-type')) document.getElementById('filter-referral-type').value = '';
+        window.currentBuClickFilter = null;
+    }
+
+    // Calls applyFilters(), waiting for it to exist yet if the referral data
+    // AJAX hasn't resolved (defines it) - shared by every card click handler.
+    function applyFiltersWhenReady() {
         if (typeof globalApplyFilters === 'function') {
             globalApplyFilters();
-        } else {
-            const checkAndApply = setInterval(function () {
-                if (typeof globalApplyFilters === 'function') {
-                    globalApplyFilters();
-                    clearInterval(checkAndApply);
-                }
-            }, 100);
-            setTimeout(function () {
-                clearInterval(checkAndApply);
-            }, 5000);
+            return;
         }
+        const checkAndApply = setInterval(function () {
+            if (typeof globalApplyFilters === 'function') {
+                globalApplyFilters();
+                clearInterval(checkAndApply);
+            }
+        }, 100);
+        setTimeout(function () {
+            clearInterval(checkAndApply);
+        }, 5000);
+    }
+
+    // Function to filter table by status (Referral card)
+    function filterTableByStatus(statusId) {
+        resetAllFilterInputs();
+        document.getElementById('filter-status').value = statusId;
+        applyFiltersWhenReady();
+    }
+
+    // Function to filter table by priority (Priority card)
+    function filterTableByPriority(priorityId) {
+        resetAllFilterInputs();
+        if (document.getElementById('filter-priority')) {
+            document.getElementById('filter-priority').value = priorityId;
+        }
+        applyFiltersWhenReady();
+    }
+
+    // Function to filter table by business unit (Business Unit card).
+    // The card counts a referral for a BU if it touched that BU at ANY point
+    // in its chain, so this matches from_business_unit OR to_business_unit -
+    // not the stricter AND used when From/To are picked independently in the
+    // Filter panel (that combination means "originated at X and now at Y").
+    function filterTableByBusinessUnit(buName) {
+        resetAllFilterInputs();
+        window.currentBuClickFilter = buName;
+        applyFiltersWhenReady();
     }
 
     // Helper function to populate business units with collapse functionality
@@ -363,16 +386,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const maxVisible = 4; // Show 4 items to match referral column height
 
+        function appendUnitRow(container, unit, index, isLast) {
+            const marginClass = isLast ? '' : 'mb-1';
+            const rowId = 'bu-card-count-' + index;
+            container.append(
+                '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
+                '<span class="r-text" style="text-align:left;flex:1;min-width:0;">' + unit.name + '</span>' +
+                '<span class="r-text" id="' + rowId + '" style="flex-shrink:0;margin-left:8px;">' + unit.count + '</span>' +
+                '</div>'
+            );
+            $('#' + rowId).parent().css('cursor', 'pointer').off('click').on('click', function () {
+                filterTableByBusinessUnit(unit.name);
+            });
+        }
+
         if (businessUnits.length <= maxVisible) {
             // Show all business units if 4 or fewer
             businessUnits.forEach(function (unit, index) {
-                const marginClass = index === businessUnits.length - 1 ? '' : 'mb-1';
-                $('#business-units-list').append(
-                    '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
-                    '<span class="r-text">' + unit.name + '</span>' +
-                    '<span class="r-text">' + unit.count + '</span>' +
-                    '</div>'
-                );
+                appendUnitRow($('#business-units-list'), unit, index, index === businessUnits.length - 1);
             });
 
             // Fill remaining slots with empty divs to maintain height
@@ -390,33 +421,179 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             // Show first 4 business units
             for (let i = 0; i < maxVisible; i++) {
-                const marginClass = i === maxVisible - 1 ? '' : 'mb-1';
-                $('#business-units-list').append(
-                    '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
-                    '<span class="r-text">' + businessUnits[i].name + '</span>' +
-                    '<span class="r-text">' + businessUnits[i].count + '</span>' +
-                    '</div>'
-                );
+                appendUnitRow($('#business-units-list'), businessUnits[i], i, i === maxVisible - 1);
             }
 
             // Show remaining business units in collapse
             for (let i = maxVisible; i < businessUnits.length; i++) {
-                const marginClass = i === businessUnits.length - 1 ? '' : 'mb-1';
-                $('#businessUnitsCollapse').append(
-                    '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
-                    '<span class="r-text">' + businessUnits[i].name + '</span>' +
-                    '<span class="r-text">' + businessUnits[i].count + '</span>' +
-                    '</div>'
-                );
+                appendUnitRow($('#businessUnitsCollapse'), businessUnits[i], i, i === businessUnits.length - 1);
             }
 
             $('#toggleButton').removeClass('d-none');
         }
     }
 
+    // Populate the Type of Referral card and wire click-to-filter
+    function populateTypeOfReferralCard(typeOfReferralList) {
+        const list = $('#type-of-referral-list');
+        list.empty();
+
+        typeOfReferralList.forEach(function (item, index) {
+            const marginClass = index === typeOfReferralList.length - 1 ? '' : 'mb-1';
+            const rowId = 'type-of-referral-count-' + index;
+            list.append(
+                '<div class="d-flex justify-content-between w-100 ' + marginClass + '">' +
+                '<span class="r-text" style="text-align:left;flex:1;min-width:0;">' + item.name + '</span>' +
+                '<span class="r-text" id="' + rowId + '" style="flex-shrink:0;margin-left:8px;">' + item.count + '</span>' +
+                '</div>'
+            );
+
+            $('#' + rowId).parent().css('cursor', 'pointer').off('click').on('click', function () {
+                const select = document.getElementById('filter-referral-type');
+                if (select) {
+                    select.value = item.name;
+                    if (typeof globalApplyFilters === 'function') {
+                        globalApplyFilters();
+                    }
+                }
+            });
+        });
+    }
+
+    // ---------------------------------------------------------------------
+    // Searchable checkbox dropdown for Outlet From / Outlet To
+    // (same vf-s2-* widget pattern used in atem's Status/Issuer filters)
+    // ---------------------------------------------------------------------
+    function renderOutletCheckboxList(prefix, outlets) {
+        const ul = document.getElementById(prefix + '-list');
+        if (!ul) return;
+        ul.innerHTML = '';
+
+        // "All Outlets" pinned row: always checked when no individual outlet
+        // is selected, and clicking it clears any individual selection so
+        // the user doesn't have to tick every outlet one by one.
+        const allLi = document.createElement('li');
+        allLi.className = 'vf-s2-list-item';
+        allLi.style.cursor = 'default';
+        allLi.style.borderBottom = '1px solid #eee';
+        allLi.innerHTML = '<label style="display:flex;align-items:center;gap:6px;width:100%;cursor:pointer;margin:0;font-weight:600;">' +
+            '<input type="checkbox" class="' + prefix + '-all-cb" checked>All Outlets</label>';
+        ul.appendChild(allLi);
+
+        outlets.forEach(function (outlet) {
+            const li = document.createElement('li');
+            li.className = 'vf-s2-list-item';
+            li.style.cursor = 'default';
+            li.innerHTML = '<label style="display:flex;align-items:center;gap:6px;width:100%;cursor:pointer;margin:0;">' +
+                '<input type="checkbox" class="' + prefix + '-cb" value="' + outlet.id + '" data-code="' + escapeHtml(outlet.code) + '">' +
+                escapeHtml(outlet.code) + '</label>';
+            ul.appendChild(li);
+        });
+    }
+
+    function getCheckedOutletValues(prefix) {
+        const boxes = document.querySelectorAll('.' + prefix + '-cb:checked');
+        const out = [];
+        boxes.forEach(function (b) { out.push(b.value); });
+        return out;
+    }
+
+    function updateOutletButtonLabel(prefix) {
+        const btn = document.getElementById(prefix + '-btn');
+        if (!btn) return;
+        const checked = document.querySelectorAll('.' + prefix + '-cb:checked');
+        const all = document.querySelectorAll('.' + prefix + '-cb');
+        if (checked.length === 0 || checked.length === all.length) {
+            btn.textContent = 'All Outlets';
+        } else if (checked.length <= 2) {
+            const codes = [];
+            checked.forEach(function (c) { codes.push(c.dataset.code); });
+            btn.textContent = codes.join(', ');
+        } else {
+            btn.textContent = checked.length + ' outlets selected';
+        }
+    }
+
+    function resetOutletDropdown(prefix) {
+        document.querySelectorAll('.' + prefix + '-cb:checked').forEach(function (cb) {
+            cb.checked = false;
+        });
+        const allCb = document.querySelector('.' + prefix + '-all-cb');
+        if (allCb) allCb.checked = true;
+        updateOutletButtonLabel(prefix);
+    }
+
+    function setupOutletDropdown(prefix) {
+        const btn = document.getElementById(prefix + '-btn');
+        const dropdown = document.getElementById(prefix + '-dropdown');
+        const wrap = document.getElementById(prefix + '-wrap');
+        const search = document.getElementById(prefix + '-search');
+        const list = document.getElementById(prefix + '-list');
+
+        if (btn && dropdown) {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('open');
+            });
+            btn.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    dropdown.classList.toggle('open');
+                }
+            });
+            document.addEventListener('click', function (e) {
+                if (wrap && !wrap.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
+
+        if (search && list) {
+            search.addEventListener('input', function () {
+                const term = this.value.trim().toLowerCase();
+                list.querySelectorAll('li').forEach(function (li) {
+                    // The "All Outlets" row always stays visible at the top
+                    if (li.querySelector('.' + prefix + '-all-cb')) return;
+                    const text = li.textContent.trim().toLowerCase();
+                    li.classList.toggle('hidden', term !== '' && text.indexOf(term) === -1);
+                });
+            });
+        }
+
+        if (dropdown) {
+            dropdown.addEventListener('change', function (e) {
+                if (!e.target || !e.target.matches('input[type="checkbox"]')) return;
+
+                if (e.target.classList.contains(prefix + '-all-cb')) {
+                    // "All Outlets" ticked: clear any individual picks (acts as reset-to-all)
+                    document.querySelectorAll('.' + prefix + '-cb:checked').forEach(function (cb) {
+                        cb.checked = false;
+                    });
+                    e.target.checked = true;
+                } else {
+                    // Individual outlet toggled: keep "All Outlets" in sync
+                    const anyChecked = document.querySelectorAll('.' + prefix + '-cb:checked').length > 0;
+                    const allCb = document.querySelector('.' + prefix + '-all-cb');
+                    if (allCb) allCb.checked = !anyChecked;
+                }
+
+                updateOutletButtonLabel(prefix);
+                if (typeof globalApplyFilters === 'function') {
+                    globalApplyFilters();
+                }
+            });
+        }
+    }
+
+    setupOutletDropdown('filter-outlet-from');
+    setupOutletDropdown('filter-outlet-to');
+
     // Helper function to handle empty data condition
     function handleEmptyData() {
         // console.log("Handling empty data - displaying zeros");
+
+        $('#total-type-of-referral-count').text(0);
+        populateTypeOfReferralCard([{ name: 'General', count: 0 }]);
 
         // Get business units from API and display with 0 counts
         $.ajax({
@@ -467,31 +644,24 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleText.textContent = 'Show More';
     });
 
-    //display business unit
+    //display business unit (From / To)
     $.ajax({
         url: 'referral/api-jwt.php',
         type: 'POST',
         data: { action: 'business-units' },
         success: function (response) {
-            var busUnitFrom = $('#filter-business-unit');
+            var buFrom = $('#filter-bu-from');
+            var buTo = $('#filter-bu-to');
 
-            // Add default "All" option
-            busUnitFrom.append('<option value="all">Business Units</option>');
-
-            let isSelected = false;
-            let businessUnitId = '';
+            buFrom.append('<option value="all">All Business Units</option>');
+            buTo.append('<option value="all">All Business Units</option>');
 
             if (response && response.data && Array.isArray(response.data)) {
                 $.each(response.data, function (index, businessUnit) {
-                    // Remove default selection
-                    if (staffBusinessUnitId && businessUnit.id === staffBusinessUnitId) {
-                        businessUnitId = businessUnit.id;
-                    }
-
-                    busUnitFrom.append(
-                        '<option value="' + businessUnit.name + '" data-id="' + businessUnit.id + '">' +
-                        businessUnit.name + '</option>'
-                    );
+                    var optionHtml = '<option value="' + businessUnit.name + '" data-id="' + businessUnit.id + '">' +
+                        businessUnit.name + '</option>';
+                    buFrom.append(optionHtml);
+                    buTo.append(optionHtml);
                 });
             }
 
@@ -516,44 +686,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const itemsPerPage = 15;
     let globalApplyFilters = null;
 
-    // Date range picker functionality using daterangepicker.com library
+    // Date From / Date To filter inputs
     $(document).ready(function () {
-        // console.log('Date range picker initializing...');
-
-        // Initialize the date range picker
-        $('#filter-date-range').daterangepicker({
-            autoUpdateInput: false,
-            locale: {
-                cancelLabel: 'Clear',
-                format: 'YYYY-MM-DD'
-            },
-            ranges: {
-                'Today': [moment(), moment()],
-                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-            }
-        });
-
-        // Handle date range selection
-        $('#filter-date-range').on('apply.daterangepicker', function (ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-            // console.log('Date range selected:', $(this).val());
-
-            // Apply filters automatically
-            if (typeof globalApplyFilters === 'function') {
-                globalApplyFilters();
-            }
-        });
-
-        // Handle date range clear
-        $('#filter-date-range').on('cancel.daterangepicker', function (ev, picker) {
-            $(this).val('');
-            // console.log('Date range cleared');
-
-            // Apply filters to show all data
+        $('#filter-date-from, #filter-date-to').on('change', function () {
             if (typeof globalApplyFilters === 'function') {
                 globalApplyFilters();
             }
@@ -627,8 +762,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 tr.innerHTML = `
                     <td style="font-size:13px;width: 8%;text-align:start;">${row.ref_id}</td>
-                    <td style="font-size:13px;width: 34%;text-align:start;">
-                        ${row.reason}
+                    <td style="font-size:13px;width: 26%;text-align:start;" title="${escapeHtml(row.reason || '')}">
+                        ${(row.reason && row.reason.length > 120) ? row.reason.substring(0, 120) + '...' : row.reason}
+                    </td>
+                    <td style="font-size:13px;width: 8%;text-align:start;">
+                        ${row.type_of_referral || 'N/A'}
                     </td>
                     <td style="font-size:13px;width: 13%;text-align:start;">
                         <span style="font-size:13px;">${(window.outletCodeMap && row.from_location && window.outletCodeMap[row.from_location]) ? window.outletCodeMap[row.from_location] : (row.from_business_unit || 'N/A')}</span>
@@ -865,32 +1003,23 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Populate location filter from current user's outlets
+        // Populate outlet From / To filters from current user's outlets
+        // (SuperAdmin/HQ Admin get every active outlet; normal users get only their own)
         $.ajax({
             url: 'referral/backend.php?action=getStaffLocation',
             type: 'GET',
             dataType: 'json',
             data: { staff_id: id_user },
             success: function (response) {
-                var locationSelect = document.getElementById('filter-location');
-                if (locationSelect) {
-                    locationSelect.innerHTML = '<option value="all">All Location</option>';
-                    if (Array.isArray(response)) {
-                        window.userOutletIds = response.map(function (outlet) { return String(outlet.id); });
-                        response.forEach(function (outlet) {
-                            var option = document.createElement('option');
-                            option.value = outlet.id;
-                            option.textContent = outlet.code;
-                            locationSelect.appendChild(option);
-                        });
-                    }
+                if (Array.isArray(response)) {
+                    window.userOutletIds = response.map(function (outlet) { return String(outlet.id); });
+                    renderOutletCheckboxList('filter-outlet-from', response);
+                    renderOutletCheckboxList('filter-outlet-to', response);
+                } else {
+                    window.userOutletIds = [];
                 }
             },
             error: function () {
-                var locationSelect = document.getElementById('filter-location');
-                if (locationSelect) {
-                    locationSelect.innerHTML = '<option value="all">All Location</option>';
-                }
                 window.userOutletIds = [];
             }
         });
@@ -914,6 +1043,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     const tbody = document.createElement('tbody');
                     document.getElementById('referral-tbl').appendChild(tbody);
                 }
+
+                // Default missing Type of Referral to "General"
+                ['all', 'sent', 'received'].forEach(function (key) {
+                    if (Array.isArray(response.data[key])) {
+                        response.data[key].forEach(function (row) {
+                            if (!row.type_of_referral) row.type_of_referral = 'General';
+                        });
+                    }
+                });
 
                 // Store the full API response structure
                 window.referralApiData = response.data;
@@ -994,13 +1132,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
 
-                // Add filter functionality for business unit
-                const businessUnitFilter = document.getElementById('filter-business-unit');
-                if (businessUnitFilter) {
-                    businessUnitFilter.addEventListener('change', function () {
-                        applyFilters();
-                    });
-                }
+                // Add filter functionality for business unit From / To
+                ['filter-bu-from', 'filter-bu-to'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('change', function () {
+                            // Manually picking From/To overrides the Business Unit card's click-filter
+                            window.currentBuClickFilter = null;
+                            applyFilters();
+                        });
+                    }
+                });
 
                 // Add filter functionality for status
                 const statusFilter = document.getElementById('filter-status');
@@ -1018,10 +1160,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
 
-                // Add filter functionality for location
-                const locationFilter = document.getElementById('filter-location');
-                if (locationFilter) {
-                    locationFilter.addEventListener('change', function () {
+                // Outlet From / To filter functionality is wired by setupOutletDropdown() (checkbox dropdown)
+
+                // Add filter functionality for Type of Referral
+                const referralTypeOfFilter = document.getElementById('filter-referral-type');
+                if (referralTypeOfFilter) {
+                    referralTypeOfFilter.addEventListener('change', function () {
                         applyFilters();
                     });
                 }
@@ -1043,15 +1187,22 @@ document.addEventListener('DOMContentLoaded', function () {
                                 // Clear filters when switching referral types (unless switching to "all")
                                 if (this.value !== 'all') {
                                     document.getElementById('filter-referral-id').value = '';
-                                    document.getElementById('filter-business-unit').value = 'all';
+                                    if (document.getElementById('filter-bu-from')) document.getElementById('filter-bu-from').value = 'all';
+                                    if (document.getElementById('filter-bu-to')) document.getElementById('filter-bu-to').value = 'all';
                                     document.getElementById('filter-status').value = '';
                                     document.getElementById('filter-priority').value = '';
-                                    if (document.getElementById('filter-date-range')) {
-                                        document.getElementById('filter-date-range').value = '';
+                                    if (document.getElementById('filter-date-from')) {
+                                        document.getElementById('filter-date-from').value = '';
                                     }
-                                    if (document.getElementById('filter-location')) {
-                                        document.getElementById('filter-location').value = 'all';
+                                    if (document.getElementById('filter-date-to')) {
+                                        document.getElementById('filter-date-to').value = '';
                                     }
+                                    resetOutletDropdown('filter-outlet-from');
+                                    resetOutletDropdown('filter-outlet-to');
+                                    if (document.getElementById('filter-referral-type')) {
+                                        document.getElementById('filter-referral-type').value = '';
+                                    }
+                                    window.currentBuClickFilter = null;
                                 }
 
                                 displayPage(currentPage);
@@ -1061,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 // Add reset filters functionality
-                const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+                const resetFiltersBtn = document.getElementById('dashResetFiltersBtn');
                 if (resetFiltersBtn) {
                     resetFiltersBtn.addEventListener('click', function () {
                         // console.log('Resetting all filters');
@@ -1076,70 +1227,89 @@ document.addEventListener('DOMContentLoaded', function () {
                             originalData = [...window.referralApiData.all];
                         }
 
-                        // Reset business unit to user's department (session-based)
-                        const businessUnitSelect = document.getElementById('filter-business-unit');
-                        const userDepartmentOption = businessUnitSelect.querySelector('option[selected]');
-                        if (userDepartmentOption) {
-                            businessUnitSelect.value = userDepartmentOption.value;
-                        } else {
-                            businessUnitSelect.value = 'all';
-                        }
-
+                        // Reset business unit / outlet / date filters
+                        if (document.getElementById('filter-bu-from')) document.getElementById('filter-bu-from').value = 'all';
+                        if (document.getElementById('filter-bu-to')) document.getElementById('filter-bu-to').value = 'all';
                         document.getElementById('filter-status').value = '';
                         document.getElementById('filter-priority').value = '';
-                        if (document.getElementById('filter-location')) {
-                            document.getElementById('filter-location').value = 'all';
+                        resetOutletDropdown('filter-outlet-from');
+                        resetOutletDropdown('filter-outlet-to');
+                        if (document.getElementById('filter-date-from')) {
+                            document.getElementById('filter-date-from').value = '';
                         }
-                        document.getElementById('filter-date-range').value = '';
+                        if (document.getElementById('filter-date-to')) {
+                            document.getElementById('filter-date-to').value = '';
+                        }
+                        if (document.getElementById('filter-referral-type')) {
+                            document.getElementById('filter-referral-type').value = '';
+                        }
+                        window.currentBuClickFilter = null;
 
-                        // Clear date range picker
-                        $('#filter-date-range').data('daterangepicker').setStartDate(moment());
-                        $('#filter-date-range').data('daterangepicker').setEndDate(moment());
-
-                        // Reset to original data and apply business unit filter if needed
+                        // Reset to original data
                         allData = [...originalData];
                         currentPage = 1;
+                        displayPage(currentPage);
 
-                        // Apply business unit filter if not 'all'
-                        if (businessUnitSelect.value !== 'all') {
-                            applyFilters();
-                        } else {
-                            displayPage(currentPage);
-                        }
-
-                        // console.log('Filters reset, showing data for department:', businessUnitSelect.value, allData.length, 'items');
+                        // console.log('Filters reset', allData.length, 'items');
                     });
+                }
+
+                // Parse custom date format "8 July 2025, Tuesday" (fallback when ori_updated_at is absent)
+                function parseCustomDate(dateStr) {
+                    if (!dateStr) return null;
+
+                    // Remove day name if present (e.g., ", Tuesday")
+                    const cleanDateStr = dateStr.replace(/,\s*\w+$/, '').trim();
+
+                    // Handle format like "8 July 2025"
+                    const parts = cleanDateStr.split(' ');
+                    if (parts.length === 3) {
+                        const day = parseInt(parts[0]);
+                        const month = parts[1];
+                        const year = parseInt(parts[2]);
+
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                            'July', 'August', 'September', 'October', 'November', 'December'];
+                        const monthIndex = monthNames.findIndex(m => m.toLowerCase() === month.toLowerCase());
+
+                        if (monthIndex !== -1 && !isNaN(day) && !isNaN(year)) {
+                            return new Date(year, monthIndex, day);
+                        }
+                    }
+
+                    // Try to parse the date directly as fallback
+                    const parsedDate = new Date(cleanDateStr);
+                    return isNaN(parsedDate.getTime()) ? null : parsedDate;
                 }
 
                 // Combined filter function
                 function applyFilters() {
                     const referralId = document.getElementById('filter-referral-id').value.trim().toLowerCase();
-                    const selectedBusinessUnit = document.getElementById('filter-business-unit').value;
+                    const selectedBuFrom = document.getElementById('filter-bu-from') ? document.getElementById('filter-bu-from').value : 'all';
+                    const selectedBuTo = document.getElementById('filter-bu-to') ? document.getElementById('filter-bu-to').value : 'all';
                     const selectedStatus = document.getElementById('filter-status').value;
                     const selectedPriority = document.getElementById('filter-priority').value;
-                    const selectedLocation = document.getElementById('filter-location') ? document.getElementById('filter-location').value : 'all';
-                    const dateRange = document.getElementById('filter-date-range').value;
-
-                    // console.log('Applying filters:', {
-                    //     referralId: referralId,
-                    //     selectedBusinessUnit: selectedBusinessUnit,
-                    //     selectedStatus: selectedStatus,
-                    //     dateRange: dateRange
-                    // });
+                    const selectedOutletFrom = getCheckedOutletValues('filter-outlet-from');
+                    const selectedOutletTo = getCheckedOutletValues('filter-outlet-to');
+                    const dateFrom = document.getElementById('filter-date-from') ? document.getElementById('filter-date-from').value : '';
+                    const dateTo = document.getElementById('filter-date-to') ? document.getElementById('filter-date-to').value : '';
+                    const selectedReferralType = document.getElementById('filter-referral-type') ? document.getElementById('filter-referral-type').value : '';
+                    const buClickFilter = window.currentBuClickFilter || null;
 
                     // Check if any filter is being used (excluding default "all" values)
                     const hasActiveFilters = referralId !== '' ||
-                        (selectedBusinessUnit !== '' && selectedBusinessUnit !== 'all') ||
+                        (selectedBuFrom !== '' && selectedBuFrom !== 'all') ||
+                        (selectedBuTo !== '' && selectedBuTo !== 'all') ||
                         selectedStatus !== '' ||
                         selectedPriority !== '' ||
-                        (selectedLocation !== '' && selectedLocation !== 'all') ||
-                        dateRange !== '';
-
-                    // console.log('DEBUG applyFilters: hasActiveFilters:', hasActiveFilters);
+                        selectedOutletFrom.length > 0 ||
+                        selectedOutletTo.length > 0 ||
+                        dateFrom !== '' || dateTo !== '' ||
+                        selectedReferralType !== '' ||
+                        !!buClickFilter;
 
                     // If any filter is active, switch to "All" view and use all data
                     if (hasActiveFilters) {
-                        // console.log('DEBUG applyFilters: Switching to All view for filtering');
                         document.getElementById('type-all').checked = true;
                         window.currentReferralType = 'all';
 
@@ -1148,137 +1318,81 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
 
-                    // When status filter is active, use ALL data without department filtering
-                    // This ensures status cards show all referrals across departments
-                    let startingData;
-                    if (selectedStatus !== '') {
-                        // console.log('DEBUG: Status filter active, using ALL data without department filtering');
-                        startingData = [...originalData];
-                    } else if (selectedBusinessUnit === '' || selectedBusinessUnit === 'all') {
-                        startingData = [...originalData];
-                    } else {
-                        // Business unit is explicitly selected, start from all data
-                        startingData = [...originalData];
-                    }
-
-                    let filteredData = startingData || [...originalData];
-                    // console.log('Starting data count:', filteredData.length);
+                    let filteredData = [...originalData];
 
                     // Filter by referral ID
                     if (referralId !== '') {
-                        // console.log('Filtering by referral ID:', referralId);
                         filteredData = filteredData.filter(function (row) {
-                            const matches = row.ref_id && row.ref_id.toLowerCase().includes(referralId);
-                            if (matches) {
-                                // console.log('Referral ID match:', row.ref_id);
-                            }
-                            return matches;
+                            return row.ref_id && row.ref_id.toLowerCase().includes(referralId);
                         });
-                        // console.log('After referral ID filter:', filteredData.length);
                     }
 
-                    // Filter by business unit
-                    if (selectedBusinessUnit !== '' && selectedBusinessUnit !== 'all') {
-                        // console.log('Filtering by business unit:', selectedBusinessUnit);
+                    // Filter by Business Unit card click (matches from OR to - the
+                    // card counts any involvement, not just chain endpoints)
+                    if (buClickFilter) {
                         filteredData = filteredData.filter(function (row) {
-                            // Check only from_business_unit
-                            const fromMatches = row.from_business_unit && row.from_business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
-                            const toMatches = row.to_business_unit && row.to_business_unit.toLowerCase() === selectedBusinessUnit.toLowerCase();
-
-                            if (fromMatches) {
-                                // console.log('From business unit match:', row.from_business_unit);
-                            }
-                            return toMatches;
+                            const from = (row.from_business_unit || '').toLowerCase();
+                            const to = (row.to_business_unit || '').toLowerCase();
+                            const target = buClickFilter.toLowerCase();
+                            return from === target || to === target;
                         });
-                        // console.log('After business unit filter:', filteredData.length);
+                    }
+
+                    // Filter by business unit From
+                    if (selectedBuFrom !== '' && selectedBuFrom !== 'all') {
+                        filteredData = filteredData.filter(function (row) {
+                            return row.from_business_unit && row.from_business_unit.toLowerCase() === selectedBuFrom.toLowerCase();
+                        });
+                    }
+
+                    // Filter by business unit To
+                    if (selectedBuTo !== '' && selectedBuTo !== 'all') {
+                        filteredData = filteredData.filter(function (row) {
+                            return row.to_business_unit && row.to_business_unit.toLowerCase() === selectedBuTo.toLowerCase();
+                        });
                     }
 
                     // Filter by status
                     if (selectedStatus !== '') {
-                        // console.log('=== STATUS FILTER DEBUG ===');
-                        // console.log('Filtering by status:', selectedStatus, 'Type:', typeof selectedStatus);
-                        // console.log('Data before status filter:', filteredData.length);
-
-                        filteredData = filteredData.filter(function (row, index) {
-                            // console.log(`Row ${index}:`, {
-                            //     id: row.id,
-                            //     ref_id: row.ref_id,
-                            //     status: row.status,
-                            //     statusType: typeof row.status,
-                            //     selectedStatus: selectedStatus,
-                            //     selectedStatusType: typeof selectedStatus,
-                            //     stringStatus: String(row.status),
-                            //     stringSelected: String(selectedStatus),
-                            //     comparison: String(row.status) === String(selectedStatus)
-                            // });
-
-                            const matches = String(row.status) === String(selectedStatus);
-                            if (matches) {
-                                // console.log('✅ STATUS MATCH FOUND:', row.ref_id, 'status:', row.status);
-                            }
-                            return matches;
+                        filteredData = filteredData.filter(function (row) {
+                            return String(row.status) === String(selectedStatus);
                         });
-                        // console.log('=== END STATUS FILTER DEBUG ===');
-                        // console.log('After status filter:', filteredData.length);
                     }
 
                     // Filter by priority
                     if (selectedPriority !== '') {
                         filteredData = filteredData.filter(function (row) {
-                            const matches = String(row.priority) === String(selectedPriority);
-                            return matches;
+                            return String(row.priority) === String(selectedPriority);
                         });
                     }
 
-                    // Filter by location (outlet)
-                    if (selectedLocation !== '' && selectedLocation !== 'all') {
+                    // Filter by outlet From (any of the ticked outlets)
+                    if (selectedOutletFrom.length > 0) {
                         filteredData = filteredData.filter(function (row) {
-                            return String(row.from_location) === String(selectedLocation) ||
-                                String(row.to_location) === String(selectedLocation);
+                            return selectedOutletFrom.indexOf(String(row.from_location)) !== -1;
                         });
                     }
 
-                    // Filter by date range
-                    if (dateRange && dateRange.includes(' - ')) {
-                        // console.log('Filtering by date range:', dateRange);
-                        const dates = dateRange.split(' - ');
-                        // Parse YYYY-MM-DD format from date picker
-                        const startDate = new Date(dates[0]);
-                        const endDate = new Date(dates[1]);
+                    // Filter by outlet To (any of the ticked outlets)
+                    if (selectedOutletTo.length > 0) {
+                        filteredData = filteredData.filter(function (row) {
+                            return selectedOutletTo.indexOf(String(row.to_location)) !== -1;
+                        });
+                    }
 
-                        // console.log('Date range:', startDate, 'to', endDate);
+                    // Filter by Type of Referral
+                    if (selectedReferralType !== '') {
+                        filteredData = filteredData.filter(function (row) {
+                            return row.type_of_referral === selectedReferralType;
+                        });
+                    }
 
-                        // Function to parse custom date format "8 July 2025, Tuesday"
-                        function parseCustomDate(dateStr) {
-                            if (!dateStr) return null;
-
-                            // Remove day name if present (e.g., ", Tuesday")
-                            const cleanDateStr = dateStr.replace(/,\s*\w+$/, '').trim();
-
-                            // Handle format like "8 July 2025"
-                            const parts = cleanDateStr.split(' ');
-                            if (parts.length === 3) {
-                                const day = parseInt(parts[0]);
-                                const month = parts[1];
-                                const year = parseInt(parts[2]);
-
-                                // Convert month name to number
-                                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                                    'July', 'August', 'September', 'October', 'November', 'December'];
-                                const monthIndex = monthNames.findIndex(m => m.toLowerCase() === month.toLowerCase());
-
-                                if (monthIndex !== -1 && !isNaN(day) && !isNaN(year)) {
-                                    return new Date(year, monthIndex, day);
-                                }
-                            }
-
-                            // Try to parse the date directly as fallback
-                            const parsedDate = new Date(cleanDateStr);
-                            return isNaN(parsedDate.getTime()) ? null : parsedDate;
-                        }
+                    // Filter by date range (Date From / Date To, both optional)
+                    if (dateFrom !== '' || dateTo !== '') {
+                        const startDateOnly = dateFrom !== '' ? new Date(dateFrom + 'T00:00:00') : null;
+                        const endDateOnly = dateTo !== '' ? new Date(dateTo + 'T00:00:00') : null;
 
                         filteredData = filteredData.filter(function (row) {
-                            // Try ori_updated_at first (ISO format), then fall back to updated_at
                             let rowDate;
                             if (row.ori_updated_at) {
                                 rowDate = new Date(row.ori_updated_at);
@@ -1286,29 +1400,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 rowDate = parseCustomDate(row.updated_at || row.date || row.timestamp);
                             }
                             if (!rowDate) {
-                                // console.log('Invalid row date:', row.updated_at);
                                 return false;
                             }
 
-                            // Set time to start of day for comparison
                             const rowDateOnly = new Date(rowDate.getFullYear(), rowDate.getMonth(), rowDate.getDate());
-                            const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-                            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
 
-                            // console.log('Comparing dates:', {
-                            //     rowDate: rowDateOnly.toDateString(),
-                            //     startDate: startDateOnly.toDateString(),
-                            //     endDate: endDateOnly.toDateString(),
-                            //     originalRowDate: row.updated_at
-                            // });
-
-                            const isInRange = rowDateOnly >= startDateOnly && rowDateOnly <= endDateOnly;
-                            if (isInRange) {
-                                // console.log('Date match:', row.updated_at, 'parsed as:', rowDate.toDateString());
-                            }
-                            return isInRange;
+                            if (startDateOnly && rowDateOnly < startDateOnly) return false;
+                            if (endDateOnly && rowDateOnly > endDateOnly) return false;
+                            return true;
                         });
-                        // console.log('After date filter:', filteredData.length);
                     }
 
                     // Update display with filtered data
@@ -1317,7 +1417,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     displayPage(currentPage);
                 }
 
-                // Assign to global variable so date picker can access it
+                // Assign to global variable so the date filters can access it
                 globalApplyFilters = applyFilters;
             },
             error: function (xhr, status, error) {
@@ -1598,6 +1698,101 @@ document.addEventListener('DOMContentLoaded', function () {
             const columnName = document.querySelector(`[data-column="${column}"]`).textContent.trim();
             toast.info(`Sorted by ${columnName} (${directionText})`);
         }
+    }
+
+    // Export to Excel (uses the current Filter selections, mirrors report.js's generateReport)
+    function downloadBase64File(base64Data, filename, mimeType) {
+        const base64String = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+        const binaryString = atob(base64String);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: mimeType });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    }
+
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    if (exportExcelBtn) {
+        exportExcelBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const buFromOption = document.getElementById('filter-bu-from') ? document.getElementById('filter-bu-from').selectedOptions[0] : null;
+            const buToOption = document.getElementById('filter-bu-to') ? document.getElementById('filter-bu-to').selectedOptions[0] : null;
+            const buFromId = buFromOption && buFromOption.value !== 'all' ? buFromOption.dataset.id : null;
+            const buToId = buToOption && buToOption.value !== 'all' ? buToOption.dataset.id : null;
+            const outletFrom = getCheckedOutletValues('filter-outlet-from');
+            const outletTo = getCheckedOutletValues('filter-outlet-to');
+            const status = document.getElementById('filter-status') ? document.getElementById('filter-status').value : '';
+            const priority = document.getElementById('filter-priority') ? document.getElementById('filter-priority').value : '';
+            const dateFrom = document.getElementById('filter-date-from') ? document.getElementById('filter-date-from').value : '';
+            const dateTo = document.getElementById('filter-date-to') ? document.getElementById('filter-date-to').value : '';
+
+            exportExcelBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+            exportExcelBtn.style.pointerEvents = 'none';
+
+            // Fetch the full outlet code map so the export can resolve Outlet
+            // From/To codes (Laravel's own DB has no outlet code table).
+            $.ajax({
+                url: 'referral/backend.php?action=getAllOutletCodes',
+                type: 'GET',
+                dataType: 'json',
+                success: function (outletCodeMap) {
+                    const reportData = {
+                        business_unit_from: buFromId ? parseInt(buFromId) : null,
+                        business_unit_to: buToId ? parseInt(buToId) : null,
+                        outlet_from: outletFrom.length > 0 ? outletFrom.map(Number) : null,
+                        outlet_to: outletTo.length > 0 ? outletTo.map(Number) : null,
+                        status: status ? parseInt(status) : null,
+                        priority: priority ? parseInt(priority) : null,
+                        date_from: dateFrom || null,
+                        date_to: dateTo || null,
+                        is_external: false,
+                        is_referred: false,
+                        outlet_code_map: outletCodeMap || {}
+                    };
+
+                    $.ajax({
+                        url: 'referral/api-jwt.php',
+                        type: 'POST',
+                        data: { action: 'get-report', formData: reportData },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response && response.success === true && response.data && response.data.base64) {
+                                downloadBase64File(response.data.base64, response.data.filename, response.data.type);
+                            } else {
+                                const message = (response && response.message) || 'No referrals found for the current filter.';
+                                if (window.toast) {
+                                    toast.error(message);
+                                } else {
+                                    alert(message);
+                                }
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            logError(new Error('Error exporting report'), { context: 'exportExcel', status: status, error: error, responseText: xhr.responseText });
+                            alert('Export failed: ' + error);
+                        },
+                        complete: function () {
+                            exportExcelBtn.innerHTML = '<i class="bi bi-file-earmark-spreadsheet me-1"></i>Export to Excel';
+                            exportExcelBtn.style.pointerEvents = '';
+                        }
+                    });
+                },
+                error: function () {
+                    exportExcelBtn.innerHTML = '<i class="bi bi-file-earmark-spreadsheet me-1"></i>Export to Excel';
+                    exportExcelBtn.style.pointerEvents = '';
+                    alert('Failed to load outlet codes for export.');
+                }
+            });
+        });
     }
 
 });

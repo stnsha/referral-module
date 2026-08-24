@@ -16,8 +16,21 @@
     <link rel="stylesheet" media="screen" type="text/css" href="referral/css/toast.css?v=<?php echo time(); ?>" />
     <link rel="stylesheet" media="screen" type="text/css" href="referral/css/skeleton.css?v=<?php echo time(); ?>" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <style>
+        /* Dashboard-only Reset button: dedicated id so the shared
+           #resetFiltersBtn plain-link style (used by report.php) doesn't apply. */
+        #dashResetFiltersBtn {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: #fff;
+        }
 
+        #dashResetFiltersBtn:hover {
+            background-color: #5c636a;
+            border-color: #565e64;
+            color: #fff;
+        }
+    </style>
 </head>
 <?php
 require_once('../lock_adv.php');
@@ -27,12 +40,12 @@ include('../common/index_adv.php');
 ?>
 
 <body>
+    <?php include('navbar.php'); ?>
     <div class="header" style="position: relative;">
         <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
         <h1 class="headerH1"><img src='common/img/myreferral.png' width='20px'>MyReferral</h1>
         <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
     </div>
-    <?php include('navbar.php'); ?>
     <div class="referral-container mb-3">
         <div class="row mb-3">
             <div class="col-12">
@@ -43,8 +56,8 @@ include('../common/index_adv.php');
             </div>
         </div>
         <div class="row align-items-stretch mb-3 px-3 g-2">
-            <div class="col-4">
-                <div class="d-flex flex-column p-3 rounded-2 shadow align-items-start mb-3"
+            <div class="col-3">
+                <div class="d-flex flex-column h-100 p-3 rounded-2 shadow align-items-start mb-3"
                     style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
                         <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
@@ -74,8 +87,8 @@ include('../common/index_adv.php');
                     </div>
                 </div>
             </div>
-            <div class="col-4">
-                <div class="d-flex flex-column p-3 rounded-2 shadow align-items-start mb-3"
+            <div class="col-3">
+                <div class="d-flex flex-column h-100 p-3 rounded-2 shadow align-items-start mb-3"
                     style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
                         <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
@@ -97,8 +110,23 @@ include('../common/index_adv.php');
                     </div>
                 </div>
             </div>
-            <div class="col-4">
-                <div class="d-flex flex-column p-3 rounded-2 shadow align-items-start mb-3"
+            <div class="col-3">
+                <div class="d-flex flex-column h-100 p-3 rounded-2 shadow align-items-start mb-3"
+                    style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
+                    <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
+                        <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
+                            id="total-type-of-referral-count">0</span>
+                        <span style="font-size:16px; color: #173F5F; line-height: 1; margin-left: 8px;"
+                            class="fw-bold">Type of
+                            Referral</span>
+                    </div>
+                    <div class="w-100" id="type-of-referral-list">
+                        <!-- Type of Referral breakdown rows populated by JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="d-flex flex-column h-100 p-3 rounded-2 shadow align-items-start mb-3"
                     style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <div class="d-flex justify-content-center align-items-end mb-2" style="line-height: 1;">
                         <span class="fw-bold" style="font-size: 32px !important; color: #173F5F; line-height: 1;"
@@ -126,7 +154,7 @@ include('../common/index_adv.php');
         <div class="row mb-3 px-3">
             <div class="col-12">
                 <div class="d-flex flex-column rounded-2 shadow p-2"
-                    style="overflow:hidden; background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
+                    style="background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);">
                     <span class="fw-bold text-start pt-3 pb-2" style="font-size:14px;">Filter</span>
 
                     <!-- Referral Type Filter -->
@@ -146,42 +174,100 @@ include('../common/index_adv.php');
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between pb-3 mb-2">
-                        <div class="d-flex gap-2" style="flex: 1; max-width: 70%;">
-                            <select name="filter-business-unit" id="filter-business-unit"
-                                class="form-select form-select-sm text-capitalize">
-                            </select>
+                    <!-- Filter row 1: Business Unit From | Business Unit To | Outlet From | Outlet To -->
+                    <div class="row g-2 align-items-end mb-2">
+                        <div class="col-md-3">
+                            <label for="filter-bu-from" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Business Unit
+                                From</label>
+                            <select name="filter-bu-from" id="filter-bu-from"
+                                class="form-select form-select-sm text-capitalize"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter-bu-to" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Business Unit
+                                To</label>
+                            <select name="filter-bu-to" id="filter-bu-to"
+                                class="form-select form-select-sm text-capitalize"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter-outlet-from-btn" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Outlet
+                                From</label>
+                            <div class="vf-issuer-wrap" id="filter-outlet-from-wrap">
+                                <div class="vf-s2-selection" id="filter-outlet-from-btn"
+                                    tabindex="0">All Outlets</div>
+                                <div class="vf-s2-dropdown" id="filter-outlet-from-dropdown">
+                                    <div class="vf-s2-search-wrap">
+                                        <input class="vf-s2-search" id="filter-outlet-from-search" type="search"
+                                            placeholder="Search outlet...">
+                                    </div>
+                                    <ul class="vf-s2-list" id="filter-outlet-from-list"></ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter-outlet-to-btn" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Outlet To</label>
+                            <div class="vf-issuer-wrap" id="filter-outlet-to-wrap">
+                                <div class="vf-s2-selection" id="filter-outlet-to-btn" tabindex="0">All
+                                    Outlets</div>
+                                <div class="vf-s2-dropdown" id="filter-outlet-to-dropdown">
+                                    <div class="vf-s2-search-wrap">
+                                        <input class="vf-s2-search" id="filter-outlet-to-search" type="search"
+                                            placeholder="Search outlet...">
+                                    </div>
+                                    <ul class="vf-s2-list" id="filter-outlet-to-list"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter row 2: Status | Priority | Date From | Date To -->
+                    <div class="row g-2 align-items-end mb-2">
+                        <div class="col-md-3">
+                            <label for="filter-status" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Status</label>
                             <select name="filter-status" id="filter-status"
-                                class="form-select form-select-sm text-capitalize">
-                            </select>
+                                class="form-select form-select-sm text-capitalize"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter-priority" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Priority</label>
                             <select name="filter-priority" id="filter-priority"
-                                class="form-select form-select-sm text-capitalize">
-                            </select>
-                            <select name="filter-location" id="filter-location"
-                                class="form-select form-select-sm">
-                            </select>
-                            <input type="text" class="form-control form-control-sm" name="filter-date-range"
-                                id="filter-date-range" placeholder="Select Date Range">
+                                class="form-select form-select-sm text-capitalize"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter-date-from" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Date From</label>
+                            <input type="date" class="form-control form-control-sm" name="filter-date-from"
+                                id="filter-date-from">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter-date-to" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Date To</label>
+                            <input type="date" class="form-control form-control-sm" name="filter-date-to"
+                                id="filter-date-to">
+                        </div>
+                    </div>
+
+                    <!-- Filter row 3: Referral ID | Type of Referral | actions -->
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label for="filter-referral-id" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Referral
+                                ID</label>
                             <input type="text" class="form-control form-control-sm" name="filter-referral-id"
                                 id="filter-referral-id" placeholder="#REF0001">
-                            <button type="button" id="resetFiltersBtn" class="btn btn-outline-secondary btn-sm"
-                                style="white-space: nowrap; padding: 0.25rem 0.5rem; font-size: 0.875rem;">Reset
-                                Filters</button>
                         </div>
-                        <div class="d-inline-flex align-items-center">
-
-                            <!-- <button type=" button" class="btn-referral" id="generateReportBtn"
-                                aria-expanded="false" aria-controls="generate-report">
-                                Generate Report
-                                </button>
-                                <div class="generate-report ms-2" id="generate-report" style="display: none;">
-                                    <select name="report-parameter" id="report-parameter"
-                                        class="form-select form-select-sm text-capitalize">
-                                        <option value="monthly">Monthly</option>
-                                        <option value="quarterly">Quarterly</option>
-                                        <option value="yearly">Yearly</option>
-                                    </select>
-                                </div> -->
+                        <div class="col-md-3">
+                            <label for="filter-referral-type" class="form-label d-block text-start" style="font-size:12px; text-align:left;">Type
+                                of Referral</label>
+                            <select name="filter-referral-type" id="filter-referral-type"
+                                class="form-select form-select-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex gap-2 justify-content-end align-items-end">
+                            <button type="button" class="btn btn-success btn-sm flex-fill" id="exportExcelBtn"
+                                title="Export current filter results to Excel">
+                                <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export to Excel
+                            </button>
+                            <button type="button" class="btn btn-sm flex-fill" id="dashResetFiltersBtn"
+                                title="Reset Filters">
+                                <i class="bi bi-x-lg me-1"></i>Reset
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -200,8 +286,13 @@ include('../common/index_adv.php');
                                     Referral ID <i class="bi bi-arrow-down-up" style="font-size:12px;opacity:0.5;"></i>
                                 </th>
                                 <th class="sortable" data-column="reason"
-                                    style="font-size:14px;width: 34%;text-align:start;cursor:pointer;user-select:none;">
+                                    style="font-size:14px;width: 26%;text-align:start;cursor:pointer;user-select:none;">
                                     Referral Reason <i class="bi bi-arrow-down-up"
+                                        style="font-size:12px;opacity:0.5;"></i>
+                                </th>
+                                <th class="sortable" data-column="type_of_referral"
+                                    style="font-size:14px;width: 8%;text-align:start;cursor:pointer;user-select:none;white-space:nowrap;">
+                                    Type of Referral <i class="bi bi-arrow-down-up"
                                         style="font-size:12px;opacity:0.5;"></i>
                                 </th>
                                 <th class="sortable" data-column="from_business_unit"
@@ -238,7 +329,6 @@ include('../common/index_adv.php');
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
     <script>

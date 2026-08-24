@@ -1010,6 +1010,25 @@ function getOutletCodes($ids)
     return $map;
 }
 
+/**
+ * Get id => code map for every active outlet (recycle != 1).
+ * Used to resolve outlet codes for the report export, since the
+ * referral-api's own database has no outlet code table.
+ */
+function getAllOutletCodes()
+{
+    global $conn;
+
+    $result = mysqli_query($conn, "SELECT id, code FROM outlet WHERE recycle != 1");
+
+    $map = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $map[$row['id']] = $row['code'];
+    }
+
+    return $map;
+}
+
 function getOutletNames($outlet_csv)
 {
     global $conn;
@@ -1195,6 +1214,13 @@ if (isset($_GET['action']) && $_GET['action'] == 'getOutletCodes') {
     header('Content-Type: application/json');
     $ids = isset($_POST['ids']) ? array_map('intval', explode(',', $_POST['ids'])) : array();
     echo json_encode(getOutletCodes($ids));
+    exit;
+}
+
+// Get id => code map for every active outlet (for report export)
+if (isset($_GET['action']) && $_GET['action'] == 'getAllOutletCodes') {
+    header('Content-Type: application/json');
+    echo json_encode(getAllOutletCodes());
     exit;
 }
 
