@@ -1016,7 +1016,13 @@ function getReportDashboard($staff_id)
 
 function getReport($formData, $staff_id)
 {
-    $result = getApiDataWithJWT('report', array($formData), 'POST', $staff_id);
+    // NOTE: must send $formData as-is (NOT wrapped in array()). Wrapping it
+    // turns the JSON body into a top-level array ([{...}]) instead of an
+    // object ({...}), and Laravel's $request->input() then returns null for
+    // every field - the report endpoint silently ignored ALL filters
+    // (business unit, outlet, status, priority, dates, outlet_code_map) and
+    // always returned the full unfiltered dataset.
+    $result = getApiDataWithJWT('report', $formData, 'POST', $staff_id);
 
     $httpCode = $result['httpCode'];
     $decoded = json_decode($result['response'], true);
