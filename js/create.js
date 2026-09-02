@@ -606,6 +606,24 @@ $(document).ready(function () {
                             class: 'error-message',
                             css: { color: 'red', fontSize: '12px' }
                         }));
+
+                        // Which consultation the referral is for. Loaded from the
+                        // consult call's completed details once a valid id is
+                        // entered; decides which consult_call_follow_ups row
+                        // link-referral-by-call updates.
+                        consultWrapper.append($('<p>', { class: 'r-text mt-2' }).html('Consultation<span style="color:red;">*</span>'));
+                        consultWrapper.append($('<select>', {
+                            name: 'consult_call_detail_id',
+                            id: 'consult_call_detail_id_visible',
+                            class: 'form-select form-select-sm',
+                            disabled: true
+                        }));
+                        consultWrapper.append($('<div>', {
+                            id: 'error-consult-call-detail',
+                            class: 'error-message',
+                            css: { color: 'red', fontSize: '12px' }
+                        }));
+
                         formContainer.after(consultWrapper);
 
                         // Strip all non-digit characters on input (e.g. "#CC12" becomes "12")
@@ -613,6 +631,11 @@ $(document).ready(function () {
                             var stripped = $(this).val().replace(/\D/g, '');
                             $(this).val(stripped);
                         });
+                        // Reload the consultation list when the id changes.
+                        $(document).off('change.consultCallId blur.consultCallId')
+                            .on('change.consultCallId blur.consultCallId', '#consult_call_id_visible', function () {
+                                loadConsultationOptions($(this).val());
+                            });
                     }
                 });
 
@@ -624,6 +647,43 @@ $(document).ready(function () {
             ,
             error: function () {
                 console.log('Failed to display form details');
+            }
+        });
+    }
+
+    // Populate #consult_call_detail_id_visible with the completed consultations of
+    // the given consult call. Auto-selects the latest, or preselectDetailId when
+    // supplied (e.g. from a URL param).
+    function loadConsultationOptions(ccId, preselectDetailId) {
+        var $sel = $('#consult_call_detail_id_visible');
+        if (!$sel.length) return;
+        ccId = parseInt(ccId, 10);
+        if (!ccId) {
+            $sel.empty().prop('disabled', true);
+            return;
+        }
+        $.ajax({
+            url: 'consultcall/api-jwt.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ action: 'get-consult-call', id: ccId }),
+            success: function (resp) {
+                var details = (resp && resp.data && resp.data.details) ? resp.data.details : [];
+                var completed = details.filter(function (d) { return String(d.consult_status) === '1'; });
+                $sel.empty();
+                if (completed.length === 0) {
+                    $sel.append($('<option>', { value: '', text: 'No completed consultation found' })).prop('disabled', true);
+                    return;
+                }
+                completed.forEach(function (d) {
+                    var label = (d.consult_date ? String(d.consult_date).substring(0, 10) : ('Consultation #' + d.id)) + ' — Completed';
+                    $sel.append($('<option>', { value: d.id, text: label }));
+                });
+                var target = preselectDetailId || completed[completed.length - 1].id;
+                $sel.val(String(target)).prop('disabled', false);
+            },
+            error: function () {
+                $sel.empty().append($('<option>', { value: '', text: 'Could not load consultations' })).prop('disabled', true);
             }
         });
     }
@@ -666,6 +726,7 @@ $(document).ready(function () {
         } else {
             consultWrapper.hide();
             $('#consult_call_id_visible').prop('disabled', true).val('');
+            $('#consult_call_detail_id_visible').prop('disabled', true).empty();
         }
     }
 
@@ -1360,6 +1421,7 @@ $(document).ready(function () {
                 }
 
                 $('#consult_call_id_visible').val(consultCallId).prop('disabled', false);
+                loadConsultationOptions(consultCallId, consultCallDetailId || null);
                 typeOption.trigger('change');
                 return true;
             };
@@ -1758,6 +1820,11 @@ function validateForm(event) {
         } else if (!/^\d+$/.test(consultCallIdVal) || parseInt(consultCallIdVal) <= 0) {
             markError("consult-call-id", true, "Consult Call ID must be a positive number.");
         }
+
+        var consultDetailVal = $('#consult_call_detail_id_visible').val();
+        if (isEmpty(consultDetailVal)) {
+            markError("consult-call-detail", true, "Select which consultation this referral is for.");
+        }
     }
 
     if (hasError) {
@@ -1821,6 +1888,7 @@ function validateForm(event) {
 
                     const redirectUrl = 'referral/successful.php?id=' + inner.id + '&sequence=1';
                     const ccIdVisible = parseInt($('#consult_call_id_visible').val());
+                    const ccDetailIdVisible = parseInt($('#consult_call_detail_id_visible').val());
                     const ccId = parseInt($('#consult_call_id').val());
                     const fuId = parseInt($('#follow_up_id').val());
                     const locationTo = $('#location_to').val();
@@ -1833,6 +1901,9 @@ function validateForm(event) {
                             my_referral_id: inner.id,
                             referral_to: locationTo ? parseInt(locationTo) : null
                         };
+                        if (ccDetailIdVisible) {
+                            payload.consult_call_detail_id = ccDetailIdVisible;
+                        }
                         $.ajax({
                             url: 'consultcall/api-jwt.php',
                             type: 'POST',
@@ -1845,8 +1916,8 @@ function validateForm(event) {
                                 // on the manual path, which only collected a call id.
                                 var fu = linkResp && linkResp.data ? linkResp.data : null;
                                 var detailId = fu && fu.consult_call_detail_id ? fu.consult_call_detail_id : null;
-                                var passedDetailId = parseInt($('#consult_call_detail_id').val());
-                                var finalDetailId = detailId || (passedDetailId || null);
+                                var finalDetailId = (ccDetailIdVisible || null) || detailId ||
+                                    (parseInt($('#consult_call_detail_id').val()) || null);
                                 if (finalDetailId) {
                                     $.ajax({
                                         url: 'referral/api-jwt.php',
