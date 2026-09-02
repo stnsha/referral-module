@@ -1308,6 +1308,26 @@ function createExternalReferee($data, $staff_id)
     }
 }
 
+function linkReferralConsultation($referral_id, $data, $staff_id)
+{
+    $result = getApiDataWithJWT('referral/' . $referral_id . '/consultation-link', $data, 'PATCH', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Referral consultation link updated',
+            'data' => isset($decoded['data']) ? $decoded['data'] : null
+        );
+    }
+
+    return array(
+        'success' => false,
+        'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update referral consultation link'
+    );
+}
+
 function updateExternalReferee($referee_id, $data, $staff_id)
 {
     $result = getApiDataWithJWT('external-referees/' . $referee_id, $data, 'PUT', $staff_id);
@@ -2109,6 +2129,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($referral_id) {
                     downloadExternalForm($referral_id, $staff_id, $sequence);
                     return;
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing referral_id');
+                }
+                break;
+
+            case 'link-consultation':
+                $referral_id = isset($jsonData['referral_id']) ? (int)$jsonData['referral_id'] : null;
+                if ($referral_id) {
+                    $linkData = array();
+                    if (isset($jsonData['consult_call_id']) && (int)$jsonData['consult_call_id'] > 0) {
+                        $linkData['consult_call_id'] = (int)$jsonData['consult_call_id'];
+                    }
+                    if (isset($jsonData['consult_call_detail_id']) && (int)$jsonData['consult_call_detail_id'] > 0) {
+                        $linkData['consult_call_detail_id'] = (int)$jsonData['consult_call_detail_id'];
+                    }
+                    $response = linkReferralConsultation($referral_id, $linkData, $staff_id);
                 } else {
                     $response = array('success' => false, 'message' => 'Missing referral_id');
                 }

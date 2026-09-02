@@ -1838,7 +1838,33 @@ function validateForm(event) {
                             type: 'POST',
                             contentType: 'application/json',
                             data: JSON.stringify(payload),
-                            complete: function() {
+                            success: function(linkResp) {
+                                // The linked follow-up carries consult_call_detail_id.
+                                // Copy it onto the referral so
+                                // referrals.consult_call_detail_id is populated even
+                                // on the manual path, which only collected a call id.
+                                var fu = linkResp && linkResp.data ? linkResp.data : null;
+                                var detailId = fu && fu.consult_call_detail_id ? fu.consult_call_detail_id : null;
+                                var passedDetailId = parseInt($('#consult_call_detail_id').val());
+                                var finalDetailId = detailId || (passedDetailId || null);
+                                if (finalDetailId) {
+                                    $.ajax({
+                                        url: 'referral/api-jwt.php',
+                                        type: 'POST',
+                                        contentType: 'application/json',
+                                        data: JSON.stringify({
+                                            action: 'link-consultation',
+                                            referral_id: inner.id,
+                                            consult_call_id: ccIdVisible,
+                                            consult_call_detail_id: finalDetailId
+                                        }),
+                                        complete: function() { window.location.href = redirectUrl; }
+                                    });
+                                } else {
+                                    window.location.href = redirectUrl;
+                                }
+                            },
+                            error: function() {
                                 window.location.href = redirectUrl;
                             }
                         });
