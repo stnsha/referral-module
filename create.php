@@ -33,6 +33,7 @@ include('../common/index_adv.php');
         <form action="referral/post.php" method="POST" id="referral-form" name="referral-form"
             onsubmit="validateForm(event)" enctype="multipart/form-data">
             <input type="hidden" name="consult_call_id" id="consult_call_id" value="">
+            <input type="hidden" name="consult_call_detail_id" id="consult_call_detail_id" value="">
             <input type="hidden" name="follow_up_id" id="follow_up_id" value="">
             <div class="row align-items-start text-start py-2 px-4">
                 <div class="col h-auto border rounded me-2 p-2">

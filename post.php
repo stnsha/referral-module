@@ -33,7 +33,8 @@ $assigneeData = array(
 $referralData = array(
     'customer_id' => isset($_POST['customer_id']) ? (int)$_POST['customer_id'] : null,
     'priority' => isset($_POST['priority']) ? (int)$_POST['priority'] : null,
-    'consult_call_id' => (isset($_POST['consult_call_id']) && $_POST['consult_call_id'] !== '') ? (int)$_POST['consult_call_id'] : null
+    'consult_call_id' => (isset($_POST['consult_call_id']) && $_POST['consult_call_id'] !== '') ? (int)$_POST['consult_call_id'] : null,
+    'consult_call_detail_id' => (isset($_POST['consult_call_detail_id']) && $_POST['consult_call_detail_id'] !== '') ? (int)$_POST['consult_call_detail_id'] : null
 );
 
 // Validate customer_id - must be a positive integer
@@ -149,6 +150,7 @@ foreach ($_POST as $key => $value) {
         'new_recipient_phone',
         'new_recipient_position',
         'consult_call_id',
+        'consult_call_detail_id',
         'follow_up_id',
         'id_type'
     ))) {

@@ -1303,6 +1303,7 @@ $(document).ready(function () {
         var reason = params.get('referral_reason');
         var condition = params.get('referral_condition');
         var consultCallId = params.get('consult_call_id');
+        var consultCallDetailId = params.get('consult_call_detail_id');
         var followUpId = params.get('follow_up_id');
         if (ic) {
             $('input[name="customer_mode"][value="existing"]').prop('checked', true);
@@ -1318,8 +1319,58 @@ $(document).ready(function () {
         if (consultCallId) {
             $('#consult_call_id').val(consultCallId);
         }
+        if (consultCallDetailId) {
+            $('#consult_call_detail_id').val(consultCallDetailId);
+        }
         if (followUpId) {
             $('#follow_up_id').val(followUpId);
+        }
+
+        // Launched from the ConsultCall app: force the referral type to ConsultCall
+        // (form_id 1 / option 3 "Clinic"), prefill the consult call id, and hide
+        // the other type choices so the wrong one cannot be picked. The type form
+        // is rendered asynchronously by displayContent(), so wait for it.
+        if (consultCallId) {
+            var applyConsultCallPreset = function () {
+                var typeOption = $('[data-form-id="1"] input[value="3"]');
+                if (typeOption.length === 0) {
+                    return false;
+                }
+
+                typeOption.prop('checked', true);
+
+                // Hide every other referral-type container.
+                $('.content .form-container').each(function () {
+                    if ($(this).attr('data-form-id') !== '1') {
+                        $(this).hide().find('input, select, textarea').prop('disabled', true);
+                    }
+                });
+
+                // Within form_id 1, hide every option that is not ConsultCall (3).
+                $('[data-form-id="1"] .form-check').each(function () {
+                    var opt = $(this).find('input[type="radio"], input[type="checkbox"]');
+                    if (opt.length && opt.val() !== '3') {
+                        $(this).hide();
+                        opt.prop('disabled', true).prop('checked', false);
+                    }
+                });
+
+                if (typeof evaluateConditions === 'function') {
+                    evaluateConditions();
+                }
+
+                $('#consult_call_id_visible').val(consultCallId).prop('disabled', false);
+                typeOption.trigger('change');
+                return true;
+            };
+
+            var presetTries = 0;
+            var presetTimer = setInterval(function () {
+                presetTries++;
+                if (applyConsultCallPreset() || presetTries > 40) {
+                    clearInterval(presetTimer);
+                }
+            }, 150);
         }
     }());
 });
