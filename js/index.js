@@ -1701,6 +1701,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const priority = document.getElementById('filter-priority') ? document.getElementById('filter-priority').value : '';
             const dateFrom = document.getElementById('filter-date-from') ? document.getElementById('filter-date-from').value : '';
             const dateTo = document.getElementById('filter-date-to') ? document.getElementById('filter-date-to').value : '';
+            const referralId = document.getElementById('filter-referral-id') ? document.getElementById('filter-referral-id').value.trim() : '';
+            const referralType = document.getElementById('filter-referral-type') ? document.getElementById('filter-referral-type').value : '';
 
             exportExcelBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
             exportExcelBtn.style.pointerEvents = 'none';
@@ -1721,6 +1723,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         priority: priority ? parseInt(priority) : null,
                         date_from: dateFrom || null,
                         date_to: dateTo || null,
+                        referral_id: referralId || null,
+                        type_of_referral: referralType || null,
                         is_external: false,
                         is_referred: false,
                         outlet_code_map: outletCodeMap || {}
