@@ -651,6 +651,16 @@ $(document).ready(function () {
         });
     }
 
+    // Formats an ISO/UTC date string to local calendar date (YYYY-MM-DD).
+    // A raw substring(0, 10) on the API string would grab the UTC date, which
+    // can be a day off from the local date consult_date actually represents.
+    function formatLocalDate(dateStr) {
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return String(dateStr).substring(0, 10);
+        var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
     // Populate #consult_call_detail_id_visible with the completed consultations of
     // the given consult call. Auto-selects the latest, or preselectDetailId when
     // supplied (e.g. from a URL param).
@@ -676,7 +686,7 @@ $(document).ready(function () {
                     return;
                 }
                 completed.forEach(function (d) {
-                    var label = (d.consult_date ? String(d.consult_date).substring(0, 10) : ('Consultation #' + d.id)) + ' — Completed';
+                    var label = (d.consult_date ? formatLocalDate(d.consult_date) : ('Consultation #' + d.id)) + ' — Completed';
                     $sel.append($('<option>', { value: d.id, text: label }));
                 });
                 var target = preselectDetailId || completed[completed.length - 1].id;
