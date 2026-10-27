@@ -339,7 +339,7 @@ Select one:
 
 ---
 
-#### **STEP 6: Complete Current/Past Treatments Section**
+#### **STEP 6: Complete Additional Information Section**
 
 This section shows **dynamic forms** based on the selected recipient department.
 
@@ -1294,7 +1294,7 @@ Please archive the form instead.
 
 1. User selects recipient business unit
 2. System checks for forms for that unit
-3. Forms automatically load in "Current/Past Treatments" section
+3. Forms automatically load in "Additional Information" section
 4. All fields appear dynamically
 5. Required fields must be filled before submission
 
@@ -1303,7 +1303,7 @@ Please archive the form instead.
 **Scenario**: Referring to Alpro Physio
 
 1. Select "Referring To": Alpro Physio
-2. Page scrolls to "Current/Past Treatments"
+2. Page scrolls to "Additional Information"
 3. Section shows: "Alpro Physio"
 4. Form "Physiotherapy Assessment" appears
 5. All 5 fields displayed:

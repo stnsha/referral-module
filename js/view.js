@@ -900,7 +900,7 @@ function processAccordionContent(queueItem, panel, accordion, shouldAutoOpen = f
     if (rd.referral_details && rd.referral_details.length > 0) {
         panel.append(`
                 <div class="treatment-section">
-                    <p class="r-title">Current/Past Treatment</p>
+                    <p class="r-title">Additional Information</p>
                 </div>
             `);
 

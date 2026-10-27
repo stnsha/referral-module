@@ -426,7 +426,7 @@ include('../common/index_adv.php');
                         </div>
                     </div>
                     <div class="border-bottom pb-3 mb-3">
-                        <p class="r-title">Current/Past Treatments</p>
+                        <p class="r-title">Additional Information</p>
 
                         <div class="business-unit-1 content">
                             <!-- style="display:none;"-->

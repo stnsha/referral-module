@@ -9,15 +9,10 @@ function loadBusinessUnits() {
             var $container = $('#business-units-container');
             $container.empty();
 
-            var preSelectedIds = [];
-
+            // No business unit is preselected: the admin's own unit (e.g. HQ) is
+            // not necessarily one the new form should be attached to. The Admin
+            // Panel is SuperAdmin-only, and the API lets SuperAdmin attach any units.
             $.each(data.data, function (i, unit) {
-                var isMatch = false;
-
-                if (staffBusinessUnitId && unit.id === staffBusinessUnitId) { isMatch = true; }
-
-                if (isMatch) { preSelectedIds.push(unit.id); }
-
                 var $label = $('<label>', {
                     class: 'form-check-label r-text text-capitalize',
                     'for': 'bu-check-' + unit.id,
@@ -34,12 +29,6 @@ function loadBusinessUnits() {
                 var $wrap = $('<div>', { class: 'form-check mb-0' }).append($cb).append($label);
                 $container.append($wrap);
             });
-
-            if (preSelectedIds.length > 0) {
-                $.each(preSelectedIds, function (i, id) {
-                    $('#bu-check-' + id).prop('checked', true).prop('disabled', true);
-                });
-            }
         },
         error: function () {
             $('#error-business-units').text('Failed to load business units');

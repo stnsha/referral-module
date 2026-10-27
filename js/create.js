@@ -433,6 +433,130 @@ $(document).ready(function () {
         });
     }
 
+    // Build the DOM container for one creation form. source is "sender" for
+    // forms attached to the Refer From business unit and "recipient" for forms
+    // attached to the Refer To business unit.
+    function buildFormContainer(form, source) {
+        const { form_id, label_name, form_details, conditions } = form;
+        const isConditional = Array.isArray(conditions) && conditions.length > 0;
+        const triggerIds = isConditional ? conditions.map(function(c) { return c.trigger_form_detail_id; }) : [];
+        const formContainer = $('<div>', {
+            class: 'form-container mb-3',
+            'data-form-id': form_id,
+            'data-conditional': isConditional ? '1' : '0',
+            'data-triggers': JSON.stringify(triggerIds),
+            css: { display: isConditional ? 'none' : '' }
+        });
+        const normalizedDetails = Array.isArray(form_details)
+            ? form_details
+            : Object.values(form_details || {});
+
+        normalizedDetails.forEach(detail => {
+            const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
+
+            const errorId = 'error-' + field_name;
+            const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
+
+            let wrapper;
+            let input;
+
+            wrapper = $('<div class="mb-2"></div>');
+
+            if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
+                wrapper = $('<div class="mb-2"></div>');
+                const label = $('<p class="r-text"></p>').html(labelText);
+                input = $('<div></div>');
+
+                field_value.forEach(option => {
+                    const optionWrapper = $('<div class="form-check"></div>');
+                    const inputField = $('<input>', {
+                        type: field_type,
+                        class: 'form-check-input border',
+                        name: field_name + (field_type === 'checkbox' ? '[]' : ''),
+                        value: option.form_detail_id,
+                        'data-required': is_required
+                    });
+                    const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
+                    optionWrapper.append(inputField, inputLabel);
+                    input.append(optionWrapper);
+                });
+
+                wrapper.append(label, input);
+
+            } else if (field_type === 'select' && Array.isArray(field_value)) {
+                wrapper = $('<div class="col mb-2"></div>');
+                input = $('<select>', {
+                    name: field_name,
+                    id: field_name,
+                    class: 'form-select form-select-sm text-capitalize',
+                    'data-required': is_required
+                });
+
+                input.append($('<option>', {
+                    value: '',
+                    text: label_name
+                }));
+
+                field_value.forEach(option => {
+                    input.append($('<option>', {
+                        value: option.form_detail_id,
+                        text: option.field_value
+                    }));
+                });
+
+                wrapper.append(input);
+
+            } else if (field_type === 'textarea') {
+                wrapper = $('<div class="mb-2"></div>');
+                const label = $('<p class="r-text"></p>').html(labelText);
+                input = $('<textarea>', {
+                    name: field_name,
+                    class: 'form-control form-control-sm',
+                    rows: 10,
+                    'data-required': is_required
+                }).text(field_value || '');
+                wrapper.append(label, input);
+            } else {
+                wrapper = $('<div class="mb-2"></div>');
+                const label = $('<p class="r-text"></p>').html(labelText);
+                input = $('<input>', {
+                    type: field_type,
+                    name: field_name,
+                    class: 'form-control form-control-sm',
+                    value: field_value || '',
+                    'data-required': is_required
+                });
+                wrapper.append(label, input);
+            }
+
+            const errorDiv = $('<div>', {
+                id: errorId,
+                class: 'error-message',
+                css: {
+                    color: 'red',
+                    fontSize: '12px'
+                }
+            });
+
+            wrapper.append(input);
+            wrapper.append(errorDiv);
+            formContainer.append(wrapper);
+
+        });
+        if (isConditional) {
+            formContainer.find('input, select, textarea').prop('disabled', true);
+        }
+        formContainer.attr('data-source', source);
+        return formContainer;
+    }
+
+    // Container that holds the creation forms of the Refer From business unit.
+    // Recipient forms are appended to the same container so they are submitted
+    // with the rest of the form.
+    var senderFormTarget = null;
+    var senderFormBuId = null;
+    var recipientFormsRequest = 0;
+
     // Function to display content based on business unit ID
     function displayContent(businessUnitId) {
         $.ajax({
@@ -466,12 +590,16 @@ $(document).ready(function () {
                 targetDiv.show();
                 targetDiv.find('[data-required="true"]').prop('required', true);
                 $('.content .form-container').remove();
+                senderFormTarget = targetDiv;
+                senderFormBuId = businessUnitId;
 
                 if (!Array.isArray(forms) || forms.length === 0) {
                     console.warn('displayContent: no forms returned for BU', businessUnitId);
+                    displayRecipientContent($('input[name="business_unit_id_to"]').val());
                     return;
                 }
-                forms.forEach(({ form_id, label_name, is_hidden, display_on, form_details, conditions }) => {
+                forms.forEach((form) => {
+                    const { form_id, is_hidden, display_on } = form;
                     // Skip hidden forms
                     if (is_hidden === true) {
                         return;
@@ -480,114 +608,7 @@ $(document).ready(function () {
                     if (display_on === 'reply') {
                         return;
                     }
-                    const isConditional = Array.isArray(conditions) && conditions.length > 0;
-                    const triggerIds = isConditional ? conditions.map(function(c) { return c.trigger_form_detail_id; }) : [];
-                    const formContainer = $('<div>', {
-                        class: 'form-container mb-3',
-                        'data-form-id': form_id,
-                        'data-conditional': isConditional ? '1' : '0',
-                        'data-triggers': JSON.stringify(triggerIds),
-                        css: { display: isConditional ? 'none' : '' }
-                    });
-                    const normalizedDetails = Array.isArray(form_details)
-                        ? form_details
-                        : Object.values(form_details || {});
-
-                    normalizedDetails.forEach(detail => {
-                        const { form_detail_id, field_name, field_type, is_required, field_value } = detail;
-
-                        const errorId = 'error-' + field_name;
-                        const labelText = label_name + (is_required ? '<span style="color:red;">*</span>' : '');
-
-                        let wrapper;
-                        let input;
-
-                        wrapper = $('<div class="mb-2"></div>');
-
-                        if ((field_type === 'radio' || field_type === 'checkbox') && Array.isArray(field_value)) {
-                            wrapper = $('<div class="mb-2"></div>');
-                            const label = $('<p class="r-text"></p>').html(labelText);
-                            input = $('<div></div>');
-
-                            field_value.forEach(option => {
-                                const optionWrapper = $('<div class="form-check"></div>');
-                                const inputField = $('<input>', {
-                                    type: field_type,
-                                    class: 'form-check-input border',
-                                    name: field_name + (field_type === 'checkbox' ? '[]' : ''),
-                                    value: option.form_detail_id,
-                                    'data-required': is_required
-                                });
-                                const inputLabel = $('<label class="form-check-label r-text"></label>').text(option.field_value);
-                                optionWrapper.append(inputField, inputLabel);
-                                input.append(optionWrapper);
-                            });
-
-                            wrapper.append(label, input);
-
-                        } else if (field_type === 'select' && Array.isArray(field_value)) {
-                            wrapper = $('<div class="col mb-2"></div>');
-                            input = $('<select>', {
-                                name: field_name,
-                                id: field_name,
-                                class: 'form-select form-select-sm text-capitalize',
-                                'data-required': is_required
-                            });
-
-                            input.append($('<option>', {
-                                value: '',
-                                text: label_name
-                            }));
-
-                            field_value.forEach(option => {
-                                input.append($('<option>', {
-                                    value: option.form_detail_id,
-                                    text: option.field_value
-                                }));
-                            });
-
-                            wrapper.append(input);
-
-                        } else if (field_type === 'textarea') {
-                            wrapper = $('<div class="mb-2"></div>');
-                            const label = $('<p class="r-text"></p>').html(labelText);
-                            input = $('<textarea>', {
-                                name: field_name,
-                                class: 'form-control form-control-sm',
-                                rows: 10,
-                                'data-required': is_required
-                            }).text(field_value || '');
-                            wrapper.append(label, input);
-                        } else {
-                            wrapper = $('<div class="mb-2"></div>');
-                            const label = $('<p class="r-text"></p>').html(labelText);
-                            input = $('<input>', {
-                                type: field_type,
-                                name: field_name,
-                                class: 'form-control form-control-sm',
-                                value: field_value || '',
-                                'data-required': is_required
-                            });
-                            wrapper.append(label, input);
-                        }
-
-                        const errorDiv = $('<div>', {
-                            id: errorId,
-                            class: 'error-message',
-                            css: {
-                                color: 'red',
-                                fontSize: '12px'
-                            }
-                        });
-
-                        wrapper.append(input);
-                        wrapper.append(errorDiv);
-                        formContainer.append(wrapper);
-
-                    });
-                    if (isConditional) {
-                        formContainer.find('input, select, textarea').prop('disabled', true);
-                    }
+                    const formContainer = buildFormContainer(form, 'sender');
                     targetDiv.append(formContainer);
 
                     // Inject consult_call_id field after form_id=1 container
@@ -643,10 +664,60 @@ $(document).ready(function () {
                 $(document).off('change.formConditions').on('change.formConditions', 'input[type="radio"], input[type="checkbox"], select', function () {
                     evaluateConditions();
                 });
+
+                // Sender forms were just re-rendered; re-add the recipient forms
+                displayRecipientContent($('input[name="business_unit_id_to"]').val());
             }
             ,
             error: function () {
                 console.log('Failed to display form details');
+            }
+        });
+    }
+
+    // Show the creation forms attached to the Refer To business unit, below the
+    // sender's forms. A form attached to both units is shown only once (as a
+    // sender form). Answers are posted with the sender's form data; the API
+    // accepts fields from forms attached to either unit.
+    function displayRecipientContent(recipientBuId) {
+        var requestId = ++recipientFormsRequest;
+        $('.content .form-container[data-source="recipient"]').remove();
+
+        if (!recipientBuId || !senderFormTarget || String(recipientBuId) === String(senderFormBuId)) {
+            evaluateConditions();
+            return;
+        }
+
+        $.ajax({
+            url: 'referral/api-jwt.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'form-details',
+                business_unit_id: recipientBuId
+            },
+            success: function (response) {
+                // Ignore responses for a Refer To selection that has since changed
+                if (requestId !== recipientFormsRequest) {
+                    return;
+                }
+                const forms = response.data ? response.data.forms : null;
+                if (!Array.isArray(forms)) {
+                    return;
+                }
+                forms.forEach((form) => {
+                    if (form.is_hidden === true || form.display_on === 'reply') {
+                        return;
+                    }
+                    if ($('.content .form-container[data-form-id="' + form.form_id + '"]').length > 0) {
+                        return;
+                    }
+                    senderFormTarget.append(buildFormContainer(form, 'recipient'));
+                });
+                evaluateConditions();
+            },
+            error: function () {
+                console.log('Failed to display recipient form details');
             }
         });
     }
@@ -749,6 +820,7 @@ $(document).ready(function () {
         if (refBusId) {
 
             $('input[name="business_unit_id_to"]').val(refBusId);
+            displayRecipientContent(refBusId);
 
             // Get locations for the selected business unit
             $.ajax({
@@ -1177,6 +1249,8 @@ $(document).ready(function () {
                 $('#external-referral').removeClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', true);
                 $('#organization, #referee').prop('disabled', false);
+                // External recipients have no business unit, so no recipient forms
+                displayRecipientContent(null);
 
                 var externalOrganizations = [];
 
@@ -1229,6 +1303,7 @@ $(document).ready(function () {
                 $('#external-referral').addClass('d-none');
                 $('#business_unit_to, #location_to, #recipient_to').prop('disabled', false);
                 $('#organization, #referee').prop('disabled', true);
+                displayRecipientContent($('input[name="business_unit_id_to"]').val());
 
                 // Hide and reset new organization section when external referral is unchecked
                 $('#new-organization-section').hide();
@@ -1411,7 +1486,7 @@ $(document).ready(function () {
                 typeOption.prop('checked', true);
 
                 // Hide every other referral-type container.
-                $('.content .form-container').each(function () {
+                $('.content .form-container[data-source="sender"]').each(function () {
                     if ($(this).attr('data-form-id') !== '1') {
                         $(this).hide().find('input, select, textarea').prop('disabled', true);
                     }
