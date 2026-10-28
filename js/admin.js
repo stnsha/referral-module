@@ -292,6 +292,44 @@ function openEditModal(form) {
             ' &nbsp; <strong>Type:</strong> ' + fieldType + '</p>';
 
         if (fieldType === 'radio' || fieldType === 'checkbox') {
+            // Collect existing values (with their form_detail_id) from array format
+            // (one row per value) or grouped-object format
+            var existingValues = [];
+            if (Array.isArray(form.form_details)) {
+                form.form_details.forEach(function (d) {
+                    if (d.field_name === fieldName && d.field_value) {
+                        existingValues.push({ id: d.form_detail_id, value: d.field_value });
+                    }
+                });
+            } else if (Array.isArray(detail.field_value)) {
+                detail.field_value.forEach(function (v) {
+                    if (v && v.field_value) {
+                        existingValues.push({ id: v.form_detail_id, value: v.field_value });
+                    }
+                });
+            } else if (detail.field_value) {
+                existingValues.push({ id: detail.form_detail_id, value: detail.field_value });
+            }
+
+            bodyHtml += '<p class="r-text fw-bold mb-1" style="font-size:13px;">Existing Values</p>';
+            if (existingValues.length > 0) {
+                bodyHtml += '<div id="existing-value-list" class="mb-2">';
+                existingValues.forEach(function (item) {
+                    var escaped = $('<div>').text(item.value).html().replace(/"/g, '&quot;');
+                    bodyHtml += '<div class="input-group mb-1 existing-value-row">' +
+                        '<input type="text" class="form-control form-control-sm existing-value-input" ' +
+                        'value="' + escaped + '" data-original="' + escaped + '">' +
+                        '<button type="button" class="btn btn-sm btn-primary btn-update-existing-value" ' +
+                        'data-form-detail-id="' + item.id + '">Update</button>' +
+                        '</div>';
+                });
+                bodyHtml += '<div id="existing-value-message" style="font-size:12px;"></div>';
+                bodyHtml += '</div>';
+            } else {
+                bodyHtml += '<p class="text-muted r-text mb-2" style="font-size:13px;">No values yet.</p>';
+            }
+            bodyHtml += '<p class="r-text fw-bold mb-1" style="font-size:13px;">Add New Values</p>';
+
             bodyHtml += '<div id="edit-value-fields">' +
                 '<div class="input-group mb-2">' +
                 '<input type="text" class="form-control form-control-sm edit-value-input" placeholder="Enter new value">' +
@@ -395,6 +433,53 @@ $(document).on('click', '#btn-save-label', function () {
         },
         error: function () {
             $btn.prop('disabled', false).text('Save Changes');
+            $msg.text('Request failed. Please try again.').css('color', 'red');
+        }
+    });
+});
+
+// Update an existing value in edit modal
+$(document).on('click', '.btn-update-existing-value', function () {
+    var $btn = $(this);
+    var $input = $btn.closest('.existing-value-row').find('.existing-value-input');
+    var formDetailId = parseInt($btn.data('form-detail-id'), 10);
+    var newValue = $input.val().trim();
+    var $msg = $('#existing-value-message');
+
+    if (newValue === '') {
+        $msg.text('Value cannot be empty.').css('color', 'red');
+        return;
+    }
+    if (newValue === String($input.attr('data-original'))) {
+        $msg.text('No changes to save.').css('color', 'green');
+        return;
+    }
+
+    $btn.prop('disabled', true).text('Saving...');
+    $msg.text('');
+
+    $.ajax({
+        url: 'referral/api-jwt.php',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'update-form-detail-value',
+            form_detail_id: formDetailId,
+            field_value: newValue
+        }),
+        success: function (data) {
+            $btn.prop('disabled', false).text('Update');
+            if (data.success) {
+                $input.val(newValue).attr('data-original', newValue);
+                $msg.text('Value updated successfully.').css('color', 'green');
+                loadAllForms();
+            } else {
+                $msg.text('Error: ' + (data.message || 'Failed to update value.')).css('color', 'red');
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).text('Update');
             $msg.text('Request failed. Please try again.').css('color', 'red');
         }
     });

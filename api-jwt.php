@@ -909,6 +909,30 @@ function updateFormLabel($form_id, $data, $staff_id)
     }
 }
 
+function updateFormDetailValue($form_detail_id, $field_value, $staff_id)
+{
+    $formattedData = array(
+        'field_value' => $field_value
+    );
+
+    $result = getApiDataWithJWT('formDetails/' . (int)$form_detail_id, $formattedData, 'PUT', $staff_id);
+    $httpCode = $result['httpCode'];
+    $decoded = json_decode($result['response'], true);
+
+    if ($httpCode == 200) {
+        return array(
+            'success' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Value updated successfully'
+        );
+    } else {
+        return array(
+            'success' => false,
+            'error' => true,
+            'message' => isset($decoded['message']) ? $decoded['message'] : 'Failed to update value'
+        );
+    }
+}
+
 function getFormDetails($business_unit_id, $staff_id)
 {
     $result = getApiDataWithJWT('form/show/' . $business_unit_id, null, 'GET', $staff_id);
@@ -2323,6 +2347,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response = updateFormLabel($jsonData['form_id'], $jsonData, $staff_id);
                 } else {
                     $response = array('success' => false, 'message' => 'Missing form_id or label_name');
+                }
+                break;
+            case 'update-form-detail-value':
+                if (isset($jsonData['form_detail_id']) && isset($jsonData['field_value'])) {
+                    $response = updateFormDetailValue($jsonData['form_detail_id'], $jsonData['field_value'], $staff_id);
+                } else {
+                    $response = array('success' => false, 'message' => 'Missing form_detail_id or field_value');
                 }
                 break;
         }
