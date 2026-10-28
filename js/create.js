@@ -665,6 +665,8 @@ $(document).ready(function () {
                     evaluateConditions();
                 });
 
+                sortFormContainers();
+
                 // Sender forms were just re-rendered; re-add the recipient forms
                 displayRecipientContent($('input[name="business_unit_id_to"]').val());
             }
@@ -675,9 +677,30 @@ $(document).ready(function () {
         });
     }
 
-    // Show the creation forms attached to the Refer To business unit, below the
-    // sender's forms. A form attached to both units is shown only once (as a
-    // sender form). Answers are posted with the sender's form data; the API
+    // Order sender and recipient form containers oldest first (ascending form_id).
+    // The API returns forms in no guaranteed order, and recipient forms are
+    // appended after the sender's. Moving the nodes keeps entered values and
+    // bound handlers. The consult call block stays directly after form_id=1.
+    function sortFormContainers() {
+        if (!senderFormTarget) {
+            return;
+        }
+        var containers = senderFormTarget.children('.form-container').get();
+        containers.sort(function (a, b) {
+            return parseInt($(a).attr('data-form-id'), 10) - parseInt($(b).attr('data-form-id'), 10);
+        });
+        senderFormTarget.append(containers);
+
+        var consultWrapper = $('#consult-call-id-wrapper');
+        var clinicForm = senderFormTarget.children('.form-container[data-form-id="1"]');
+        if (consultWrapper.length > 0 && clinicForm.length > 0) {
+            clinicForm.after(consultWrapper);
+        }
+    }
+
+    // Show the creation forms attached to the Refer To business unit, mixed in
+    // with the sender's forms by sortFormContainers(). A form attached to both
+    // units is shown only once (as a sender form). Answers are posted with the sender's form data; the API
     // accepts fields from forms attached to either unit.
     function displayRecipientContent(recipientBuId) {
         var requestId = ++recipientFormsRequest;
@@ -714,6 +737,7 @@ $(document).ready(function () {
                     }
                     senderFormTarget.append(buildFormContainer(form, 'recipient'));
                 });
+                sortFormContainers();
                 evaluateConditions();
             },
             error: function () {
