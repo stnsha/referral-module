@@ -515,8 +515,29 @@ $(document).on('click', '#btn-save-edit-values', function () {
         if (v !== '') { newValues.push(v); }
     });
 
-    if (newValues.length === 0) {
-        // No values entered — business unit changes are already saved; just close
+    // Existing values that were renamed in place
+    var changedValues = [];
+    var hasEmptyExisting = false;
+    $('.existing-value-input').each(function () {
+        var $input = $(this);
+        var v = $input.val().trim();
+        if (v === '') { hasEmptyExisting = true; return; }
+        if (v !== String($input.attr('data-original'))) {
+            changedValues.push({
+                $input: $input,
+                id: parseInt($input.closest('.existing-value-row').find('.btn-update-existing-value').data('form-detail-id'), 10),
+                value: v
+            });
+        }
+    });
+
+    if (hasEmptyExisting) {
+        $msg.text('Existing values cannot be empty.').css('color', 'red');
+        return;
+    }
+
+    if (newValues.length === 0 && changedValues.length === 0) {
+        // Nothing entered or renamed — business unit changes are already saved; just close
         bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).hide();
         return;
     }
@@ -524,6 +545,51 @@ $(document).on('click', '#btn-save-edit-values', function () {
     $btn.prop('disabled', true).text('Saving...');
     $msg.text('');
 
+    var updateRequests = changedValues.map(function (item) {
+        return $.ajax({
+            url: 'referral/api-jwt.php',
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'update-form-detail-value',
+                form_detail_id: item.id,
+                field_value: item.value
+            })
+        }).then(function (data) {
+            if (data && data.success) {
+                item.$input.attr('data-original', item.value);
+                return null;
+            }
+            return item.value + ': ' + ((data && data.message) || 'Failed to update value.');
+        }, function () {
+            return $.Deferred().resolve(item.value + ': Request failed.').promise();
+        });
+    });
+
+    $.when.apply($, updateRequests).then(function () {
+        var errors = Array.prototype.slice.call(arguments).filter(function (e) { return e; });
+        if (errors.length > 0) {
+            $btn.prop('disabled', false).text('Save');
+            $msg.text('Error: ' + errors.join('; ')).css('color', 'red');
+            loadAllForms();
+            return;
+        }
+        if (newValues.length === 0) {
+            $btn.prop('disabled', false).text('Save');
+            $msg.text('Values updated successfully.').css('color', 'green');
+            loadAllForms();
+            setTimeout(function () {
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).hide();
+            }, 1200);
+            return;
+        }
+        addNewEditValues($btn, $msg, formId, fieldName, fieldType, isRequired, newValues);
+    });
+});
+
+// Add new values for the field shown in the edit modal
+function addNewEditValues($btn, $msg, formId, fieldName, fieldType, isRequired, newValues) {
     var formDetails = newValues.map(function (v) {
         return {
             field_name: fieldName,
@@ -560,7 +626,7 @@ $(document).on('click', '#btn-save-edit-values', function () {
             $msg.text('Request failed. Please try again.').css('color', 'red');
         }
     });
-});
+}
 
 // Remove a business unit from a form
 $(document).on('click', '.btn-remove-form-bu', function () {
